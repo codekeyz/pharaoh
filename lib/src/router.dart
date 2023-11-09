@@ -2,45 +2,84 @@
 
 import 'dart:async';
 import 'dart:io';
-import 'package:collection/collection.dart';
 
 import 'response.dart';
+import 'utils.dart';
 
-typedef HandlerFunc = Function(HttpRequest req, Response res);
+const ANY_PATH = '*';
 
-enum HTTPMethod {
-  GET,
-  HEAD,
-  POST,
-  PUT,
-  DELETE,
-}
+const BASE_PATH = '/';
 
-HTTPMethod getHttpMethod(HttpRequest req) {
-  switch (req.method) {
-    case 'GET' || 'HEAD':
-      return HTTPMethod.GET;
-    case 'POST':
-      return HTTPMethod.POST;
-    case 'PUT':
-      return HTTPMethod.PUT;
-    case 'DELETE':
-      return HTTPMethod.DELETE;
-    default:
-      throw Exception('Method ${req.method} not yet supported');
+enum HTTPMethod { GET, HEAD, POST, PUT, DELETE, ALL }
+
+typedef ReqRes = (HttpRequest req, Response res);
+
+typedef HandlerFunc = FutureOr<dynamic> Function(HttpRequest req, Response res);
+
+typedef ProcessHandlerFunc = (ReqRes data, HandlerFunc handler);
+
+class Route {
+  final String route;
+  final List<HTTPMethod> verbs;
+  const Route(this.route, this.verbs);
+
+  /// any routes with the following [HTTPMethod]
+  Route.all([HTTPMethod method = HTTPMethod.ALL])
+      : verbs = [method],
+        route = ANY_PATH;
+
+  /// any route or any method
+  Route.any()
+      : verbs = [],
+        route = ANY_PATH;
+
+  bool match(HTTPMethod method, String path) {
+    final anyMethod = verbs.isEmpty;
+    if (!anyMethod) {
+      final canMethod = verbs[0] == HTTPMethod.ALL || verbs.contains(method);
+      if (!canMethod) return false;
+    }
+
+    if (route == ANY_PATH) return true;
+
+    // TODO: extend path matching to support complex types
+    return route == path;
   }
 }
 
-class RequestHandler {
-  final List<HTTPMethod> methods;
-  final String pattern;
-  final HandlerFunc handler;
+class RouteGroup {
+  String prefix;
+  List<RequestHandler> routes;
 
-  const RequestHandler(
-    this.pattern, {
-    this.methods = const [],
-    required this.handler,
-  });
+  RouteGroup._(this.prefix) : routes = [];
+
+  void add(RequestHandler handler) {
+    /// TODO: do checks here to make sure there's
+    /// no duplicate entry in the routes
+    routes.add(handler);
+  }
+
+  List<RequestHandler> _findHandlers(HTTPMethod method, String path) {
+    return routes.where((e) => e.route.match(method, path)).toList();
+  }
+}
+
+enum RequestHandlerType {
+  middleware,
+  endpoints,
+}
+
+class RequestHandler {
+  final Route route;
+  final HandlerFunc handler;
+  const RequestHandler(this.handler, this.route);
+  RequestHandlerType get type => RequestHandlerType.endpoints;
+}
+
+class Middleware extends RequestHandler {
+  Middleware(super.handler, super.route);
+  @override
+  RequestHandlerType get type => RequestHandlerType.middleware;
 }
 
 mixin RouterContract {
@@ -53,6 +92,12 @@ mixin RouterContract {
   void put(String path, HandlerFunc handler);
 
   void delete(String path, HandlerFunc handler);
+
+  void any(String path, HandlerFunc handler);
+
+  void use(HandlerFunc handler);
+
+  RouteGroup group(String prefix, void Function(PharoahRouter router) groupCtx);
 }
 
 abstract class Router with RouterContract {
@@ -64,48 +109,53 @@ abstract class Router with RouterContract {
 }
 
 class PharoahRouter extends Router {
-  final List<RequestHandler> _routeBag;
+  late final RouteGroup _group;
 
-  PharoahRouter() : _routeBag = [];
+  String get prefix => _group.prefix;
+
+  final Map<String, RouteGroup> _subGroups = {};
+
+  PharoahRouter({RouteGroup? group})
+      : _group = group ?? RouteGroup._(BASE_PATH);
+
+  @override
+  List<RequestHandler> get routes => _group.routes;
 
   @override
   void get(String path, HandlerFunc handler) {
-    final route = RequestHandler(
-      path,
-      methods: [HTTPMethod.GET, HTTPMethod.HEAD],
-      handler: handler,
-    );
-    _routeBag.add(route);
+    _group.add(RequestHandler(
+      handler,
+      Route(path, [HTTPMethod.GET, HTTPMethod.HEAD]),
+    ));
   }
 
   @override
   void post(String path, HandlerFunc handler) {
-    final route = RequestHandler(
-      path,
-      methods: [HTTPMethod.POST],
-      handler: handler,
-    );
-    _routeBag.add(route);
+    _group.add(RequestHandler(
+      handler,
+      Route(path, [HTTPMethod.POST]),
+    ));
   }
 
   @override
   void put(String path, HandlerFunc handler) {
-    final route = RequestHandler(
-      path,
-      methods: [HTTPMethod.PUT],
-      handler: handler,
-    );
-    _routeBag.add(route);
+    _group.add(RequestHandler(
+      handler,
+      Route(path, [HTTPMethod.PUT]),
+    ));
   }
 
   @override
   void delete(String path, HandlerFunc handler) {
-    final route = RequestHandler(
-      path,
-      methods: [HTTPMethod.DELETE],
-      handler: handler,
-    );
-    _routeBag.add(route);
+    _group.add(RequestHandler(
+      handler,
+      Route(path, [HTTPMethod.DELETE]),
+    ));
+  }
+
+  @override
+  void any(String path, HandlerFunc handler) {
+    _group.add(RequestHandler(handler, Route.any()));
   }
 
   @override
@@ -114,35 +164,45 @@ class PharoahRouter extends Router {
     final path = request.uri.toString();
     final response = Response.from(request);
 
-    final route = _findRoute(method, path);
-    if (route == null) {
-      await response.status(HttpStatus.notFound).json({
+    final handlers = _group._findHandlers(method, path);
+    if (handlers.isEmpty) {
+      return await response.status(HttpStatus.notFound).json({
         "message": "No handler found for path :$path",
         "path": path,
       });
-      return;
     }
 
+    final handlerFncs = List.from(handlers);
+
+    ReqRes reqRes = (request, response);
+    while (handlerFncs.isNotEmpty) {
+      final handler = handlerFncs.removeAt(0);
+      final result = await processHandler(handler, reqRes);
+      if (result is ReqRes) {
+        reqRes = result;
+        continue;
+      }
+      if (result is HttpResponse) break;
+      await reqRes.$2.json(result);
+      break;
+    }
+  }
+
+  Future<dynamic> processHandler(RequestHandler rqh, ReqRes rq) async {
     try {
-      final result = await route.handler(request, Response.from(request));
-      if (result.runtimeType == Null) return;
-      await response.json(result);
+      final result = await rqh.handler(rq.$1, rq.$2);
+      if (result != null) return result;
+      return rq;
     } catch (e) {
-      await response
+      return await rq.$2
           .status(HttpStatus.internalServerError)
-          .json({"message": "An error occurred", "path": path});
+          .json({"message": "An error occurred"});
     }
   }
 
-  RequestHandler? _findRoute(HTTPMethod method, String path) {
-    return _routeBag.firstWhereOrNull(
-      (route) =>
-          route.methods.contains(method) && _matchPath(route.pattern, path),
-    );
-  }
-
-  bool _matchPath(String routePath, String requestPath) {
-    return routePath == requestPath;
+  @override
+  void use(HandlerFunc handler) {
+    _group.add(Middleware(handler, Route.all()));
   }
 
   @override
@@ -151,5 +211,17 @@ class PharoahRouter extends Router {
   }
 
   @override
-  List<RequestHandler> get routes => _routeBag;
+  RouteGroup group(String prefix, Function(PharoahRouter router) groupCtx) {
+    /// do more validation on prefix
+    if (prefix == BASE_PATH || prefix == ANY_PATH) {
+      throw Exception('Group Prefix not allowed prefix: $prefix');
+    }
+
+    final router = PharoahRouter(group: RouteGroup._(prefix));
+    groupCtx(router);
+
+    final group = router._group;
+    _subGroups[prefix] = group;
+    return group;
+  }
 }

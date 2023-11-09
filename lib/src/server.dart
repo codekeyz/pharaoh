@@ -1,15 +1,20 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:mason_logger/mason_logger.dart';
+
 import 'router.dart';
 
 class Pharaoh {
   late final HttpServer _server;
   late final Router _router;
+  late final Logger _logger;
 
   RouterContract get router => _router;
 
-  Pharaoh() : _router = PharoahRouter();
+  Pharaoh()
+      : _router = PharoahRouter(),
+        _logger = Logger();
 
   Uri get url {
     if (_server.address.isLoopback) {
@@ -35,10 +40,12 @@ class Pharaoh {
 
   Future<Pharaoh> listen([int? port]) async {
     port ??= 3000;
+    final progress = _logger.progress('Evaluating routes');
     await _router.commit();
+    progress.update('starting server');
     _server = await HttpServer.bind('localhost', port);
     _server.listen(_router.handleRequest);
-    print('Server start on port: $port -> ${url.toString()}');
+    progress.complete('Server start on PORT: $port -> ${url.toString()}');
     return this;
   }
 

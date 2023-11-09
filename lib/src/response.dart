@@ -2,17 +2,17 @@ import 'dart:io';
 
 import 'utils.dart';
 
-mixin ResponseContract {
-  Future<void> redirect(String url, [int statusCode = HttpStatus.found]);
+abstract interface class ResponseContract {
+  Future<dynamic> redirect(String url, [int statusCode = HttpStatus.found]);
 
-  Future<void> json(dynamic data);
+  Future<dynamic> json(dynamic data);
 
   Response type(ContentType type);
 
   Response status(int code);
 }
 
-class Response with ResponseContract {
+class Response implements ResponseContract {
   final HttpRequest _req;
 
   HttpResponse get _res {
@@ -29,17 +29,22 @@ class Response with ResponseContract {
   }
 
   @override
-  Future<void> json(dynamic data) async {
+  Future<dynamic> json(dynamic data) async {
     type(ContentType.json);
     _res.write(encodeJson(data));
-    await _res.close();
+    await _res.flush();
+    return await _res.close();
   }
 
   @override
-  Future<void> redirect(String url, [int statusCode = HttpStatus.found]) async {
+  Future<dynamic> redirect(
+    String url, [
+    int statusCode = HttpStatus.found,
+  ]) async {
     status(statusCode);
     _res.headers.set('Location', url);
-    await _res.close();
+    await _res.flush();
+    return await _res.close();
   }
 
   @override
