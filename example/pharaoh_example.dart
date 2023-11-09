@@ -3,15 +3,17 @@ import 'package:pharaoh/src/server.dart';
 final pharaoh = Pharaoh();
 
 void main() async {
-  pharaoh.router.get('/', (req, [args, hello]) async {
-    return {"name": "John"};
-  });
+  final router = pharaoh.router;
 
-  pharaoh.router.post('/', (req) async {
-    return null;
-  });
+  router.get(
+    '/test-json',
+    (_, res) => res.json({"name": "Chima", "age": 24}),
+  );
 
-  pharaoh.router.delete('/user', (req) => 'Some Error');
+  router.get(
+    '/redirect',
+    (req, res) => res.redirect('http://google.com'),
+  );
 
   await pharaoh.listen();
 }

@@ -3,9 +3,10 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:collection/collection.dart';
-import 'package:pharaoh/src/utils.dart';
 
-typedef Handler = Function(HttpRequest req);
+import 'response.dart';
+
+typedef HandlerFunc = Function(HttpRequest req, Response res);
 
 enum HTTPMethod {
   GET,
@@ -33,7 +34,7 @@ HTTPMethod getHttpMethod(HttpRequest req) {
 class RequestHandler {
   final List<HTTPMethod> methods;
   final String pattern;
-  final Handler handler;
+  final HandlerFunc handler;
 
   const RequestHandler(
     this.pattern, {
@@ -45,19 +46,19 @@ class RequestHandler {
 mixin RouterContract {
   List<RequestHandler> get routes;
 
-  void get(String path, Handler handler);
+  void get(String path, HandlerFunc handler);
 
-  void post(String path, Handler handler);
+  void post(String path, HandlerFunc handler);
 
-  void put(String path, Handler handler);
+  void put(String path, HandlerFunc handler);
 
-  void delete(String path, Handler handler);
+  void delete(String path, HandlerFunc handler);
 }
 
 abstract class Router with RouterContract {
   static Router get getInstance => PharoahRouter();
 
-  Future<dynamic> handleRequest(HttpRequest request);
+  Future<void> handleRequest(HttpRequest request);
 
   FutureOr<Router> commit();
 }
@@ -68,7 +69,7 @@ class PharoahRouter extends Router {
   PharoahRouter() : _routeBag = [];
 
   @override
-  void get(String path, Handler handler) {
+  void get(String path, HandlerFunc handler) {
     final route = RequestHandler(
       path,
       methods: [HTTPMethod.GET, HTTPMethod.HEAD],
@@ -78,7 +79,7 @@ class PharoahRouter extends Router {
   }
 
   @override
-  void post(String path, Handler handler) {
+  void post(String path, HandlerFunc handler) {
     final route = RequestHandler(
       path,
       methods: [HTTPMethod.POST],
@@ -88,7 +89,7 @@ class PharoahRouter extends Router {
   }
 
   @override
-  void put(String path, Handler handler) {
+  void put(String path, HandlerFunc handler) {
     final route = RequestHandler(
       path,
       methods: [HTTPMethod.PUT],
@@ -98,7 +99,7 @@ class PharoahRouter extends Router {
   }
 
   @override
-  void delete(String path, Handler handler) {
+  void delete(String path, HandlerFunc handler) {
     final route = RequestHandler(
       path,
       methods: [HTTPMethod.DELETE],
@@ -108,22 +109,28 @@ class PharoahRouter extends Router {
   }
 
   @override
-  Future handleRequest(HttpRequest request) async {
+  Future<void> handleRequest(HttpRequest request) async {
     final method = getHttpMethod(request);
     final path = request.uri.toString();
-    final response = request.response;
+    final response = Response.from(request);
 
     final route = _findRoute(method, path);
     if (route == null) {
-      sendServerError(response, 'Route not found for $path');
+      await response.status(HttpStatus.notFound).json({
+        "message": "No handler found for path :$path",
+        "path": path,
+      });
       return;
     }
 
     try {
-      final result = await route.handler(request);
-      sendJsonResponse(response, result);
+      final result = await route.handler(request, Response.from(request));
+      if (result.runtimeType == Null) return;
+      await response.json(result);
     } catch (e) {
-      sendServerError(response, 'An error occurred $e');
+      await response
+          .status(HttpStatus.internalServerError)
+          .json({"message": "An error occurred", "path": path});
     }
   }
 
