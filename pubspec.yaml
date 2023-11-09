@@ -8,8 +8,6 @@ environment:
 
 # Add regular dependencies here.
 dependencies:
-  logger: ^2.0.2+1
-  get_it: ^7.6.4
   meta: ^1.11.0
   collection: ^1.18.0
 
