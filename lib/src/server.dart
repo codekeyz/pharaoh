@@ -3,8 +3,6 @@ import 'dart:io';
 
 import 'router.dart';
 
-typedef PharoahMiddleware = Handler;
-
 class Pharaoh {
   late final HttpServer _server;
   late final Router _router;
@@ -36,9 +34,11 @@ class Pharaoh {
   }
 
   Future<Pharaoh> listen([int? port]) async {
+    port ??= 3000;
     await _router.commit();
-    _server = await HttpServer.bind('localhost', (port ?? 3000));
+    _server = await HttpServer.bind('localhost', port);
     _server.listen(_router.handleRequest);
+    print('Server start on port: $port -> ${url.toString()}');
     return this;
   }
 
