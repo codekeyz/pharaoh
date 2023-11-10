@@ -2,9 +2,11 @@
 
 import 'dart:async';
 import 'dart:io';
+import 'package:path_to_regexp/path_to_regexp.dart';
 
-import 'response.dart';
-import 'utils.dart';
+import '../response.dart';
+import 'route.dart';
+import '../utils.dart';
 
 const ANY_PATH = '*';
 
@@ -14,76 +16,12 @@ enum HTTPMethod { GET, HEAD, POST, PUT, DELETE, ALL }
 
 typedef ReqRes = (HttpRequest req, Response res);
 
-typedef HandlerFunc = FutureOr<dynamic> Function(HttpRequest req, Response res);
-
 typedef ProcessHandlerFunc = (ReqRes data, HandlerFunc handler);
 
-class Route {
-  final String route;
-  final List<HTTPMethod> verbs;
-  const Route(this.route, this.verbs);
+typedef HandlerFunc = FutureOr<dynamic> Function(HttpRequest req, Response res);
 
-  /// any routes with the following [HTTPMethod]
-  Route.all([HTTPMethod method = HTTPMethod.ALL])
-      : verbs = [method],
-        route = ANY_PATH;
-
-  /// any route or any method
-  Route.any()
-      : verbs = [],
-        route = ANY_PATH;
-
-  bool match(HTTPMethod method, String path) {
-    final anyMethod = verbs.isEmpty;
-    if (!anyMethod) {
-      final canMethod = verbs[0] == HTTPMethod.ALL || verbs.contains(method);
-      if (!canMethod) return false;
-    }
-
-    if (route == ANY_PATH) return true;
-
-    // TODO: extend path matching to support complex types
-    return route == path;
-  }
-}
-
-class RouteGroup {
-  String prefix;
-  List<RequestHandler> routes;
-
-  RouteGroup._(this.prefix) : routes = [];
-
-  void add(RequestHandler handler) {
-    /// TODO: do checks here to make sure there's
-    /// no duplicate entry in the routes
-    routes.add(handler);
-  }
-
-  List<RequestHandler> _findHandlers(HTTPMethod method, String path) {
-    return routes.where((e) => e.route.match(method, path)).toList();
-  }
-}
-
-enum RequestHandlerType {
-  middleware,
-  endpoints,
-}
-
-class RequestHandler {
-  final Route route;
-  final HandlerFunc handler;
-  const RequestHandler(this.handler, this.route);
-  RequestHandlerType get type => RequestHandlerType.endpoints;
-}
-
-class Middleware extends RequestHandler {
-  Middleware(super.handler, super.route);
-  @override
-  RequestHandlerType get type => RequestHandlerType.middleware;
-}
-
-mixin RouterContract {
-  List<RequestHandler> get routes;
+abstract interface class RouterContract {
+  List<Route> get routes;
 
   void get(String path, HandlerFunc handler);
 
@@ -97,29 +35,32 @@ mixin RouterContract {
 
   void use(HandlerFunc handler);
 
-  RouteGroup group(String prefix, void Function(PharoahRouter router) groupCtx);
+  void group(
+    String prefix,
+    void Function(RouterContract router) groupCtx,
+  );
 }
 
-abstract class Router with RouterContract {
-  static Router get getInstance => PharoahRouter();
+abstract class Router implements RouterContract {
+  static Router get getInstance => _$PharoahRouter();
 
   Future<void> handleRequest(HttpRequest request);
 
   FutureOr<Router> commit();
 }
 
-class PharoahRouter extends Router {
+class _$PharoahRouter extends Router {
   late final RouteGroup _group;
 
   String get prefix => _group.prefix;
 
   final Map<String, RouteGroup> _subGroups = {};
 
-  PharoahRouter({RouteGroup? group})
-      : _group = group ?? RouteGroup._(BASE_PATH);
+  _$PharoahRouter({RouteGroup? group})
+      : _group = group ?? RouteGroup(BASE_PATH);
 
   @override
-  List<RequestHandler> get routes => _group.routes;
+  List<Route> get routes => _group.handlers.map((e) => e.route).toList();
 
   @override
   void get(String path, HandlerFunc handler) {
@@ -164,31 +105,43 @@ class PharoahRouter extends Router {
     final path = request.uri.toString();
     final response = Response.from(request);
 
-    final handlers = _group._findHandlers(method, path);
-    if (handlers.isEmpty) {
-      return await response.status(HttpStatus.notFound).json({
-        "message": "No handler found for path :$path",
-        "path": path,
-      });
+    final handlers = _group.findHandlers(method, path);
+    if (hasNoRequestHandlers(handlers)) {
+      final group = findRouteGroup(path);
+      if (group != null) {
+        final subHdls = group.findHandlers(method, path);
+        if (subHdls.isNotEmpty) handlers.addAll(subHdls);
+      }
+
+      if (hasNoRequestHandlers(handlers)) {
+        return await response.status(HttpStatus.notFound).json({
+          "message": "No handler found for path :$path",
+          "path": path,
+        });
+      }
     }
 
     final handlerFncs = List.from(handlers);
-
     ReqRes reqRes = (request, response);
     while (handlerFncs.isNotEmpty) {
       final handler = handlerFncs.removeAt(0);
+      final completed = handlerFncs.isEmpty;
       final result = await processHandler(handler, reqRes);
+      if (result is HttpResponse) break;
       if (result is ReqRes) {
+        if (completed) {
+          reqRes.$2.ok();
+          break;
+        }
         reqRes = result;
         continue;
       }
-      if (result is HttpResponse) break;
-      await reqRes.$2.json(result);
+      reqRes.$2.json(result);
       break;
     }
   }
 
-  Future<dynamic> processHandler(RequestHandler rqh, ReqRes rq) async {
+  Future<dynamic> processHandler(RouteHandler rqh, ReqRes rq) async {
     try {
       final result = await rqh.handler(rq.$1, rq.$2);
       if (result != null) return result;
@@ -211,17 +164,25 @@ class PharoahRouter extends Router {
   }
 
   @override
-  RouteGroup group(String prefix, Function(PharoahRouter router) groupCtx) {
+  void group(String prefix, Function(RouterContract router) groupCtx) {
     /// do more validation on prefix
     if (prefix == BASE_PATH || prefix == ANY_PATH) {
       throw Exception('Group Prefix not allowed prefix: $prefix');
     }
-
-    final router = PharoahRouter(group: RouteGroup._(prefix));
+    final router = _$PharoahRouter(group: RouteGroup(prefix));
     groupCtx(router);
-
-    final group = router._group;
-    _subGroups[prefix] = group;
-    return group;
+    _subGroups[prefix] = router._group;
   }
+
+  RouteGroup? findRouteGroup(String path) {
+    for (final key in _subGroups.keys) {
+      bool isMatch = path.contains(key);
+      if (!isMatch) isMatch = pathToRegExp(key).hasMatch(path);
+      if (isMatch) return _subGroups[key];
+    }
+    return null;
+  }
+
+  bool hasNoRequestHandlers(List<RouteHandler> handlers) =>
+      !handlers.any((e) => e is RequestHandler);
 }

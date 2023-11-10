@@ -5,7 +5,9 @@ import 'utils.dart';
 abstract interface class ResponseContract {
   Future<dynamic> redirect(String url, [int statusCode = HttpStatus.found]);
 
-  Future<dynamic> json(dynamic data);
+  Future<dynamic> json(Object data);
+
+  Future<dynamic> ok([Object? object]);
 
   Response type(ContentType type);
 
@@ -29,11 +31,10 @@ class Response implements ResponseContract {
   }
 
   @override
-  Future<dynamic> json(dynamic data) async {
+  Future<dynamic> json(Object data) async {
     type(ContentType.json);
     _res.write(encodeJson(data));
-    await _res.flush();
-    return await _res.close();
+    return await flushAndClose(_res);
   }
 
   @override
@@ -43,8 +44,7 @@ class Response implements ResponseContract {
   ]) async {
     status(statusCode);
     _res.headers.set('Location', url);
-    await _res.flush();
-    return await _res.close();
+    return await flushAndClose(_res);
   }
 
   @override
@@ -57,5 +57,20 @@ class Response implements ResponseContract {
   Response status(int code) {
     _res.statusCode = code;
     return this;
+  }
+
+  @override
+  Future<dynamic> ok([Object? object]) async {
+    status(HttpStatus.ok);
+    if (object != null) {
+      type(ContentType.text);
+      _res.write(object);
+    }
+    return await flushAndClose(_res);
+  }
+
+  Future<HttpResponse> flushAndClose(HttpResponse response) async {
+    await _res.flush();
+    return await _res.close();
   }
 }

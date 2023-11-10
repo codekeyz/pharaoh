@@ -10,6 +10,7 @@ environment:
 dependencies:
   meta: ^1.11.0
   collection: ^1.18.0
+  path_to_regexp: ^0.4.0
   mason_logger: ^0.2.10
 
 dev_dependencies:

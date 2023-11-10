@@ -3,7 +3,7 @@ import 'dart:io';
 
 import 'package:mason_logger/mason_logger.dart';
 
-import 'router.dart';
+import 'router/router.dart';
 
 class Pharaoh {
   late final HttpServer _server;
@@ -13,7 +13,7 @@ class Pharaoh {
   RouterContract get router => _router;
 
   Pharaoh()
-      : _router = PharoahRouter(),
+      : _router = Router.getInstance,
         _logger = Logger();
 
   Uri get url {
