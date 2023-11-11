@@ -6,7 +6,7 @@ import 'package:collection/collection.dart';
 import 'package:path_to_regexp/path_to_regexp.dart';
 
 import '../middleware/body_parser.dart';
-import '../response.dart';
+import '../http/response.dart';
 import '../http/request.dart';
 import 'handler.dart';
 import 'route.dart';
