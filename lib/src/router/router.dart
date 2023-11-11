@@ -4,13 +4,12 @@ import 'dart:async';
 import 'dart:io';
 import 'package:collection/collection.dart';
 import 'package:path_to_regexp/path_to_regexp.dart';
-import 'package:pharaoh/src/middleware/body_parser.dart';
-import 'package:pharaoh/src/middleware/multi_part_parser.dart';
 
-import 'handler.dart';
-import 'route.dart';
+import '../middleware/body_parser.dart';
 import '../response.dart';
 import '../http/request.dart';
+import 'handler.dart';
+import 'route.dart';
 
 const ANY_PATH = '*';
 
@@ -46,9 +45,7 @@ class _$PharoahRouter extends Router {
 
   _$PharoahRouter({RouteGroup? group}) {
     if (group == null) {
-      _group = RouteGroup(BASE_PATH)
-        ..add(bodyParser)
-        ..add(multiPartParser);
+      _group = RouteGroup(BASE_PATH)..add(bodyParser);
       return;
     }
     _group = group;

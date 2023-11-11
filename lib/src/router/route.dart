@@ -30,7 +30,8 @@ class Route {
       );
 
   bool canHandle(Request request) {
-    final canMethod = verbs.contains(request.method);
+    final canMethod =
+        verbs.contains(HTTPMethod.ALL) || verbs.contains(request.method);
     if (!canMethod) return false;
     if (route == ANY_PATH) return true;
     return pathToRegExp(route).hasMatch(request.path);
