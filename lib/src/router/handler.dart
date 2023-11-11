@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import '../http/request.dart';
-import '../response.dart';
+import '../http/response.dart';
 import 'route.dart';
 
 typedef ReqRes = (Request req, Response res);

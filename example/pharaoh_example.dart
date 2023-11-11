@@ -5,8 +5,6 @@ final pharaoh = Pharaoh();
 void main() async {
   final app = pharaoh.router;
 
-  app.use((req, res) {});
-
   app.get(
     '/:user/json',
     (req, res) => res.json({"name": "Chima", "age": 31}),
@@ -27,7 +25,10 @@ void main() async {
       (req, res) => res.json({"name": "Chima Precious"}),
     );
 
-    router.post('/sign-in', (req, res) => res.ok());
+    router.post(
+      '/sign-in',
+      (req, res) => res.json(req.body ?? {}),
+    );
   });
 
   await pharaoh.listen();

@@ -1,14 +1,14 @@
-import 'dart:convert';
 import 'dart:io';
 
-import 'package:http_parser/http_parser.dart';
-
 import '../utils.dart';
+import 'message.dart';
 
 // ignore: constant_identifier_names
 enum HTTPMethod { GET, HEAD, POST, PUT, DELETE, ALL }
 
-abstract interface class $Request {
+abstract interface class $Request extends Message {
+  $Request._(super.req);
+
   String get path;
 
   String? get query;
@@ -21,15 +21,7 @@ abstract interface class $Request {
 
   HTTPMethod get method;
 
-  MediaType? get contentType;
-
-  Encoding? get encoding;
-
-  Map<String, dynamic> get headers;
-
   Map<String, dynamic> get params;
-
-  Object? get body;
 
   /// Use this to get objects from the current request context
   /// Middlewares can make available extra stuffs eg: Files during
@@ -42,28 +34,18 @@ abstract interface class $Request {
   Object? operator [](String name);
 }
 
-class Request implements $Request {
+class Request extends $Request {
   final HttpRequest _req;
-  final Map<String, dynamic> _headers = {};
   final Map<String, dynamic> _params = {};
   final Map<String, dynamic> _context = {};
-  Object? _body;
 
-  HttpRequest get req => _req;
-
-  Request._(this._req) {
-    _req.headers.forEach((name, values) {
-      _headers[name] = values;
-    });
+  Request._(this._req) : super._(_req) {
     _params.addAll(_req.uri.queryParameters);
   }
 
   factory Request.from(HttpRequest request) => Request._(request);
 
-  @override
-  Object? get body => _body;
-
-  set body(Object? body) => _body = body;
+  HttpRequest get req => _req;
 
   void putInContext(String key, Object object) => _context[key] = object;
 
@@ -77,9 +59,6 @@ class Request implements $Request {
   HTTPMethod get method => getHttpMethod(_req);
 
   @override
-  Map<String, dynamic> get headers => _headers;
-
-  @override
   Map<String, dynamic> get params => _params;
 
   @override
@@ -90,32 +69,6 @@ class Request implements $Request {
 
   @override
   String get protocol => _req.requestedUri.scheme;
-
-  MediaType? _contentTypeCache;
-
-  @override
-  MediaType? get contentType {
-    if (_contentTypeCache != null) return _contentTypeCache;
-    var type = _headers[HttpHeaders.contentTypeHeader];
-    if (type == null) return null;
-    if (type is Iterable) type = type.join(';');
-    return _contentTypeCache = MediaType.parse(type);
-  }
-
-  /// The encoding of the message body.
-  ///
-  /// This is parsed from the "charset" parameter of the Content-Type header in
-  /// [headers].
-  ///
-  /// If [headers] doesn't have a Content-Type header or it specifies an
-  /// encoding that `dart:convert` doesn't support, this will be `null`.
-  @override
-  Encoding? get encoding {
-    var ctype = contentType;
-    if (ctype == null) return null;
-    if (!ctype.parameters.containsKey('charset')) return null;
-    return Encoding.getByName(ctype.parameters['charset']);
-  }
 
   @override
   Object? operator [](String name) => _context[name];
