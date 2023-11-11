@@ -1,6 +1,7 @@
+import 'dart:convert';
 import 'dart:io';
 
-import '../utils.dart';
+import 'body.dart';
 import 'message.dart';
 
 abstract interface class ResponseContract {
@@ -15,22 +16,22 @@ abstract interface class ResponseContract {
   Response status(int code);
 }
 
-class Response extends Message implements ResponseContract {
-  final HttpRequest _req;
+class Response extends Message<Body> implements ResponseContract {
+  late final HttpRequest _req;
+  HttpResponse get httpResponse => _req.response;
+
   bool _completed = false;
   int _statusCode = 200;
 
   bool get completed => _completed;
 
-  HttpResponse get _res => _req.response;
-
-  Response._(this._req) : super(_req);
+  Response._(this._req) : super(_req, Body(null));
 
   factory Response.from(HttpRequest req) => Response._(req);
 
   @override
   Future<dynamic> json(Object data) {
-    body = data;
+    body = Body(jsonEncode(data), encoding);
     updateHeaders(
       (headers) =>
           headers[HttpHeaders.contentTypeHeader] = ContentType.json.value,
@@ -62,28 +63,31 @@ class Response extends Message implements ResponseContract {
 
   @override
   Future<dynamic> ok([Object? object]) async {
-    body = object;
+    body = Body(object, encoding);
     return forward();
   }
 
   Future<Response> forward() async {
+    final response = body;
+    if (response == null) throw Exception('Body value must always be present');
     if (_completed) throw Exception('Response already sent');
-
-    final data = encodeJson(body);
 
     updateHeaders((headers) {
       headers['X-Powered-By'] = 'Pharoah';
-      headers[HttpHeaders.contentLengthHeader] = data.length;
+      headers[HttpHeaders.contentLengthHeader] = response.contentLength;
+      headers[HttpHeaders.dateHeader] = DateTime.now().toUtc();
+      httpResponse.headers.chunkedTransferEncoding = false;
     });
 
     for (final header in headers.entries) {
-      _res.headers.add(header.key, header.value);
+      httpResponse.headers.add(header.key, header.value);
     }
 
-    _res.statusCode = _statusCode;
-    _res.write(encodeJson(data));
-    await _res.flush();
-    await _res.close();
+    httpResponse.statusCode = _statusCode;
+
+    await httpResponse
+        .addStream(response.read())
+        .then((value) => httpResponse.close());
     _completed = true;
     return this;
   }
