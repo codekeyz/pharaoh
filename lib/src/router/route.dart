@@ -1,6 +1,7 @@
 import 'package:path_to_regexp/path_to_regexp.dart';
 
 import '../request.dart';
+import 'handler.dart';
 import 'router.dart';
 
 class Route {
@@ -46,20 +47,28 @@ class Route {
   }
 }
 
-abstract class RouteHandler {
-  Route route;
-  final HandlerFunc handler;
-  RouteHandler(this.handler, this.route);
-  RouteHandler prefix(String prefix) {
-    route = route.withPrefix(prefix);
-    return this;
+class RouteGroup {
+  final String prefix;
+  final List<RouteHandler> handlers = [];
+
+  RouteGroup(this.prefix);
+
+  void add(RouteHandler handler) {
+    var route = handler.route;
+
+    if (route.route.trim().isEmpty) {
+      throw Exception('Routes should being with $BASE_PATH');
+    }
+
+    if (![BASE_PATH, ANY_PATH].contains(prefix)) {
+      handler.prefix(prefix);
+    }
+
+    /// TODO: do checks here to make sure there's no duplicate entry in the routes
+    handlers.add(handler);
   }
-}
 
-class RequestHandler extends RouteHandler {
-  RequestHandler(super.handler, super.route);
-}
-
-class Middleware extends RouteHandler {
-  Middleware(super.handler, super.route);
+  List<RouteHandler> findHandlers(Request request) => handlers.isEmpty
+      ? []
+      : handlers.where((e) => e.route.canHandle(request)).toList();
 }
