@@ -6,7 +6,7 @@ import 'message.dart';
 // ignore: constant_identifier_names
 enum HTTPMethod { GET, HEAD, POST, PUT, DELETE, ALL }
 
-abstract interface class $Request extends Message {
+abstract interface class $Request extends Message<dynamic> {
   $Request._(super.req);
 
   String get path;
