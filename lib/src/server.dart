@@ -40,9 +40,7 @@ class Pharaoh {
 
   Future<Pharaoh> listen([int? port]) async {
     port ??= 3000;
-    final progress = _logger.progress('Evaluating routes');
-    await _router.commit();
-    progress.update('starting server');
+    final progress = _logger.progress('Starting server');
     _server = await HttpServer.bind('localhost', port);
     _server.listen(_router.handleRequest);
     progress.complete('Server start on PORT: $port -> ${url.toString()}');

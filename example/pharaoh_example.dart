@@ -26,6 +26,10 @@ void main() async {
       '/:user/boy',
       (req, res) => res.json({"name": "Chima Precious"}),
     );
+
+    router.post('/sign-in', (req, res) {
+      print('I am here');
+    });
   });
 
   await pharaoh.listen();

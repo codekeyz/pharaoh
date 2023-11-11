@@ -2,17 +2,17 @@
 
 import 'dart:async';
 import 'dart:io';
+import 'package:collection/collection.dart';
 import 'package:path_to_regexp/path_to_regexp.dart';
+import 'package:pharaoh/src/request.dart';
 
-import '../response.dart';
+import 'route_group.dart';
 import 'route.dart';
-import '../utils.dart';
+import '../response.dart';
 
 const ANY_PATH = '*';
 
 const BASE_PATH = '/';
-
-enum HTTPMethod { GET, HEAD, POST, PUT, DELETE, ALL }
 
 typedef ReqRes = (HttpRequest req, Response res);
 
@@ -45,8 +45,6 @@ abstract class Router implements RouterContract {
   static Router get getInstance => _$PharoahRouter();
 
   Future<void> handleRequest(HttpRequest request);
-
-  FutureOr<Router> commit();
 }
 
 class _$PharoahRouter extends Router {
@@ -100,16 +98,16 @@ class _$PharoahRouter extends Router {
   }
 
   @override
-  Future<void> handleRequest(HttpRequest request) async {
-    final method = getHttpMethod(request);
-    final path = request.uri.toString();
-    final response = Response.from(request);
+  Future<void> handleRequest(HttpRequest httpReq) async {
+    final request = Request.from(httpReq);
+    final response = Response.from(httpReq);
+    final path = request.path;
 
-    final handlers = _group.findHandlers(method, path);
+    final handlers = _group.findHandlers(request);
     if (hasNoRequestHandlers(handlers)) {
       final group = findRouteGroup(path);
       if (group != null) {
-        final subHdls = group.findHandlers(method, path);
+        final subHdls = group.findHandlers(request);
         if (subHdls.isNotEmpty) handlers.addAll(subHdls);
       }
 
@@ -122,12 +120,12 @@ class _$PharoahRouter extends Router {
     }
 
     final handlerFncs = List.from(handlers);
-    ReqRes reqRes = (request, response);
+    ReqRes reqRes = (httpReq, response);
     while (handlerFncs.isNotEmpty) {
       final handler = handlerFncs.removeAt(0);
       final completed = handlerFncs.isEmpty;
       final result = await processHandler(handler, reqRes);
-      if (result is HttpResponse) break;
+      if (result is Response) break;
       if (result is ReqRes) {
         if (completed) {
           reqRes.$2.ok();
@@ -159,15 +157,10 @@ class _$PharoahRouter extends Router {
   }
 
   @override
-  FutureOr<Router> commit() async {
-    return this;
-  }
-
-  @override
   void group(String prefix, Function(RouterContract router) groupCtx) {
     /// do more validation on prefix
     if (prefix == BASE_PATH || prefix == ANY_PATH) {
-      throw Exception('Group Prefix not allowed prefix: $prefix');
+      throw Exception('Prefix :[$prefix] not allowed for groups');
     }
     final router = _$PharoahRouter(group: RouteGroup(prefix));
     groupCtx(router);
@@ -175,12 +168,10 @@ class _$PharoahRouter extends Router {
   }
 
   RouteGroup? findRouteGroup(String path) {
-    for (final key in _subGroups.keys) {
-      bool isMatch = path.contains(key);
-      if (!isMatch) isMatch = pathToRegExp(key).hasMatch(path);
-      if (isMatch) return _subGroups[key];
-    }
-    return null;
+    if (_subGroups.isEmpty) return null;
+    final key = _subGroups.keys.firstWhereOrNull(
+        (key) => path.contains(key) || pathToRegExp(key).hasMatch(path));
+    return key == null ? null : _subGroups[key];
   }
 
   bool hasNoRequestHandlers(List<RouteHandler> handlers) =>
