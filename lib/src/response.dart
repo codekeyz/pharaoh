@@ -69,8 +69,9 @@ class Response implements ResponseContract {
     return await flushAndClose(_res);
   }
 
-  Future<HttpResponse> flushAndClose(HttpResponse response) async {
+  Future<Response> flushAndClose(HttpResponse response) async {
     await _res.flush();
-    return await _res.close();
+    await _res.close();
+    return this;
   }
 }

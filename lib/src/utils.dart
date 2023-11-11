@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'router/router.dart';
+import 'request.dart';
 
 HTTPMethod getHttpMethod(HttpRequest req) {
   switch (req.method) {
