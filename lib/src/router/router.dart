@@ -4,21 +4,16 @@ import 'dart:async';
 import 'dart:io';
 import 'package:collection/collection.dart';
 import 'package:path_to_regexp/path_to_regexp.dart';
-import 'package:pharaoh/src/request.dart';
+import 'package:pharaoh/src/middleware/body_parser.dart';
 
-import 'route_group.dart';
+import 'handler.dart';
 import 'route.dart';
 import '../response.dart';
+import '../request.dart';
 
 const ANY_PATH = '*';
 
 const BASE_PATH = '/';
-
-typedef ReqRes = (HttpRequest req, Response res);
-
-typedef ProcessHandlerFunc = (ReqRes data, HandlerFunc handler);
-
-typedef HandlerFunc = FutureOr<dynamic> Function(HttpRequest req, Response res);
 
 abstract interface class RouterContract {
   List<Route> get routes;
@@ -49,13 +44,15 @@ abstract class Router implements RouterContract {
 
 class _$PharoahRouter extends Router {
   late final RouteGroup _group;
-
-  String get prefix => _group.prefix;
-
   final Map<String, RouteGroup> _subGroups = {};
 
-  _$PharoahRouter({RouteGroup? group})
-      : _group = group ?? RouteGroup(BASE_PATH);
+  _$PharoahRouter({RouteGroup? group}) {
+    if (group == null) {
+      _group = RouteGroup(BASE_PATH)..add(bodyParser);
+      return;
+    }
+    _group = group;
+  }
 
   @override
   List<Route> get routes => _group.handlers.map((e) => e.route).toList();
@@ -113,14 +110,14 @@ class _$PharoahRouter extends Router {
 
       if (hasNoRequestHandlers(handlers)) {
         return await response.status(HttpStatus.notFound).json({
-          "message": "No handler found for path :$path",
+          "message": "No Request handler found for path :$path",
           "path": path,
         });
       }
     }
 
     final handlerFncs = List.from(handlers);
-    ReqRes reqRes = (httpReq, response);
+    ReqRes reqRes = (request, response);
     while (handlerFncs.isNotEmpty) {
       final handler = handlerFncs.removeAt(0);
       final completed = handlerFncs.isEmpty;

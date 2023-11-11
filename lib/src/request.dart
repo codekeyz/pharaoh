@@ -12,14 +12,12 @@ abstract interface class $Request {
 
   String get ipAddr;
 
-  String get hostname;
+  String? get hostname;
 
   String get protocol;
 
   HTTPMethod get method;
 
-  /// if the client doesn't provide it, please don't
-  /// set any default. leave it as is
   String? get type;
 
   Map<String, dynamic> get headers;
@@ -34,32 +32,28 @@ class Request implements $Request {
   final Map<String, dynamic> _headers = {};
   final Map<String, dynamic> _params = {};
 
+  Object? _body;
+
   Request._(this._req) {
     _req.headers.forEach((name, values) {
       _headers[name] = values;
     });
+    _params.addAll(_req.uri.queryParameters);
   }
 
   factory Request.from(HttpRequest request) => Request._(request);
 
   @override
-  Object? get body {
-    final contentType = type;
-    if (contentType == null) return null;
-
-    // var requestBody = await utf8.decoder.bind(_req).join();
-    // print('Request Body: $requestBody');
-  }
+  Object? get body => _body;
 
   @override
-  String get path => _req.uri.toString();
+  String get path => _req.uri.path;
 
-  /// if no contentType
   @override
   String? get type => _headers[HttpHeaders.contentTypeHeader]?.toString();
 
   @override
-  String get ipAddr => throw UnimplementedError();
+  String get ipAddr => _req.connectionInfo?.remoteAddress.address ?? 'Unknown';
 
   @override
   HTTPMethod get method => getHttpMethod(_req);
@@ -71,11 +65,11 @@ class Request implements $Request {
   Map<String, dynamic> get params => _params;
 
   @override
-  String? get query => null;
+  String? get query => _req.uri.query;
 
   @override
-  String get hostname => throw UnimplementedError();
+  String? get hostname => _req.headers.host;
 
   @override
-  String get protocol => throw UnimplementedError();
+  String get protocol => _req.requestedUri.scheme;
 }
