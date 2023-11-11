@@ -16,6 +16,9 @@ abstract interface class ResponseContract {
 
 class Response implements ResponseContract {
   final HttpRequest _req;
+  bool _completed = false;
+
+  bool get completed => _completed;
 
   HttpResponse get _res {
     /// TODO: be able to tell if response stream is closed
@@ -70,8 +73,10 @@ class Response implements ResponseContract {
   }
 
   Future<Response> flushAndClose(HttpResponse response) async {
+    if (_completed) throw Exception('Response already completed.');
     await _res.flush();
     await _res.close();
+    _completed = true;
     return this;
   }
 }
