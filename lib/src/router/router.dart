@@ -5,11 +5,12 @@ import 'dart:io';
 import 'package:collection/collection.dart';
 import 'package:path_to_regexp/path_to_regexp.dart';
 import 'package:pharaoh/src/middleware/body_parser.dart';
+import 'package:pharaoh/src/middleware/multi_part_parser.dart';
 
 import 'handler.dart';
 import 'route.dart';
 import '../response.dart';
-import '../request.dart';
+import '../http/request.dart';
 
 const ANY_PATH = '*';
 
@@ -18,22 +19,19 @@ const BASE_PATH = '/';
 abstract interface class RouterContract {
   List<Route> get routes;
 
-  void get(String path, HandlerFunc handler);
+  void get(String path, RequestHandlerFunc handler);
 
-  void post(String path, HandlerFunc handler);
+  void post(String path, RequestHandlerFunc handler);
 
-  void put(String path, HandlerFunc handler);
+  void put(String path, RequestHandlerFunc handler);
 
-  void delete(String path, HandlerFunc handler);
+  void delete(String path, RequestHandlerFunc handler);
 
-  void any(String path, HandlerFunc handler);
+  void any(String path, RequestHandlerFunc handler);
 
   void use(HandlerFunc handler);
 
-  void group(
-    String prefix,
-    void Function(RouterContract router) groupCtx,
-  );
+  void group(String prefix, void Function(RouterContract router) groupCtx);
 }
 
 abstract class Router implements RouterContract {
@@ -48,7 +46,9 @@ class _$PharoahRouter extends Router {
 
   _$PharoahRouter({RouteGroup? group}) {
     if (group == null) {
-      _group = RouteGroup(BASE_PATH)..add(bodyParser);
+      _group = RouteGroup(BASE_PATH)
+        ..add(bodyParser)
+        ..add(multiPartParser);
       return;
     }
     _group = group;
@@ -58,39 +58,28 @@ class _$PharoahRouter extends Router {
   List<Route> get routes => _group.handlers.map((e) => e.route).toList();
 
   @override
-  void get(String path, HandlerFunc handler) {
+  void get(String path, RequestHandlerFunc handler) {
     _group.add(RequestHandler(
-      handler,
-      Route(path, [HTTPMethod.GET, HTTPMethod.HEAD]),
-    ));
+        handler, Route(path, [HTTPMethod.GET, HTTPMethod.HEAD])));
   }
 
   @override
-  void post(String path, HandlerFunc handler) {
-    _group.add(RequestHandler(
-      handler,
-      Route(path, [HTTPMethod.POST]),
-    ));
+  void post(String path, RequestHandlerFunc handler) {
+    _group.add(RequestHandler(handler, Route(path, [HTTPMethod.POST])));
   }
 
   @override
-  void put(String path, HandlerFunc handler) {
-    _group.add(RequestHandler(
-      handler,
-      Route(path, [HTTPMethod.PUT]),
-    ));
+  void put(String path, RequestHandlerFunc handler) {
+    _group.add(RequestHandler(handler, Route(path, [HTTPMethod.PUT])));
   }
 
   @override
-  void delete(String path, HandlerFunc handler) {
-    _group.add(RequestHandler(
-      handler,
-      Route(path, [HTTPMethod.DELETE]),
-    ));
+  void delete(String path, RequestHandlerFunc handler) {
+    _group.add(RequestHandler(handler, Route(path, [HTTPMethod.DELETE])));
   }
 
   @override
-  void any(String path, HandlerFunc handler) {
+  void any(String path, RequestHandlerFunc handler) {
     _group.add(RequestHandler(handler, Route.any()));
   }
 
@@ -150,7 +139,7 @@ class _$PharoahRouter extends Router {
 
   @override
   void use(HandlerFunc handler) {
-    _group.add(Middleware(handler, Route.all()));
+    _group.add(Middleware(handler, Route.any()));
   }
 
   @override

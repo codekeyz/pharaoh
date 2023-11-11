@@ -9,7 +9,9 @@ environment:
 # Add regular dependencies here.
 dependencies:
   meta: ^1.11.0
+  mime: ^1.0.4
   collection: ^1.18.0
+  http_parser: ^4.0.2
   path_to_regexp: ^0.4.0
   mason_logger: ^0.2.10
 
