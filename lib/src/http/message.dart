@@ -24,6 +24,10 @@ abstract class Message<T> {
     _contentTypeCache = null;
   }
 
+  /// This is parsed from the Content-Type header in [headers]. It contains only
+  /// the MIME type, without any Content-Type parameters.
+  ///
+  /// If [headers] doesn't have a Content-Type header, this will be `null`.
   MediaType? get contentType {
     if (_contentTypeCache != null) return _contentTypeCache;
     var type = headers[HttpHeaders.contentTypeHeader];
@@ -31,6 +35,8 @@ abstract class Message<T> {
     if (type is Iterable) type = type.join(';');
     return _contentTypeCache = MediaType.parse(type);
   }
+
+  String? get mimeType => contentType?.mimeType;
 
   /// The encoding of the message body.
   ///
