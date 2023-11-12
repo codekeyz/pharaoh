@@ -11,7 +11,7 @@ void main() async {
 
   app.get(
     '/:user/json',
-    (req, res) => res.json({"name": "Chima", "age": 31}),
+    (req, res) => {"name": "Chima", "age": 3333331},
   );
 
   app.get(

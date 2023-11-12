@@ -79,6 +79,8 @@ class Route {
   Verbs:       ${verbString(verbs)}""";
 }
 
+const reservedPaths = [BASE_PATH, ANY_PATH];
+
 class RouteGroup {
   final String prefix;
   final List<RouteHandler> handlers = [];
@@ -89,11 +91,14 @@ class RouteGroup {
   /// check to make sure we don't have multiple [RequestHandler]
   /// registered on the same route. See: [Route.isSameAs].
   void add(RouteHandler newHandler) {
-    if (newHandler.route.route.isEmpty) {
-      throw PharoahException('Routes should being with $BASE_PATH');
+    final newRoute = newHandler.route.route.trim();
+    if (newRoute.isEmpty) {
+      throw PharoahException('Route cannot be an empty string');
+    } else if (!reservedPaths.contains(newRoute[0])) {
+      throw PharoahException.value('Route should be with $BASE_PATH', newRoute);
     }
 
-    if (![BASE_PATH, ANY_PATH].contains(prefix)) {
+    if (!reservedPaths.contains(prefix)) {
       newHandler = newHandler.prefix(prefix);
     }
 
@@ -101,15 +106,25 @@ class RouteGroup {
         (e) => e.route.isSameAs(newHandler.route) && e is RequestHandler);
     if (existingHandler != null && newHandler is RequestHandler) {
       final route = existingHandler.route;
-      final errorMsg =
-          '${verbString(route.verbs)} Request handler already registered for ${route.route}';
-      throw PharoahException(errorMsg);
+      throw PharoahException.value(
+        'Request handler already registered for route',
+        '${verbString(route.verbs)} on ${route.route}',
+      );
     }
 
     handlers.add(newHandler);
   }
 
-  List<RouteHandler> findHandlers(Request request) => handlers.isEmpty
-      ? []
-      : handlers.where((e) => e.route.canHandle(request)).toList();
+  List<RouteHandler> findHandlers(Request request) => findHandlersForRequest(
+        request,
+        handlers,
+      );
 }
+
+List<RouteHandler> findHandlersForRequest(
+  Request request,
+  List<RouteHandler> handlers,
+) =>
+    handlers.isEmpty
+        ? []
+        : handlers.where((e) => e.route.canHandle(request)).toList();
