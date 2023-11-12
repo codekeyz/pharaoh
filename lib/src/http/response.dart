@@ -76,16 +76,19 @@ class Response extends Message<Body> implements ResponseContract {
   @override
   Response notFound([Object? object]) {
     status(404);
-    object ??= PharoahErrorBody('Not found', _reqInfo.path, _statusCode).data;
+    object ??= PharoahErrorBody('Not found', _reqInfo.path, _statusCode,
+            method: _reqInfo.method)
+        .data;
     return json(object);
   }
 
   @override
   Response internalServerError([Object? object]) {
     status(500);
-    object ??=
-        PharoahErrorBody('Internal Server Error', _reqInfo.path, _statusCode)
-            .data;
+    object ??= PharoahErrorBody(
+            'Internal Server Error', _reqInfo.path, _statusCode,
+            method: _reqInfo.method)
+        .data;
     return json(object);
   }
 }

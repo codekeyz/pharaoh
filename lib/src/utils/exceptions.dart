@@ -1,3 +1,5 @@
+import '../http/request.dart';
+
 class PharoahException extends Error {
   /// Whether value was provided.
   final bool _hasValue;
@@ -36,13 +38,20 @@ class PharoahException extends Error {
 
 class PharoahErrorBody {
   final String path;
+  final HTTPMethod method;
   final String message;
   final int statusCode;
 
-  const PharoahErrorBody(this.message, this.path, this.statusCode);
+  const PharoahErrorBody(
+    this.message,
+    this.path,
+    this.statusCode, {
+    required this.method,
+  });
 
   Map<String, dynamic> get data => {
         "path": path,
+        "method": method.name,
         "message": message,
         "status_code": statusCode,
       };
