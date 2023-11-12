@@ -2,7 +2,7 @@ import '../http/request.dart';
 import '../http/response.dart';
 import '../router/handler.dart';
 
-Future<ReqRes> _processBody(Request req, Response _) async {
+void _processBody(Request req, Response res, Function next) async {
   final logLines = """
 -------------------------------------------------------
 Path:             ${req.path}
@@ -10,7 +10,7 @@ Method:           ${req.method.name}
 Content-Type      ${req.mimeType}
 -------------------------------------------------------\n""";
   print(logLines);
-  return (req, _);
+  next();
 }
 
-HandlerFunc logRequests = _processBody;
+MiddlewareFunc logRequests = _processBody;

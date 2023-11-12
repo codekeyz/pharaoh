@@ -44,6 +44,11 @@ abstract interface class $Request extends Message<dynamic> {
 
   Map<String, dynamic> get params;
 
+  /// TODO(codekeyz) implement this so that we can retrieve objects
+  /// from the current request context.
+  /// This can be useful to middlewares that will want to make available
+  /// loggers, etc to other handlers in the route handler execution list
+  ///
   /// Use this to get objects from the current request context
   /// Middlewares can make available extra stuffs eg: Files during
   /// a file upload.

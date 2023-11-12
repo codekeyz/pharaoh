@@ -30,7 +30,7 @@ abstract interface class RouterContract {
 
   void any(String path, RequestHandlerFunc handler);
 
-  void use(HandlerFunc handler, [Route? route]);
+  void use(MiddlewareFunc reqResNext, [Route? route]);
 
   void group(String prefix, void Function(RouterContract router) groupCtx);
 }
@@ -44,7 +44,7 @@ abstract class Router implements RouterContract {
 class _$PharoahRouter extends Router {
   late final RouteGroup _group;
   final Map<String, RouteGroup> _subGroups = {};
-  final List<Middleware> _lastMiddlewares = [];
+  final List<InternalMiddleware> _lastMiddlewares = [];
 
   _$PharoahRouter({RouteGroup? group}) {
     if (group == null) {
@@ -85,11 +85,6 @@ class _$PharoahRouter extends Router {
   }
 
   @override
-  void use(HandlerFunc handler, [Route? route]) {
-    _group.add(Middleware(handler, route ?? Route.any()));
-  }
-
-  @override
   void group(String prefix, Function(RouterContract router) groupCtx) {
     if (reservedPaths.contains(prefix)) {
       throw PharoahException.value('Prefix not allowed for groups', prefix);
@@ -125,19 +120,19 @@ class _$PharoahRouter extends Router {
     final lastHandlers = findHandlersForRequest(request, _lastMiddlewares);
     handlers.addAll(lastHandlers);
 
-    final handlerFncs = List.from(handlers);
-    ReqRes reqRes = (request, response);
+    final handlerFncs = List<RouteHandler>.from(handlers);
+    ReqRes reqRes = (req: request, res: response);
     while (handlerFncs.isNotEmpty) {
       final handler = handlerFncs.removeAt(0);
       final completed = handlerFncs.isEmpty;
 
       try {
         final result = await processHandler(handler, reqRes);
-        if (completed) return forward(httpReq.response, reqRes.$2);
+        if (completed) return forward(httpReq.response, reqRes.res);
         reqRes = result;
         continue;
       } catch (e) {
-        return forward(httpReq.response, reqRes.$2.internalServerError());
+        return forward(httpReq.response, reqRes.res.internalServerError());
       }
     }
   }
@@ -146,13 +141,28 @@ class _$PharoahRouter extends Router {
   /// different types of results. We must use that result to compose
   /// a new [ReqRes].
   Future<ReqRes> processHandler(RouteHandler rqh, ReqRes rq) async {
-    final result = await rqh.handler(rq.$1, rq.$2);
-    if (result is ReqRes) return result;
-    if (result is Response) return (rq.$1, result);
-    if (result is Request) return (result, rq.$2);
-    if (result == null) return rq;
-    return (rq.$1, Response.from(rq.$1).json(result));
+    final result = await rqh.handle(rq);
+    final data = result.data;
+    if (data is ReqRes) return data;
+    if (data is Response) return (req: rq.req, res: data);
+    if (data is Request) return (req: data, res: rq.res);
+    if (data == null) return rq;
+    return (req: rq.req, res: Response.from(rq.req).json(data));
   }
+
+  // Future<ReqRes> processHandlers(ReqRes reqRes, List<RouteHandler> hds) async {
+  //   if (hds.isEmpty) return reqRes;
+  //   final handlers = List<RouteHandler>.from(hds);
+  //   final handler = hds.removeAt(0);
+  //   final completed = handlers.isEmpty;
+  //   try {
+  //     final result = await processHandler(handler, reqRes);
+  //     if (completed) return result;
+  //     return processHandlers(result, handlers);
+  //   } catch (e) {
+  //     return reqRes;
+  //   }
+  // }
 
   RouteGroup? findRouteGroup(String path) {
     if (_subGroups.isEmpty) return null;
@@ -191,5 +201,10 @@ class _$PharoahRouter extends Router {
     // }
 
     return httpRes.addStream(body.read()).then((value) => httpRes.close());
+  }
+
+  @override
+  void use(MiddlewareFunc reqResNext, [Route? route]) {
+    _group.add(Middleware(reqResNext, route ?? Route.any()));
   }
 }

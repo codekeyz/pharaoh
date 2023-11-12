@@ -16,9 +16,9 @@ class MimeType {
   static const String textPlain = 'text/plain';
 }
 
-Future<ReqRes> _processBody(Request req, Response res) async {
+_processBody(Request req, Response res, Function next) async {
   final mimeType = req.contentType?.mimeType;
-  if (mimeType == null) return (req, res);
+  if (mimeType == null) return next();
 
   if (mimeType == MimeType.multiPartForm) {
     final boundary = req.contentType!.parameters['boundary']!;
@@ -34,11 +34,11 @@ Future<ReqRes> _processBody(Request req, Response res) async {
     }
 
     req.body = dataBag;
-    return (req, res);
+    return next();
   }
 
   final body = await utf8.decoder.bind(req.req).join();
-  if (body.isEmpty) return (req, res);
+  if (body.isEmpty) return next();
 
   switch (mimeType) {
     case MimeType.applicationFormUrlEncoded:
@@ -52,7 +52,7 @@ Future<ReqRes> _processBody(Request req, Response res) async {
       break;
   }
 
-  return (req, res);
+  return next();
 }
 
-final bodyParser = Middleware(_processBody, Route.any());
+final bodyParser = InternalMiddleware(_processBody, Route.any());
