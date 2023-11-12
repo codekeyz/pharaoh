@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import '../utils/exceptions.dart';
 import 'body.dart';
 import 'message.dart';
 
@@ -69,8 +70,12 @@ class Response extends Message<Body> implements ResponseContract {
 
   Future<Response> forward() async {
     final response = body;
-    if (response == null) throw Exception('Body value must always be present');
-    if (_completed) throw Exception('Response already sent');
+    if (response == null) {
+      throw PharoahException('Body value must always be present');
+    }
+    if (_completed) {
+      throw PharoahException('Response already sent');
+    }
 
     httpResponse.statusCode = _statusCode;
 

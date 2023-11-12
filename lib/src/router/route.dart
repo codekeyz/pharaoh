@@ -1,8 +1,12 @@
+import 'package:collection/collection.dart';
 import 'package:path_to_regexp/path_to_regexp.dart';
 
 import '../http/request.dart';
+import '../utils/exceptions.dart';
 import 'handler.dart';
 import 'router.dart';
+
+String verbString(List<HTTPMethod> verbs) => verbs.map((e) => e.name).join(':');
 
 class Route {
   final String path;
@@ -46,6 +50,33 @@ class Route {
     /// Hence if [prefix != null] prefix should be true
     return pathToRegExp(route, prefix: prefix != null).hasMatch(request.path);
   }
+
+  /// This is implemented in such a way that if a [Route]
+  /// is already registered to handle [HTTPMethod.ALL] and you attempt
+  /// to add any other method on the same route, it should return true.
+  /// because they're the same.
+  bool isSameAs(Route other) {
+    if (route != other.route) return false;
+    if (verbs.contains(HTTPMethod.ALL)) return true;
+    final otherVerbs = other.verbs.toSet();
+    return verbs.toSet().difference(otherVerbs).isEmpty;
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is Route && other.route == route && other.verbs == verbs;
+  }
+
+  @override
+  int get hashCode {
+    return route.hashCode ^ verbs.hashCode;
+  }
+
+  @override
+  String toString() => """ 
+  Route:       $route
+  Verbs:       ${verbString(verbs)}""";
 }
 
 class RouteGroup {
@@ -54,17 +85,28 @@ class RouteGroup {
 
   RouteGroup(this.prefix);
 
-  void add(RouteHandler handler) {
-    if (handler.route.route.trim().isEmpty) {
-      throw Exception('Routes should being with $BASE_PATH');
+  /// Adding routes the the current group does a very simple
+  /// check to make sure we don't have multiple [RequestHandler]
+  /// registered on the same route. See: [Route.isSameAs].
+  void add(RouteHandler newHandler) {
+    if (newHandler.route.route.isEmpty) {
+      throw PharoahException('Routes should being with $BASE_PATH');
     }
 
     if (![BASE_PATH, ANY_PATH].contains(prefix)) {
-      handler = handler.prefix(prefix);
+      newHandler = newHandler.prefix(prefix);
     }
 
-    /// TODO(codekeyz) do checks here to make sure there's no duplicate entry in the routes
-    handlers.add(handler);
+    final existingHandler = handlers.firstWhereOrNull(
+        (e) => e.route.isSameAs(newHandler.route) && e is RequestHandler);
+    if (existingHandler != null && newHandler is RequestHandler) {
+      final route = existingHandler.route;
+      final errorMsg =
+          '${verbString(route.verbs)} Request handler already registered for ${route.route}';
+      throw PharoahException(errorMsg);
+    }
+
+    handlers.add(newHandler);
   }
 
   List<RouteHandler> findHandlers(Request request) => handlers.isEmpty

@@ -18,6 +18,12 @@ void main() async {
   );
 
   app.group('/api/v1', (router) {
+    router.use((req, res) {});
+
+    router.use((req, res) {});
+
+    router.use((req, res) {});
+
     router.get('/version', (req, res) => res.ok('1.0.0'));
 
     router.get('/ping', (req, res) => res.ok('2.0.0'));
