@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import '../utils.dart';
+import '../utils/utils.dart';
 import 'message.dart';
 
 // ignore: constant_identifier_names

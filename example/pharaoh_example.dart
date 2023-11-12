@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:pharaoh/pharaoh.dart';
 
 final pharaoh = Pharaoh();
@@ -20,13 +22,15 @@ void main() async {
   app.group('/api/v1', (router) {
     router.use((req, res) {});
 
-    router.use((req, res) {});
+    router.get(
+      '/version',
+      (req, res) => res.type(ContentType.text).ok('1.0.0'),
+    );
 
-    router.use((req, res) {});
-
-    router.get('/version', (req, res) => res.ok('1.0.0'));
-
-    router.get('/ping', (req, res) => res.ok('2.0.0'));
+    router.get(
+      '/ping',
+      (req, res) => res.type(ContentType.text).ok('2.0.0'),
+    );
 
     router.get(
       '/:user/boy',

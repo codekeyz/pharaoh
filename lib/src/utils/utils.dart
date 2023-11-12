@@ -1,9 +1,8 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 
-import 'http/request.dart';
-import 'utils/exceptions.dart';
+import '../http/request.dart';
+import 'exceptions.dart';
 
 HTTPMethod getHttpMethod(HttpRequest req) {
   switch (req.method) {
@@ -18,15 +17,6 @@ HTTPMethod getHttpMethod(HttpRequest req) {
     default:
       throw PharoahException('Method ${req.method} not yet supported');
   }
-}
-
-String encodeJson(dynamic data) {
-  if (data == null) {
-    return 'null';
-  } else if (data is Map) {
-    return jsonEncode(data);
-  }
-  return data;
 }
 
 /// Run [callback] and capture any errors that would otherwise be top-leveled.

@@ -4,13 +4,18 @@ import 'dart:io';
 import '../utils/exceptions.dart';
 import 'body.dart';
 import 'message.dart';
+import 'request.dart';
 
 abstract interface class ResponseContract {
   Future<dynamic> redirect(String url, [int statusCode = HttpStatus.found]);
 
   Future<dynamic> json(Object data);
 
-  Future<dynamic> ok([Object? object]);
+  Future<dynamic> ok([Object? body]);
+
+  Future<dynamic> notFound([Object? body]);
+
+  Future<dynamic> internalServerError([Object? body]);
 
   Response type(ContentType type);
 
@@ -19,6 +24,10 @@ abstract interface class ResponseContract {
 
 class Response extends Message<Body> implements ResponseContract {
   late final HttpRequest _req;
+
+  /// This is just an interface that holds the current request information
+  late final $Request _reqInfo;
+
   HttpResponse get httpResponse => _req.response;
 
   bool _completed = false;
@@ -26,19 +35,10 @@ class Response extends Message<Body> implements ResponseContract {
 
   bool get completed => _completed;
 
-  Response._(this._req) : super(_req, Body(null));
+  Response._(this._req, this._reqInfo) : super(_req, Body(null));
 
-  factory Response.from(HttpRequest req) => Response._(req);
-
-  @override
-  Future<dynamic> json(Object data) {
-    body = Body(jsonEncode(data), encoding);
-    updateHeaders(
-      (headers) =>
-          headers[HttpHeaders.contentTypeHeader] = ContentType.json.value,
-    );
-    return forward();
-  }
+  factory Response.from(HttpRequest req, $Request request) =>
+      Response._(req, request);
 
   @override
   Future<dynamic> redirect(
@@ -63,9 +63,36 @@ class Response extends Message<Body> implements ResponseContract {
   }
 
   @override
+  Future<dynamic> json(Object data) {
+    body = Body(jsonEncode(data), encoding);
+    updateHeaders(
+      (headers) =>
+          headers[HttpHeaders.contentTypeHeader] = ContentType.json.value,
+    );
+    return forward();
+  }
+
+  @override
   Future<dynamic> ok([Object? object]) async {
+    status(200);
     body = Body(object, encoding);
     return forward();
+  }
+
+  @override
+  Future notFound([Object? object]) {
+    status(404);
+    object ??= PharoahErrorBody('Not found', _reqInfo.path, _statusCode).data;
+    return json(object);
+  }
+
+  @override
+  Future internalServerError([Object? object]) {
+    status(500);
+    object ??=
+        PharoahErrorBody('Internal Server Error', _reqInfo.path, _statusCode)
+            .data;
+    return json(object);
   }
 
   Future<Response> forward() async {
@@ -76,6 +103,12 @@ class Response extends Message<Body> implements ResponseContract {
     if (_completed) {
       throw PharoahException('Response already sent');
     }
+
+    updateHeaders((headers) {
+      headers['X-Powered-By'] = 'Pharoah';
+      headers[HttpHeaders.contentLengthHeader] = response.contentLength;
+      headers[HttpHeaders.dateHeader] = DateTime.now().toUtc();
+    });
 
     httpResponse.statusCode = _statusCode;
 
@@ -88,12 +121,6 @@ class Response extends Message<Body> implements ResponseContract {
     for (final header in headers.entries) {
       httpResponse.headers.add(header.key, header.value);
     }
-
-    updateHeaders((headers) {
-      headers['X-Powered-By'] = 'Pharoah';
-      headers[HttpHeaders.contentLengthHeader] = response.contentLength;
-      headers[HttpHeaders.dateHeader] = DateTime.now().toUtc();
-    });
 
     // var coding = response.headers['transfer-encoding']?.join();
     // if (coding != null && !equalsIgnoreAsciiCase(coding, 'identity')) {
