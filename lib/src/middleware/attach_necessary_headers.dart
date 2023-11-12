@@ -3,8 +3,9 @@ import 'dart:io';
 import '../router/route.dart';
 import '../router/handler.dart';
 
-Middleware attachNecessaryHeaders({includeXpoweredBy = true}) => Middleware(
-      (req, res) {
+InternalMiddleware attachNecessaryHeaders({includeXpoweredBy = true}) =>
+    InternalMiddleware(
+      (req, res, next) {
         res.updateHeaders(
           (headers) {
             if (includeXpoweredBy) headers['X-Powered-By'] = 'Pharoah';
@@ -12,7 +13,8 @@ Middleware attachNecessaryHeaders({includeXpoweredBy = true}) => Middleware(
             headers[HttpHeaders.contentLengthHeader] = res.contentLength;
           },
         );
-        return (req, res);
+
+        next();
       },
       Route.any(),
     );
