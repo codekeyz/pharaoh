@@ -1,10 +1,31 @@
 import 'dart:io';
 
-import '../utils/utils.dart';
+import '../utils/exceptions.dart';
 import 'message.dart';
 
 // ignore: constant_identifier_names
-enum HTTPMethod { GET, HEAD, POST, PUT, DELETE, ALL }
+enum HTTPMethod { GET, HEAD, POST, PUT, DELETE, ALL, PATCH, OPTIONS, TRACE }
+
+HTTPMethod getHttpMethod(HttpRequest req) {
+  switch (req.method) {
+    case 'GET' || 'HEAD':
+      return HTTPMethod.GET;
+    case 'POST':
+      return HTTPMethod.POST;
+    case 'PUT':
+      return HTTPMethod.PUT;
+    case 'DELETE':
+      return HTTPMethod.DELETE;
+    case 'PATCH':
+      return HTTPMethod.PATCH;
+    case 'OPTIONS':
+      return HTTPMethod.OPTIONS;
+    case 'TRACE':
+      return HTTPMethod.TRACE;
+    default:
+      throw PharoahException('Method ${req.method} not yet supported');
+  }
+}
 
 abstract interface class $Request extends Message<dynamic> {
   $Request._(super.req);

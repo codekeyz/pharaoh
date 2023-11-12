@@ -117,10 +117,9 @@ class _$PharoahRouter extends Router {
       if (subHdls.isNotEmpty) handlers.addAll(subHdls);
     }
 
-    // It means you don't have any request handlers
-    // for this type of route.
+    // It means you don't have any request handlers for this route.
     if (hasNoRequestHandlers(handlers)) {
-      return await forward(httpReq.response, response.notFound());
+      return forward(httpReq.response, response.notFound());
     }
 
     final lastHandlers = findHandlersForRequest(request, _lastMiddlewares);
@@ -134,11 +133,11 @@ class _$PharoahRouter extends Router {
 
       try {
         final result = await processHandler(handler, reqRes);
-        if (completed) return await forward(httpReq.response, reqRes.$2);
+        if (completed) return forward(httpReq.response, reqRes.$2);
         reqRes = result;
         continue;
       } catch (e) {
-        return await forward(httpReq.response, reqRes.$2.internalServerError());
+        return forward(httpReq.response, reqRes.$2.internalServerError());
       }
     }
   }
