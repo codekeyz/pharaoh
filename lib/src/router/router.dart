@@ -152,8 +152,7 @@ class _$PharoahRouter extends Router {
     if (result is ReqRes) return result;
     if (result is Response) return (rq.$1, result);
     if (result == null) return rq;
-    rq.$2.body = Body(encodeObject(result));
-    return rq;
+    return (rq.$1, Response.from(rq.$1).json(result));
   }
 
   RouteGroup? findRouteGroup(String path) {
