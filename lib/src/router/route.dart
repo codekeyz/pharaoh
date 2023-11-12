@@ -9,7 +9,11 @@ class Route {
   final List<HTTPMethod> verbs;
   final String? prefix;
 
-  String get route => prefix == null ? path : '$prefix$path';
+  String get route {
+    if (prefix == null) return path;
+    if (path == ANY_PATH) return '$prefix';
+    return '$prefix$path';
+  }
 
   const Route(
     this.path,
@@ -34,7 +38,13 @@ class Route {
         verbs.contains(HTTPMethod.ALL) || verbs.contains(request.method);
     if (!canMethod) return false;
     if (route == ANY_PATH) return true;
-    return pathToRegExp(route).hasMatch(request.path);
+
+    /// This matches routes correctly until you register
+    /// a handler on a prefix eg: `/api/v1`.
+    /// In order for it to still be a match to /api/v1/whatever-comes-after
+    /// you need to set prefix: true.
+    /// Hence if [prefix != null] prefix should be true
+    return pathToRegExp(route, prefix: prefix != null).hasMatch(request.path);
   }
 }
 

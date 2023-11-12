@@ -1,9 +1,11 @@
-import 'package:pharaoh/src/server.dart';
+import 'package:pharaoh/pharaoh.dart';
 
 final pharaoh = Pharaoh();
 
 void main() async {
   final app = pharaoh.router;
+
+  app.use(logRequests);
 
   app.get(
     '/:user/json',
