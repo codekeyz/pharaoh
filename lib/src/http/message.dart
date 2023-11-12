@@ -3,6 +3,8 @@ import 'dart:io';
 
 import 'package:http_parser/http_parser.dart';
 
+import 'body.dart';
+
 abstract class Message<T> {
   final Map<String, dynamic> _headers = {};
 
@@ -52,8 +54,8 @@ abstract class Message<T> {
     return Encoding.getByName(ctype.parameters['charset']);
   }
 
-  int get contentLength {
-    if (body == null) return 0;
-    return 20;
+  int? get contentLength {
+    final content = body;
+    return content is Body ? content.contentLength : null;
   }
 }

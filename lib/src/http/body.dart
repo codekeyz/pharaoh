@@ -5,6 +5,8 @@
 import 'dart:async';
 import 'dart:convert';
 
+import '../utils/exceptions.dart';
+
 /// The body of a request or response.
 ///
 /// This tracks whether the body has been read. It's separate from [Message]
@@ -91,8 +93,8 @@ class Body {
   /// Can only be called once.
   Stream<List<int>> read() {
     if (_stream == null) {
-      throw StateError("The 'read' method can only be called once on a "
-          'shelf.Request/shelf.Response object.');
+      throw PharoahException("The 'read' method can only be called once on a "
+          'Request/Response object.');
     }
     var stream = _stream!;
     _stream = null;

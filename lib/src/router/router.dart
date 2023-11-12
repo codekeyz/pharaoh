@@ -5,10 +5,13 @@ import 'dart:io';
 import 'package:collection/collection.dart';
 import 'package:path_to_regexp/path_to_regexp.dart';
 
+import '../http/body.dart';
+import '../middleware/attach_necessary_headers.dart';
 import '../middleware/body_parser.dart';
 import '../http/response.dart';
 import '../http/request.dart';
 import '../utils/exceptions.dart';
+import '../utils/utils.dart';
 import 'handler.dart';
 import 'route.dart';
 
@@ -43,10 +46,12 @@ abstract class Router implements RouterContract {
 class _$PharoahRouter extends Router {
   late final RouteGroup _group;
   final Map<String, RouteGroup> _subGroups = {};
+  final List<Middleware> _lastMiddlewares = [];
 
   _$PharoahRouter({RouteGroup? group}) {
     if (group == null) {
       _group = RouteGroup(BASE_PATH)..add(bodyParser);
+      _lastMiddlewares.add(attachNecessaryHeaders());
       return;
     }
     _group = group;
@@ -88,9 +93,8 @@ class _$PharoahRouter extends Router {
 
   @override
   void group(String prefix, Function(RouterContract router) groupCtx) {
-    /// do more validation on prefix
-    if (prefix == BASE_PATH || prefix == ANY_PATH) {
-      throw PharoahException('Prefix :[$prefix] not allowed for groups');
+    if (reservedPaths.contains(prefix)) {
+      throw PharoahException.value('Prefix not allowed for groups', prefix);
     }
     final router = _$PharoahRouter(group: RouteGroup(prefix));
     groupCtx(router);
@@ -109,7 +113,14 @@ class _$PharoahRouter extends Router {
       if (subHdls.isNotEmpty) handlers.addAll(subHdls);
     }
 
-    if (hasNoRequestHandlers(handlers)) return response.notFound();
+    if (hasNoRequestHandlers(handlers)) {
+      // It means you don't have any request handlers
+      // for this type of route.
+      return forward(httpReq.response, response.notFound());
+    }
+
+    final lastHandlers = findHandlersForRequest(request, _lastMiddlewares);
+    handlers.addAll(lastHandlers);
 
     final handlerFncs = List.from(handlers);
     ReqRes reqRes = (request, response);
@@ -119,22 +130,23 @@ class _$PharoahRouter extends Router {
 
       try {
         final result = await processHandler(handler, reqRes);
-        if (result is Response) break;
-        if (result is ReqRes) {
-          if (completed) return reqRes.$2.ok();
-          reqRes = result;
-          continue;
-        }
-        reqRes.$2.json(result);
+        if (completed) return await forward(httpReq.response, reqRes.$2);
+        reqRes = result;
+        continue;
       } catch (e) {
-        return reqRes.$2.internalServerError();
+        return await forward(httpReq.response, reqRes.$2.internalServerError());
       }
     }
   }
 
-  Future<dynamic> processHandler(RouteHandler rqh, ReqRes rq) async {
+  /// TODO(codekeyz) Document this well enough so you don't
+  /// forget why things are this way
+  Future<ReqRes> processHandler(RouteHandler rqh, ReqRes rq) async {
     final result = await rqh.handler(rq.$1, rq.$2);
-    if (result != null) return result;
+    if (result is ReqRes) return result;
+    if (result is Response) return (rq.$1, result);
+    if (result == null) return rq;
+    rq.$2.body = Body(encodeObject(result));
     return rq;
   }
 
@@ -147,4 +159,33 @@ class _$PharoahRouter extends Router {
 
   bool hasNoRequestHandlers(List<RouteHandler> handlers) =>
       !handlers.any((e) => e is RequestHandler);
+
+  Future<void> forward(HttpResponse httpRes, Response res) {
+    final body = res.body;
+    if (body == null) {
+      throw PharoahException('Body value must always be present');
+    }
+
+    httpRes.statusCode = res.statusCode;
+
+    for (final header in res.headers.entries) {
+      httpRes.headers.add(header.key, header.value);
+    }
+
+    // var coding = response.headers['transfer-encoding']?.join();
+    // if (coding != null && !equalsIgnoreAsciiCase(coding, 'identity')) {
+    //   respBody = Body(chunkedCoding.decoder.bind(body!.read()));
+    //   response.headers.set(HttpHeaders.transferEncodingHeader, 'chunked');
+    // } else if (response.statusCode >= 200 &&
+    //     response.statusCode != 204 &&
+    //     response.statusCode != 304 &&
+    //     respBody.contentLength == null &&
+    //     mimeType != 'multipart/byteranges') {
+    //   // If the response isn't chunked yet and there's no other way to tell its
+    //   // length, enable `dart:io`'s chunked encoding.
+    //   response.headers.set(HttpHeaders.transferEncodingHeader, 'chunked');
+    // }
+
+    return httpRes.addStream(body.read()).then((value) => httpRes.close());
+  }
 }
