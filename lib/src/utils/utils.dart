@@ -20,8 +20,8 @@ HTTPMethod getHttpMethod(HttpRequest req) {
   }
 }
 
-String? encodeObject(dynamic object) {
-  if (object == null) return null;
+String encodeObject(dynamic object) {
+  if (object == null) return 'null';
   if (object is Map) return jsonEncode(object);
   if (object is String) return object;
   return object.toString();
