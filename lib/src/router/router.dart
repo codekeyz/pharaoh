@@ -28,7 +28,7 @@ abstract interface class RouterContract {
 
   void any(String path, RequestHandlerFunc handler);
 
-  void use(HandlerFunc handler);
+  void use(HandlerFunc handler, [Route? route]);
 
   void group(String prefix, void Function(RouterContract router) groupCtx);
 }
@@ -78,6 +78,22 @@ class _$PharoahRouter extends Router {
   @override
   void any(String path, RequestHandlerFunc handler) {
     _group.add(RequestHandler(handler, Route.any()));
+  }
+
+  @override
+  void use(HandlerFunc handler, [Route? route]) {
+    _group.add(Middleware(handler, route ?? Route.any()));
+  }
+
+  @override
+  void group(String prefix, Function(RouterContract router) groupCtx) {
+    /// do more validation on prefix
+    if (prefix == BASE_PATH || prefix == ANY_PATH) {
+      throw Exception('Prefix :[$prefix] not allowed for groups');
+    }
+    final router = _$PharoahRouter(group: RouteGroup(prefix));
+    groupCtx(router);
+    _subGroups[prefix] = router._group;
   }
 
   @override
@@ -132,22 +148,6 @@ class _$PharoahRouter extends Router {
           .status(HttpStatus.internalServerError)
           .json({"message": "An error occurred"});
     }
-  }
-
-  @override
-  void use(HandlerFunc handler) {
-    _group.add(Middleware(handler, Route.any()));
-  }
-
-  @override
-  void group(String prefix, Function(RouterContract router) groupCtx) {
-    /// do more validation on prefix
-    if (prefix == BASE_PATH || prefix == ANY_PATH) {
-      throw Exception('Prefix :[$prefix] not allowed for groups');
-    }
-    final router = _$PharoahRouter(group: RouteGroup(prefix));
-    groupCtx(router);
-    _subGroups[prefix] = router._group;
   }
 
   RouteGroup? findRouteGroup(String path) {

@@ -72,18 +72,37 @@ class Response extends Message<Body> implements ResponseContract {
     if (response == null) throw Exception('Body value must always be present');
     if (_completed) throw Exception('Response already sent');
 
-    updateHeaders((headers) {
-      headers['X-Powered-By'] = 'Pharoah';
-      headers[HttpHeaders.contentLengthHeader] = response.contentLength;
-      headers[HttpHeaders.dateHeader] = DateTime.now().toUtc();
-      httpResponse.headers.chunkedTransferEncoding = false;
-    });
+    httpResponse.statusCode = _statusCode;
+
+    // An adapter must not add or modify the `Transfer-Encoding` parameter, but
+    // the Dart SDK sets it by default. Set this before we fill in
+    // [response.headers] so that the user or Shelf can explicitly override it if
+    // necessary.
+    httpResponse.headers.chunkedTransferEncoding = false;
 
     for (final header in headers.entries) {
       httpResponse.headers.add(header.key, header.value);
     }
 
-    httpResponse.statusCode = _statusCode;
+    updateHeaders((headers) {
+      headers['X-Powered-By'] = 'Pharoah';
+      headers[HttpHeaders.contentLengthHeader] = response.contentLength;
+      headers[HttpHeaders.dateHeader] = DateTime.now().toUtc();
+    });
+
+    // var coding = response.headers['transfer-encoding']?.join();
+    // if (coding != null && !equalsIgnoreAsciiCase(coding, 'identity')) {
+    //   respBody = Body(chunkedCoding.decoder.bind(body!.read()));
+    //   response.headers.set(HttpHeaders.transferEncodingHeader, 'chunked');
+    // } else if (response.statusCode >= 200 &&
+    //     response.statusCode != 204 &&
+    //     response.statusCode != 304 &&
+    //     respBody.contentLength == null &&
+    //     mimeType != 'multipart/byteranges') {
+    //   // If the response isn't chunked yet and there's no other way to tell its
+    //   // length, enable `dart:io`'s chunked encoding.
+    //   response.headers.set(HttpHeaders.transferEncodingHeader, 'chunked');
+    // }
 
     await httpResponse
         .addStream(response.read())
