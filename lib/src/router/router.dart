@@ -100,55 +100,42 @@ class _$PharoahRouter extends Router {
   @override
   Future<void> handleRequest(HttpRequest httpReq) async {
     final request = Request.from(httpReq);
-    final response = Response.from(httpReq);
-    final path = request.path;
+    final response = Response.from(httpReq, request);
 
     final handlers = _group.findHandlers(request);
-    if (hasNoRequestHandlers(handlers)) {
-      final group = findRouteGroup(path);
-      if (group != null) {
-        final subHdls = group.findHandlers(request);
-        if (subHdls.isNotEmpty) handlers.addAll(subHdls);
-      }
-
-      if (hasNoRequestHandlers(handlers)) {
-        return await response.status(HttpStatus.notFound).json({
-          "message": "No Request handler found for path :$path",
-          "path": path,
-        });
-      }
+    final group = findRouteGroup(request.path);
+    if (group != null) {
+      final subHdls = group.findHandlers(request);
+      if (subHdls.isNotEmpty) handlers.addAll(subHdls);
     }
+
+    if (hasNoRequestHandlers(handlers)) return response.notFound();
 
     final handlerFncs = List.from(handlers);
     ReqRes reqRes = (request, response);
     while (handlerFncs.isNotEmpty) {
       final handler = handlerFncs.removeAt(0);
       final completed = handlerFncs.isEmpty;
-      final result = await processHandler(handler, reqRes);
-      if (result is Response) break;
-      if (result is ReqRes) {
-        if (completed) {
-          reqRes.$2.ok();
-          break;
+
+      try {
+        final result = await processHandler(handler, reqRes);
+        if (result is Response) break;
+        if (result is ReqRes) {
+          if (completed) return reqRes.$2.ok();
+          reqRes = result;
+          continue;
         }
-        reqRes = result;
-        continue;
+        reqRes.$2.json(result);
+      } catch (e) {
+        return reqRes.$2.internalServerError();
       }
-      reqRes.$2.json(result);
-      break;
     }
   }
 
   Future<dynamic> processHandler(RouteHandler rqh, ReqRes rq) async {
-    try {
-      final result = await rqh.handler(rq.$1, rq.$2);
-      if (result != null) return result;
-      return rq;
-    } catch (e) {
-      return await rq.$2
-          .status(HttpStatus.internalServerError)
-          .json({"message": "An error occurred"});
-    }
+    final result = await rqh.handler(rq.$1, rq.$2);
+    if (result != null) return result;
+    return rq;
   }
 
   RouteGroup? findRouteGroup(String path) {
