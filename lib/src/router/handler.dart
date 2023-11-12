@@ -15,7 +15,7 @@ typedef ReqRes = ({Request req, Response res});
 /// See here: [Middleware]
 typedef HandlerFunc = FutureOr<dynamic> Function(Request req, Response res);
 
-typedef HandlerResult = ({bool canNext, dynamic data});
+typedef HandlerResult = ({bool canNext, ReqRes reqRes});
 
 /// All route handler types must extend this class.
 ///
@@ -34,8 +34,36 @@ abstract interface class RouteHandler {
   RouteHandler prefix(String prefix);
 
   Future<HandlerResult> handle(ReqRes reqRes) async {
-    final result = await handler(reqRes.req, reqRes.res);
-    return (canNext: canNext, data: result);
+    final hdlrResult = await handler(reqRes.req, reqRes.res);
+    if (hdlrResult is ReqRes) {
+      return (
+        canNext: canNext,
+        reqRes: hdlrResult,
+      );
+    } else if (hdlrResult is Request) {
+      return (
+        canNext: canNext,
+        reqRes: (req: hdlrResult, res: reqRes.res),
+      );
+    } else if (hdlrResult is Response) {
+      return (
+        canNext: canNext,
+        reqRes: (req: reqRes.req, res: hdlrResult),
+      );
+    } else if (hdlrResult == null) {
+      return (
+        canNext: canNext,
+        reqRes: reqRes,
+      );
+    }
+
+    return (
+      canNext: canNext,
+      reqRes: (
+        req: reqRes.req,
+        res: Response.from(reqRes.req).json(hdlrResult),
+      ),
+    );
   }
 }
 

@@ -9,8 +9,6 @@ void main() async {
 
   app.use(logRequests);
 
-  app.use((req, res, next) {});
-
   app.get(
     '/:user/json',
     (req, res) => {"name": "Chima", "age": 3333331},
@@ -22,8 +20,6 @@ void main() async {
   );
 
   app.group('/api/v1', (router) {
-    router.use((req, res, next) {});
-
     router.get(
       '/version',
       (req, res) => res.type(ContentType.text).ok('1.0.0'),
