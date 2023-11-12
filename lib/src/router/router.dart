@@ -103,8 +103,14 @@ class _$PharoahRouter extends Router {
 
   @override
   Future<void> handleRequest(HttpRequest httpReq) async {
+    // An adapter must not add or modify the `Transfer-Encoding` parameter, but
+    // the Dart SDK sets it by default. Set this before we fill in
+    // [response.headers] so that the user or Shelf can explicitly override it if
+    // necessary.
+    httpReq.response.headers.chunkedTransferEncoding = false;
+
     final request = Request.from(httpReq);
-    final response = Response.from(httpReq, request);
+    final response = Response.from(request);
 
     final handlers = _group.findHandlers(request);
     final group = findRouteGroup(request.path);

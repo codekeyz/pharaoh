@@ -14,8 +14,8 @@ abstract class Message<T> {
 
   MediaType? _contentTypeCache;
 
-  Message(HttpRequest req, [T? value]) {
-    req.headers.forEach((name, values) {
+  Message(HttpRequest? req, [T? value]) {
+    req?.headers.forEach((name, values) {
       _headers[name] = values;
     });
     body = value;
