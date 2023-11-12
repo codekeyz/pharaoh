@@ -127,42 +127,16 @@ class _$PharoahRouter extends Router {
       final completed = handlerFncs.isEmpty;
 
       try {
-        final result = await processHandler(handler, reqRes);
+        final data = await handler.handle(reqRes);
+        reqRes = data.reqRes;
+        if (!data.canNext) break;
         if (completed) return forward(httpReq.response, reqRes.res);
-        reqRes = result;
         continue;
       } catch (e) {
         return forward(httpReq.response, reqRes.res.internalServerError());
       }
     }
   }
-
-  /// When we process a [RouteHandler], the handler can return
-  /// different types of results. We must use that result to compose
-  /// a new [ReqRes].
-  Future<ReqRes> processHandler(RouteHandler rqh, ReqRes rq) async {
-    final result = await rqh.handle(rq);
-    final data = result.data;
-    if (data is ReqRes) return data;
-    if (data is Response) return (req: rq.req, res: data);
-    if (data is Request) return (req: data, res: rq.res);
-    if (data == null) return rq;
-    return (req: rq.req, res: Response.from(rq.req).json(data));
-  }
-
-  // Future<ReqRes> processHandlers(ReqRes reqRes, List<RouteHandler> hds) async {
-  //   if (hds.isEmpty) return reqRes;
-  //   final handlers = List<RouteHandler>.from(hds);
-  //   final handler = hds.removeAt(0);
-  //   final completed = handlers.isEmpty;
-  //   try {
-  //     final result = await processHandler(handler, reqRes);
-  //     if (completed) return result;
-  //     return processHandlers(result, handlers);
-  //   } catch (e) {
-  //     return reqRes;
-  //   }
-  // }
 
   RouteGroup? findRouteGroup(String path) {
     if (_subGroups.isEmpty) return null;
@@ -186,7 +160,9 @@ class _$PharoahRouter extends Router {
       httpRes.headers.add(header.key, header.value);
     }
 
-    // var coding = response.headers['transfer-encoding']?.join();
+    // TODO(codekeyz) research on handling chunked-encoding
+    //
+    //var coding = response.headers['transfer-encoding']?.join();
     // if (coding != null && !equalsIgnoreAsciiCase(coding, 'identity')) {
     //   respBody = Body(chunkedCoding.decoder.bind(body!.read()));
     //   response.headers.set(HttpHeaders.transferEncodingHeader, 'chunked');
