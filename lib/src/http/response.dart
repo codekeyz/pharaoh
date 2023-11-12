@@ -23,27 +23,16 @@ abstract interface class ResponseContract {
 }
 
 class Response extends Message<Body> implements ResponseContract {
-  late final HttpRequest _req;
-
   /// This is just an interface that holds the current request information
   late final $Request _reqInfo;
-
-  HttpResponse get httpResponse => _req.response;
 
   int _statusCode = 200;
 
   int get statusCode => _statusCode;
 
-  Response._(this._req, this._reqInfo) : super(_req, Body(null)) {
-    // An adapter must not add or modify the `Transfer-Encoding` parameter, but
-    // the Dart SDK sets it by default. Set this before we fill in
-    // [response.headers] so that the user or Shelf can explicitly override it if
-    // necessary.
-    httpResponse.headers.chunkedTransferEncoding = false;
-  }
+  Response._(this._reqInfo) : super(null, Body(null));
 
-  factory Response.from(HttpRequest req, $Request request) =>
-      Response._(req, request);
+  factory Response.from($Request request) => Response._(request);
 
   @override
   Response type(ContentType type) {
