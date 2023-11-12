@@ -5,13 +5,11 @@ import 'dart:io';
 import 'package:collection/collection.dart';
 import 'package:path_to_regexp/path_to_regexp.dart';
 
-import '../http/body.dart';
 import '../middleware/attach_necessary_headers.dart';
 import '../middleware/body_parser.dart';
 import '../http/response.dart';
 import '../http/request.dart';
 import '../utils/exceptions.dart';
-import '../utils/utils.dart';
 import 'handler.dart';
 import 'route.dart';
 
@@ -40,7 +38,7 @@ abstract interface class RouterContract {
 abstract class Router implements RouterContract {
   static Router get getInstance => _$PharoahRouter();
 
-  Future<void> handleRequest(HttpRequest request);
+  void handleRequest(HttpRequest request);
 }
 
 class _$PharoahRouter extends Router {
@@ -102,7 +100,7 @@ class _$PharoahRouter extends Router {
   }
 
   @override
-  Future<void> handleRequest(HttpRequest httpReq) async {
+  void handleRequest(HttpRequest httpReq) async {
     // An adapter must not add or modify the `Transfer-Encoding` parameter, but
     // the Dart SDK sets it by default. Set this before we fill in
     // [response.headers] so that the user or Shelf can explicitly override it if
@@ -119,10 +117,10 @@ class _$PharoahRouter extends Router {
       if (subHdls.isNotEmpty) handlers.addAll(subHdls);
     }
 
+    // It means you don't have any request handlers
+    // for this type of route.
     if (hasNoRequestHandlers(handlers)) {
-      // It means you don't have any request handlers
-      // for this type of route.
-      return forward(httpReq.response, response.notFound());
+      return await forward(httpReq.response, response.notFound());
     }
 
     final lastHandlers = findHandlersForRequest(request, _lastMiddlewares);
@@ -145,12 +143,14 @@ class _$PharoahRouter extends Router {
     }
   }
 
-  /// TODO(codekeyz) Document this well enough so you don't
-  /// forget why things are this way
+  /// When we process a [RouteHandler], the handler can return
+  /// different types of results. We must use that result to compose
+  /// a new [ReqRes].
   Future<ReqRes> processHandler(RouteHandler rqh, ReqRes rq) async {
     final result = await rqh.handler(rq.$1, rq.$2);
     if (result is ReqRes) return result;
     if (result is Response) return (rq.$1, result);
+    if (result is Request) return (result, rq.$2);
     if (result == null) return rq;
     return (rq.$1, Response.from(rq.$1).json(result));
   }
