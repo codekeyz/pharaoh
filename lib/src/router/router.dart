@@ -8,6 +8,7 @@ import 'package:path_to_regexp/path_to_regexp.dart';
 import '../middleware/body_parser.dart';
 import '../http/response.dart';
 import '../http/request.dart';
+import '../utils/exceptions.dart';
 import 'handler.dart';
 import 'route.dart';
 
@@ -89,7 +90,7 @@ class _$PharoahRouter extends Router {
   void group(String prefix, Function(RouterContract router) groupCtx) {
     /// do more validation on prefix
     if (prefix == BASE_PATH || prefix == ANY_PATH) {
-      throw Exception('Prefix :[$prefix] not allowed for groups');
+      throw PharoahException('Prefix :[$prefix] not allowed for groups');
     }
     final router = _$PharoahRouter(group: RouteGroup(prefix));
     groupCtx(router);

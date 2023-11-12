@@ -6,7 +6,7 @@ Future<ReqRes> _processBody(Request req, Response _) async {
   final logLines = """
 -------------------------------------------------------
 Path:             ${req.path}
-Params:           ${req.method.name}
+Method:           ${req.method.name}
 Content-Type      ${req.mimeType}
 -------------------------------------------------------\n""";
   print(logLines);

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'http/request.dart';
+import 'utils/exceptions.dart';
 
 HTTPMethod getHttpMethod(HttpRequest req) {
   switch (req.method) {
@@ -15,7 +16,7 @@ HTTPMethod getHttpMethod(HttpRequest req) {
     case 'DELETE':
       return HTTPMethod.DELETE;
     default:
-      throw Exception('Method ${req.method} not yet supported');
+      throw PharoahException('Method ${req.method} not yet supported');
   }
 }
 
