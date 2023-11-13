@@ -1,8 +1,16 @@
 import 'dart:io';
 
+import 'package:mime/mime.dart';
 import 'package:pharaoh/pharaoh.dart';
+import 'package:shelf_static/shelf_static.dart';
 
 final pharaoh = Pharaoh();
+
+final serveStatic = createStaticHandler(
+  'example/',
+  defaultDocument: 'index.html',
+  listDirectories: true,
+);
 
 void main() async {
   final app = pharaoh.router;
@@ -11,8 +19,26 @@ void main() async {
 
   app.get(
     '/:user/json',
-    (req, res) => {"name": "Chima", "age": 3333331},
+    (req, res) => res.json({'name': "Chima Precious", 'age': 28}),
   );
+
+  app.get('/website', (req, res) async {
+    final result = await serveStatic(toShelfRequest((req)));
+    if (result.statusCode >= 200 && result.statusCode < 300) {
+      result.copyTo(res);
+
+      final mimeType = lookupMimeType(req.path);
+      if (mimeType != null) {
+        res.type(ContentType.parse(mimeType));
+      } else {
+        res.type(ContentType.html);
+      }
+
+      return res;
+    }
+
+    return res.notFound();
+  });
 
   app.get(
     '/redirect',
