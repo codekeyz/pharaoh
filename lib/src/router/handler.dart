@@ -20,7 +20,7 @@ typedef HandlerResult = ({bool canNext, ReqRes reqRes});
 /// All route handler types must extend this class.
 ///
 /// See: [RequestHandler] and [Middleware] types
-abstract interface class RouteHandler {
+abstract class RouteHandler {
   Route get route;
   HandlerFunc get handler;
   bool get internal;

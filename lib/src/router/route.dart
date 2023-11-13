@@ -9,11 +9,11 @@ import 'router.dart';
 String verbString(List<HTTPMethod> verbs) => verbs.map((e) => e.name).join(':');
 
 class Route {
-  final String path;
+  final String? path;
   final List<HTTPMethod> verbs;
   final String? prefix;
 
-  String get route {
+  String? get route {
     if (prefix == null) return path;
     if (path == ANY_PATH) return '$prefix';
     return '$prefix$path';
@@ -38,11 +38,15 @@ class Route {
       );
 
   bool canHandle(Request request) {
+    final fullRoute = route;
+    if (fullRoute == null) return false;
+
+    if (route == null) return false;
     final canMethod =
         verbs.contains(HTTPMethod.ALL) || verbs.contains(request.method);
     if (!canMethod) return false;
     if (route == ANY_PATH) return true;
-    return pathToRegExp(route, prefix: true).hasMatch(request.path);
+    return pathToRegExp(fullRoute, prefix: true).hasMatch(request.path);
   }
 
   /// This is implemented in such a way that if a [Route]
@@ -76,16 +80,28 @@ class Route {
 const reservedPaths = [BASE_PATH, ANY_PATH];
 
 class RouteGroup {
-  final String prefix;
-  final List<RouteHandler> handlers = [];
+  final String? prefix;
+  final List<RouteHandler> handlers;
 
-  RouteGroup(this.prefix);
+  RouteGroup._({
+    this.prefix,
+    List<RouteHandler>? handlers,
+  }) : handlers = handlers ?? [];
+
+  RouteGroup.path(String path)
+      : prefix = path,
+        handlers = [];
+
+  RouteGroup withPrefix(String prefix) => RouteGroup._(
+        prefix: prefix,
+        handlers: handlers,
+      );
 
   /// Adding routes the the current group does a very simple
   /// check to make sure we don't have multiple [RequestHandler]
   /// registered on the same route. See: [Route.isSameAs].
   void add(RouteHandler newHandler) {
-    final newRoute = newHandler.route.route.trim();
+    final newRoute = newHandler.route.route?.trim() ?? '';
     if (newRoute.isEmpty) {
       throw PharoahException('Route cannot be an empty string');
     } else if (!reservedPaths.contains(newRoute[0])) {
@@ -93,7 +109,7 @@ class RouteGroup {
     }
 
     if (!reservedPaths.contains(prefix)) {
-      newHandler = newHandler.prefix(prefix);
+      newHandler = newHandler.prefix(prefix!);
     }
 
     final existingHandler = handlers.firstWhereOrNull(

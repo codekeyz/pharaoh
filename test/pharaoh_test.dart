@@ -1,4 +1,4 @@
-import 'package:pharaoh/src/server.dart';
+import 'package:pharaoh/pharaoh.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -10,7 +10,7 @@ void main() {
     });
 
     test('First Test', () {
-      expect(server.url, '');
+      expect(server.uri, '');
     });
   });
 }
