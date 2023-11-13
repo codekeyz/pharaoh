@@ -55,13 +55,21 @@ abstract interface class RouteHandler {
         canNext: canNext,
         reqRes: reqRes,
       );
+    } else if (hdlrResult is Map || hdlrResult is List) {
+      return (
+        canNext: canNext,
+        reqRes: (
+          req: reqRes.req,
+          res: Response.from(reqRes.req).json(hdlrResult)
+        )
+      );
     }
 
     return (
       canNext: canNext,
       reqRes: (
         req: reqRes.req,
-        res: Response.from(reqRes.req).json(hdlrResult),
+        res: Response.from(reqRes.req).ok(hdlrResult.toString()),
       ),
     );
   }

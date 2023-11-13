@@ -157,7 +157,8 @@ class _$PharoahRouter extends Router {
     httpRes.statusCode = res.statusCode;
 
     for (final header in res.headers.entries) {
-      httpRes.headers.add(header.key, header.value);
+      final value = header.value;
+      if (value != null) httpRes.headers.add(header.key, value);
     }
 
     // TODO(codekeyz) research on handling chunked-encoding

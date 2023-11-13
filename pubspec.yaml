@@ -14,6 +14,11 @@ dependencies:
   http_parser: ^4.0.2
   path_to_regexp: ^0.4.0
   mason_logger: ^0.2.10
+  # We only need this to implement inter-operability for shelf
+  shelf: ^1.4.1
+
+  # TODO(codekeyz) move this packages into example usages of pharoah. We don't need it to run Pharoah
+  shelf_cors_headers: ^0.1.5
 
 dev_dependencies:
   lints: ^2.0.0

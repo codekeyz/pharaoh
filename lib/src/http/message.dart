@@ -3,7 +3,7 @@ import 'dart:io';
 
 import 'package:http_parser/http_parser.dart';
 
-import 'body.dart';
+import '../shelf_interop/shelf.dart';
 
 abstract class Message<T> {
   final Map<String, dynamic> _headers = {};
@@ -14,12 +14,7 @@ abstract class Message<T> {
 
   MediaType? _contentTypeCache;
 
-  Message(HttpRequest? req, [T? value]) {
-    req?.headers.forEach((name, values) {
-      _headers[name] = values;
-    });
-    body = value;
-  }
+  Message(HttpRequest? req, [T? value]) : body = value;
 
   void updateHeaders(void Function(Map<String, dynamic> headers) update) {
     update(_headers);

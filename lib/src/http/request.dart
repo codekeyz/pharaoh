@@ -40,6 +40,8 @@ abstract interface class $Request extends Message<dynamic> {
 
   String get protocol;
 
+  String get protocolVersion;
+
   HTTPMethod get method;
 
   Map<String, dynamic> get params;
@@ -66,6 +68,11 @@ class Request extends $Request {
   final Map<String, dynamic> _context = {};
 
   Request._(this._req) : super._(_req) {
+    updateHeaders((headers) {
+      req.headers.forEach((name, values) {
+        headers[name] = values;
+      });
+    });
     _params.addAll(_req.uri.queryParameters);
   }
 
@@ -95,6 +102,9 @@ class Request extends $Request {
 
   @override
   String get protocol => _req.requestedUri.scheme;
+
+  @override
+  String get protocolVersion => _req.protocolVersion;
 
   @override
   Object? operator [](String name) => _context[name];

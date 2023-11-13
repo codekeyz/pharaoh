@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:pharaoh/pharaoh.dart';
+import 'package:shelf_cors_headers/shelf_cors_headers.dart';
 
 final pharaoh = Pharaoh();
 
@@ -9,9 +10,12 @@ void main() async {
 
   app.use(logRequests);
 
+  /// Using shelf_cors_header with Pharoah
+  app.use(useShelfMiddleware(corsHeaders()));
+
   app.get(
     '/:user/json',
-    (req, res) => {"name": "Chima", "age": 3333331},
+    (req, res) => res.json({'foo': "bar", 'mee': 'moo'}),
   );
 
   app.get(

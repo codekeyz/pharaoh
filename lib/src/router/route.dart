@@ -42,13 +42,7 @@ class Route {
         verbs.contains(HTTPMethod.ALL) || verbs.contains(request.method);
     if (!canMethod) return false;
     if (route == ANY_PATH) return true;
-
-    /// This matches routes correctly until you register
-    /// a handler on a prefix eg: `/api/v1`.
-    /// In order for it to still be a match to /api/v1/whatever-comes-after
-    /// you need to set prefix: true.
-    /// Hence if [prefix != null] prefix should be true
-    return pathToRegExp(route, prefix: prefix != null).hasMatch(request.path);
+    return pathToRegExp(route, prefix: true).hasMatch(request.path);
   }
 
   /// This is implemented in such a way that if a [Route]
