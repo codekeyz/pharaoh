@@ -15,26 +15,8 @@ void main() async {
 
   app.get(
     '/:user/json',
-    (req, res) => res.json({'name': "Chima Precious", 'age': 28}),
+    (req, res) => res.json({'foo': "bar", 'mee': 'moo'}),
   );
-
-  // app.get('/website', (req, res) async {
-  //   final result = await serveStatic(toShelfRequest((req)));
-  //   if (result.statusCode >= 200 && result.statusCode < 300) {
-  //     result.copyTo(res);
-
-  //     final mimeType = lookupMimeType(req.path);
-  //     if (mimeType != null) {
-  //       res.type(ContentType.parse(mimeType));
-  //     } else {
-  //       res.type(ContentType.html);
-  //     }
-
-  //     return res;
-  //   }
-
-  //   return res.notFound();
-  // });
 
   app.get(
     '/redirect',
