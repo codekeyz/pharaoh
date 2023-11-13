@@ -58,17 +58,15 @@ class Response extends Message<Body> implements ResponseContract {
 
   @override
   Response json(Object data) {
+    type(ContentType.json);
     body = Body(jsonEncode(data), encoding);
-    updateHeaders(
-      (headers) =>
-          headers[HttpHeaders.contentTypeHeader] = ContentType.json.value,
-    );
     return this;
   }
 
   @override
   Response ok([Object? object]) {
     status(200);
+    type(ContentType.text);
     body = Body(object, encoding);
     return this;
   }

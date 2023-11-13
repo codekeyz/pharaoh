@@ -14,12 +14,7 @@ abstract class Message<T> {
 
   MediaType? _contentTypeCache;
 
-  Message(HttpRequest? req, [T? value]) {
-    req?.headers.forEach((name, values) {
-      _headers[name] = values;
-    });
-    body = value;
-  }
+  Message(HttpRequest? req, [T? value]) : body = value;
 
   void updateHeaders(void Function(Map<String, dynamic> headers) update) {
     update(_headers);
