@@ -1,44 +1,40 @@
 import 'dart:io';
 
-import 'package:mime/mime.dart';
 import 'package:pharaoh/pharaoh.dart';
-import 'package:shelf_static/shelf_static.dart';
+import 'package:shelf_cors_headers/shelf_cors_headers.dart';
 
 final pharaoh = Pharaoh();
-
-final serveStatic = createStaticHandler(
-  'example/',
-  defaultDocument: 'index.html',
-  listDirectories: true,
-);
 
 void main() async {
   final app = pharaoh.router;
 
   app.use(logRequests);
 
+  /// Using shelf_cors_header with Pharoah
+  app.use(useShelfMiddleware(corsHeaders()));
+
   app.get(
     '/:user/json',
     (req, res) => res.json({'name': "Chima Precious", 'age': 28}),
   );
 
-  app.get('/website', (req, res) async {
-    final result = await serveStatic(toShelfRequest((req)));
-    if (result.statusCode >= 200 && result.statusCode < 300) {
-      result.copyTo(res);
+  // app.get('/website', (req, res) async {
+  //   final result = await serveStatic(toShelfRequest((req)));
+  //   if (result.statusCode >= 200 && result.statusCode < 300) {
+  //     result.copyTo(res);
 
-      final mimeType = lookupMimeType(req.path);
-      if (mimeType != null) {
-        res.type(ContentType.parse(mimeType));
-      } else {
-        res.type(ContentType.html);
-      }
+  //     final mimeType = lookupMimeType(req.path);
+  //     if (mimeType != null) {
+  //       res.type(ContentType.parse(mimeType));
+  //     } else {
+  //       res.type(ContentType.html);
+  //     }
 
-      return res;
-    }
+  //     return res;
+  //   }
 
-    return res.notFound();
-  });
+  //   return res.notFound();
+  // });
 
   app.get(
     '/redirect',
