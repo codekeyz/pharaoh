@@ -3,7 +3,7 @@ import 'dart:io';
 
 import 'package:http_parser/http_parser.dart';
 
-import 'body.dart';
+import '../shelf_interop/shelf.dart';
 
 abstract class Message<T> {
   final Map<String, dynamic> _headers = {};

@@ -6,5 +6,8 @@ library;
 export 'src/server.dart';
 export 'src/router/router.dart';
 export 'src/middleware/request_logger.dart';
+export 'src/http/request.dart';
+export 'src/http/response.dart' hide ResponseContract;
+export 'src/shelf_interop/adapter.dart';
 
 // TODO: Export any libraries intended for clients of this package.

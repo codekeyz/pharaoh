@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import '../utils/exceptions.dart';
-import 'body.dart';
+import '../shelf_interop/shelf.dart';
 import 'message.dart';
 import 'request.dart';
 
@@ -11,15 +11,17 @@ abstract interface class ResponseContract {
 
   Response json(Object data);
 
-  Response ok([Object? body]);
+  Response ok([Object? data]);
 
-  Response notFound([Object? body]);
+  Response notFound([Object? data]);
 
-  Response internalServerError([Object? body]);
+  Response internalServerError([Object? data]);
 
   Response type(ContentType type);
 
   Response status(int code);
+
+  Response render([Object? data]);
 }
 
 class Response extends Message<Body> implements ResponseContract {
@@ -89,4 +91,13 @@ class Response extends Message<Body> implements ResponseContract {
         .data;
     return json(object);
   }
+
+  @override
+  Response render([Object? data]) {
+    type(ContentType.html);
+    if (data != null) body = Body(data);
+    return this;
+  }
+
+  void change(Response response) {}
 }
