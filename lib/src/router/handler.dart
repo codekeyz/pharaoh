@@ -20,9 +20,9 @@ typedef HandlerResult = ({bool canNext, ReqRes reqRes});
 /// All route handler types must extend this class.
 ///
 /// See: [RequestHandler] and [Middleware] types
-abstract class RouteHandler {
+abstract class RouteHandler<T> {
   Route get route;
-  HandlerFunc get handler;
+  T get handler;
   bool get internal;
 
   bool _canNext = false;
@@ -34,7 +34,7 @@ abstract class RouteHandler {
   RouteHandler prefix(String prefix);
 
   Future<HandlerResult> handle(ReqRes reqRes) async {
-    final hdlrResult = await handler(reqRes.req, reqRes.res);
+    final hdlrResult = await (handler as dynamic)(reqRes.req, reqRes.res);
     if (hdlrResult is ReqRes) {
       return (
         canNext: canNext,
@@ -75,17 +75,12 @@ abstract class RouteHandler {
   }
 }
 
-/// This type of handler uses the Request interface [$Request]
-/// which is nothing but an interface. All you have on this are getter calls
-/// to get information about Requests reaching your application
-///
-/// See here: [RequestHandler]
 typedef RequestHandlerFunc = FutureOr<dynamic> Function(
   $Request req,
   Response res,
 );
 
-class RequestHandler extends RouteHandler {
+class RequestHandler extends RouteHandler<RequestHandlerFunc> {
   final RequestHandlerFunc _func;
   final Route _route;
 
@@ -96,7 +91,7 @@ class RequestHandler extends RouteHandler {
       RequestHandler(_func, route.withPrefix(prefix));
 
   @override
-  HandlerFunc get handler => _func;
+  RequestHandlerFunc get handler => _func;
 
   @override
   Route get route => _route;
@@ -111,19 +106,31 @@ class RequestHandler extends RouteHandler {
   }
 }
 
+///  [Middleware] type route handler
+///
+///
+///
+///
+///  The foremost thing you should know is 'middl'
 typedef MiddlewareFunc = Function(Request req, Response res, Function next);
 
-class Middleware extends RouteHandler {
+class Middleware extends RouteHandler<MiddlewareFunc> {
   final MiddlewareFunc _func;
   final Route _route;
   Middleware(this._func, this._route);
 
   @override
-  Middleware prefix(String prefix) =>
-      Middleware(_func, route.withPrefix(prefix));
+  Middleware prefix(String prefix) => Middleware(
+        _func,
+        route.withPrefix(prefix),
+      );
 
   @override
-  HandlerFunc get handler => (req, res) => _func(req, res, () => next());
+  MiddlewareFunc get handler => (req, res, _) => _func(
+        req,
+        res,
+        () => next(),
+      );
 
   @override
   Route get route => _route;

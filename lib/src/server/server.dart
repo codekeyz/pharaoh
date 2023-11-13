@@ -14,7 +14,7 @@ abstract class Pharaoh implements RoutePathDefinitionContract<Pharaoh> {
 
   Uri get uri;
 
-  void useOnPath(String path, RouteHandler handler);
+  Pharaoh useOnPath(String path, RouteHandler handler);
 
   Future<Pharaoh> listen([int? port]);
 
