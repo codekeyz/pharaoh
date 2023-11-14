@@ -36,8 +36,6 @@ abstract class RouteHandler<T> {
 
   Future<HandlerResult> handle(final ReqRes reqRes) async {
     final hdlrResult = await (handler as dynamic)(reqRes.req, reqRes.res);
-
-    /// TODO(codekeyz) This is working fine now but i am not too confident. Spend time and resolve this
     return switch (hdlrResult.runtimeType) {
       // ignore: prefer_void_to_null
       Null => (canNext: true, reqRes: reqRes),

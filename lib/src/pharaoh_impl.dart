@@ -81,17 +81,14 @@ class $PharaohImpl implements Pharaoh {
   }
 
   @override
-  Pharaoh useOnPath(String path, RouteHandler handler) {
+  Pharaoh group(final String path, final RouteHandler handler) {
     final route = Route(path, [HTTPMethod.ALL]);
 
-    if (handler.runtimeType == PharoahRouter) {
-      final subRouter = (handler as PharoahRouter).prefix(path);
-
+    if (handler is PharoahRouter) {
       _router.use((req, res, next) async {
-        await drainRouter(subRouter, (req: req, res: res));
-
+        await drainRouter(handler.prefix(path), (req: req, res: res));
         next();
-      }, route);
+      });
       return this;
     }
 

@@ -24,9 +24,9 @@ void main() async {
     ..post('/say-hello', (req, res) => res.notFound())
     ..delete('/delete', (req, res) => res.json(req.body));
 
-  app.useOnPath('/guest', guestRouter);
+  app.group('/guest', guestRouter);
 
-  app.useOnPath('/admin', adminRouter);
+  app.group('/admin', adminRouter);
 
   await app.listen();
 }

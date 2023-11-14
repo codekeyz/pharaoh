@@ -23,7 +23,7 @@ abstract class Pharaoh implements RoutePathDefinitionContract<Pharaoh> {
 
   Uri get uri;
 
-  Pharaoh useOnPath(String path, RouteHandler handler);
+  Pharaoh group(String path, RouteHandler handler);
 
   Future<Pharaoh> listen([int? port]);
 

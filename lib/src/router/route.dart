@@ -45,14 +45,7 @@ class Route {
         verbs.contains(HTTPMethod.ALL) || verbs.contains(request.method);
     if (!canMethod) return false;
     if (route == ANY_PATH) return true;
-    final matchesUrl = pathToRegExp(
-      fullRoute,
-      prefix: true,
-    ).hasMatch(request.path);
-
-    print('Route: $fullRoute      Path: ${request.path}  Match: $matchesUrl');
-
-    return matchesUrl;
+    return pathToRegExp(fullRoute).hasMatch(_cleanPath(request));
   }
 
   /// This is implemented in such a way that if a [Route]
@@ -77,6 +70,13 @@ class Route {
     return route.hashCode ^ verbs.hashCode;
   }
 
+  String _cleanPath(Request request) {
+    String path = request.path;
+    if (path == BASE_PATH) return path;
+    if (path.endsWith(BASE_PATH)) path = path.substring(0, path.length - 1);
+    return path;
+  }
+
   @override
   String toString() => "Route:  $route    Verbs: ${verbString(verbs)}";
 }
@@ -84,11 +84,11 @@ class Route {
 const reservedPaths = [BASE_PATH, ANY_PATH];
 
 class RouteGroup {
-  final String? prefix;
+  final String prefix;
   final List<RouteHandler> handlers;
 
-  RouteGroup._({
-    this.prefix,
+  RouteGroup._(
+    this.prefix, {
     List<RouteHandler>? handlers,
   }) : handlers = handlers ?? [];
 
@@ -97,7 +97,7 @@ class RouteGroup {
         handlers = [];
 
   RouteGroup withPrefix(String prefix) => RouteGroup._(
-        prefix: prefix,
+        prefix,
         handlers: handlers.map((e) => e.prefix(prefix)).toList(),
       );
 
@@ -110,10 +110,6 @@ class RouteGroup {
       throw PharoahException('Route cannot be an empty string');
     } else if (!reservedPaths.contains(newRoute[0])) {
       throw PharoahException.value('Route should be with $BASE_PATH', newRoute);
-    }
-
-    if (!reservedPaths.contains(prefix)) {
-      newHandler = newHandler.prefix(prefix!);
     }
 
     final existingHandler = handlers.firstWhereOrNull(

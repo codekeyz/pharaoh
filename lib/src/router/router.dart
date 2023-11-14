@@ -92,9 +92,6 @@ mixin RouterMixin<T extends RouteHandler<dynamic>> on RouteHandler
     _group.add(Middleware(reqResNext, route ?? Route.any()));
     return this as T;
   }
-
-  bool hasNoRequestHandlers(List<RouteHandler> handlers) =>
-      !handlers.any((e) => e is RequestHandler);
 }
 
 class PharoahRouter extends RouteHandler<dynamic>
