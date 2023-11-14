@@ -56,10 +56,7 @@ class Response extends Message<Body> implements $Response {
   }
 
   @override
-  Response redirect(
-    String url, [
-    int statusCode = HttpStatus.found,
-  ]) {
+  Response redirect(String url, [int statusCode = HttpStatus.found]) {
     _updateOrThrowIfEnded(
       (res) => res
         ..status(statusCode)
@@ -74,7 +71,7 @@ class Response extends Message<Body> implements $Response {
     try {
       data = jsonEncode(data);
     } catch (_) {
-      internalServerError(errorBody(message: _.toString()).toJson);
+      internalServerError(makeError(message: _.toString()).toJson);
       return this;
     }
 
@@ -86,31 +83,11 @@ class Response extends Message<Body> implements $Response {
   }
 
   @override
-  Response ok([String? data]) {
-    _updateOrThrowIfEnded((res) => res
-      ..type(ContentType.text)
-      ..body = Body(data == null ? null : jsonEncode(data), encoding)
-      ..status(200)
-      ..end());
-    return this;
-  }
-
-  @override
   Response notFound([Object? object]) {
     _updateOrThrowIfEnded(
       (res) {
-        res.status(404);
-
-        object ??= PharoahErrorBody(
-          'Not found',
-          _reqInfo.path,
-          method: _reqInfo.method,
-        ).toJson;
-
-        res
-          ..type(ContentType.json)
-          ..body = Body(jsonEncode(object))
-          ..end();
+        object ??= makeError(message: 'Not found').toJson;
+        res.status(404).json(object!);
       },
     );
     return this;
@@ -120,20 +97,20 @@ class Response extends Message<Body> implements $Response {
   Response internalServerError([Object? object]) {
     _updateOrThrowIfEnded(
       (res) {
-        res.status(500);
-
-        object ??= PharoahErrorBody(
-          'Internal Server Error',
-          _reqInfo.path,
-          method: _reqInfo.method,
-        ).toJson;
-
-        res
-          ..type(ContentType.json)
-          ..body = Body(jsonEncode(object))
-          ..end();
+        object ??= makeError(message: 'Internal Server Error').toJson;
+        res.status(500).json(object!);
       },
     );
+    return this;
+  }
+
+  @override
+  Response ok([String? data]) {
+    _updateOrThrowIfEnded((res) => res
+      ..type(ContentType.text)
+      ..body = Body(data, encoding)
+      ..status(200)
+      ..end());
     return this;
   }
 
@@ -156,11 +133,6 @@ class Response extends Message<Body> implements $Response {
     update(this);
   }
 
-  PharoahErrorBody errorBody({String message = 'Internal Server Error'}) {
-    return PharoahErrorBody(
-      message,
-      _reqInfo.path,
-      method: _reqInfo.method,
-    );
-  }
+  PharoahErrorBody makeError({required String message}) =>
+      PharoahErrorBody(message, _reqInfo.path, method: _reqInfo.method);
 }
