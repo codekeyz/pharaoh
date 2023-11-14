@@ -2,11 +2,13 @@ import 'dart:io';
 
 import 'package:mason_logger/mason_logger.dart';
 
-import '../../pharaoh.dart';
-import '../middleware/body_parser.dart';
-import '../router/handler.dart';
-import '../router/route.dart';
-import '../utils/exceptions.dart';
+import '../pharaoh.dart';
+import 'http/request.dart';
+import 'http/response.dart';
+import 'middleware/body_parser.dart';
+import 'router/handler.dart';
+import 'router/route.dart';
+import 'utils/exceptions.dart';
 
 class $PharaohImpl implements Pharaoh {
   late final PharoahRouter _router;

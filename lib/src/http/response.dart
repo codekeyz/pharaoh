@@ -6,7 +6,7 @@ import '../shelf_interop/shelf.dart';
 import 'message.dart';
 import 'request.dart';
 
-abstract interface class ResponseContract {
+abstract interface class $Response {
   Response redirect(String url, [int statusCode = HttpStatus.found]);
 
   Response end();
@@ -26,7 +26,7 @@ abstract interface class ResponseContract {
   Response status(int code);
 }
 
-class Response extends Message<Body> implements ResponseContract {
+class Response extends Message<Body> implements $Response {
   /// This is just an interface that holds the current request information
   late final $Request _reqInfo;
 

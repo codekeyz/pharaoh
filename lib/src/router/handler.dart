@@ -50,7 +50,7 @@ abstract class RouteHandler<T> {
 
 typedef RequestHandlerFunc = FutureOr<dynamic> Function(
   $Request req,
-  Response res,
+  $Response res,
 );
 
 class RequestHandler extends RouteHandler<RequestHandlerFunc> {
