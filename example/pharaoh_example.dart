@@ -21,7 +21,7 @@ void main() async {
   final adminRouter = app.router()
     ..get('/user', (req, res) => res.json({"chima": "happy"}))
     ..post('/hello', (req, res) => res.json({"name": "chima"}))
-    ..put('/put', (req, res) => res.json('String'))
+    ..post('/say-hello', (req, res) => res.notFound())
     ..delete('/delete', (req, res) => res.json(req.body));
 
   app.useOnPath('/guest', guestRouter);
