@@ -1,30 +1,36 @@
 import 'package:pharaoh/pharaoh.dart';
 import 'package:shelf_cors_headers/shelf_cors_headers.dart';
 
-final pharaoh = Pharaoh();
+final app = Pharaoh();
 
 void main() async {
   /// Using shelf_cors_header with Pharoah
-  pharaoh.use(useShelfMiddleware(corsHeaders()));
-  pharaoh.use(logRequests);
+  app.use(useShelfMiddleware(corsHeaders()));
+  app.use(logRequests);
 
-  final guestRouter = pharaoh.router()
-    ..use((req, res, next) => null)
-    ..get('/user', (req, res) => null)
-    ..post('/hello', (req, res) => null)
-    ..put('/put', (req, res) => null)
-    ..delete('/delete', (req, res) => null);
+  app.get(
+    '/chima',
+    (req, res) => res.json({"name": "Chima"}),
+  );
 
-  final adminRouter = pharaoh.router()
-    ..use((req, res, next) => null)
-    ..get('/user', (req, res) => null)
-    ..post('/hello', (req, res) => null)
-    ..put('/put', (req, res) => null)
-    ..delete('/delete', (req, res) => null);
+  final guestRouter = app.router()
+    ..get('/user', (req, res) => res.ok("Hello World"))
+    ..post('/post', (req, res) => res.json({"mee": "moo"}))
+    ..put('/put', (req, res) => res.json({"pookey": "reyrey"}));
 
-  pharaoh.useOnPath('/chief', guestRouter);
+  // final adminRouter = app.router()
+  //   // ..use((req, res, next) {
+  //   //   print('Admin was called today');
+  //   //   next();
+  //   // })
+  //   ..get('/user', (req, res) => res.json({"chima": "happy"}))
+  //   ..post('/hello', (req, res) => res.json({"name": "chima"}))
+  //   ..put('/put', (req, res) => null)
+  //   ..delete('/delete', (req, res) => null);
 
-  pharaoh.useOnPath('/bigchief', adminRouter);
+  app.useOnPath('/guest', guestRouter);
 
-  await pharaoh.listen();
+  // app.useOnPath('/admin', adminRouter);
+
+  await app.listen();
 }

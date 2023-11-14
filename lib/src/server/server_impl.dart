@@ -82,16 +82,20 @@ class $PharaohImpl implements Pharaoh {
   Pharaoh useOnPath(String path, RouteHandler handler) {
     final route = Route(path, [HTTPMethod.ALL]);
 
+    if (handler.runtimeType == PharoahRouter) {
+      final subRouter = (handler as PharoahRouter).prefix(path);
+
+      _router.use((req, res, next) async {
+        await drainRouter(subRouter, (req: req, res: res));
+
+        next();
+      }, route);
+      return this;
+    }
+
     MiddlewareFunc func = switch (handler.runtimeType) {
       Middleware => handler.handler,
-      RequestHandler => (req, res, next) => handler.handler(req, res),
-      PharoahRouter => (req, res, next) async {
-          final result = await handler.prefix(path).handle(
-            (req: req, res: res),
-          );
-          next();
-          return result;
-        },
+      RequestHandler => (req, res, _) => handler.handler(req, res),
       Type() => throw PharoahException.value(
           'RouteHandler type not known', handler.runtimeType),
     };
@@ -117,23 +121,34 @@ class $PharaohImpl implements Pharaoh {
     // necessary.
     httpReq.response.headers.chunkedTransferEncoding = false;
 
-    final request = Request.from(httpReq);
+    final req = Request.from(httpReq);
+    final result =
+        await drainRouter(_router, (req: req, res: Response.from(req)));
+    if (result.canNext == false) return;
 
+    final res = result.reqRes.res;
+    if (res.ended) {
+      return forward(httpReq.response, res);
+    }
+
+    return forward(httpReq.response, res.notFound());
+  }
+
+  Future<HandlerResult> drainRouter(
+    PharoahRouter routerX,
+    ReqRes reqRes,
+  ) async {
     try {
-      final HandlerResult result = await _router.handle((
-        req: request,
-        res: Response.from(request),
-      ));
-      final res = result.reqRes.res;
-      if (res.ended) {
-        forward(httpReq.response, res);
-        return;
-      }
-      forward(httpReq.response, res.notFound());
+      return await routerX.handle(reqRes);
     } catch (e) {
-      forward(
-        httpReq.response,
-        Response.from(request).internalServerError(),
+      print(e);
+
+      return (
+        canNext: true,
+        reqRes: (
+          req: reqRes.req,
+          res: Response.from(reqRes.req).internalServerError()
+        )
       );
     }
   }

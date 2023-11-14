@@ -56,10 +56,10 @@ mixin RouterMixin<T extends RouteHandler<dynamic>> on RouteHandler
       result = data.reqRes;
 
       final breakOut = data.canNext == false || result.res.ended;
-      if (breakOut) return (canNext: false, reqRes: result);
+      if (breakOut) return (canNext: true, reqRes: result);
     }
 
-    return super.handle(result);
+    return (canNext: true, reqRes: result);
   }
 
   @override

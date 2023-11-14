@@ -41,12 +41,18 @@ class Route {
     final fullRoute = route;
     if (fullRoute == null) return false;
 
-    if (route == null) return false;
     final canMethod =
         verbs.contains(HTTPMethod.ALL) || verbs.contains(request.method);
     if (!canMethod) return false;
     if (route == ANY_PATH) return true;
-    return pathToRegExp(fullRoute, prefix: true).hasMatch(request.path);
+    final matchesUrl = pathToRegExp(
+      fullRoute,
+      prefix: true,
+    ).hasMatch(request.path);
+
+    print('Route: $fullRoute      Path: ${request.path}  Match: $matchesUrl');
+
+    return matchesUrl;
   }
 
   /// This is implemented in such a way that if a [Route]
@@ -72,7 +78,7 @@ class Route {
   }
 
   @override
-  String toString() => "Route:  $route\nVerbs: ${verbString(verbs)}\n";
+  String toString() => "Route:  $route    Verbs: ${verbString(verbs)}";
 }
 
 const reservedPaths = [BASE_PATH, ANY_PATH];
