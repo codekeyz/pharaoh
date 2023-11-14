@@ -41,7 +41,7 @@ _processBody(Request req, Response res, Function next) async {
   }
 
   final body = await utf8.decoder.bind(req.req).join();
-  if (body.isEmpty) {
+  if (body.trim().isEmpty) {
     next();
     return;
   }
