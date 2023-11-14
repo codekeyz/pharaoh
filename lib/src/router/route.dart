@@ -72,9 +72,7 @@ class Route {
   }
 
   @override
-  String toString() => """ 
-  Route:       $route
-  Verbs:       ${verbString(verbs)}""";
+  String toString() => "Route:  $route\nVerbs: ${verbString(verbs)}\n";
 }
 
 const reservedPaths = [BASE_PATH, ANY_PATH];
@@ -94,7 +92,7 @@ class RouteGroup {
 
   RouteGroup withPrefix(String prefix) => RouteGroup._(
         prefix: prefix,
-        handlers: handlers,
+        handlers: handlers.map((e) => e.prefix(prefix)).toList(),
       );
 
   /// Adding routes the the current group does a very simple

@@ -9,9 +9,13 @@ import 'request.dart';
 abstract interface class ResponseContract {
   Response redirect(String url, [int statusCode = HttpStatus.found]);
 
+  Response end();
+
   Response json(Object data);
 
-  Response ok([Object? data]);
+  Response ok([String? data]);
+
+  Response render([Object? data]);
 
   Response notFound([Object? data]);
 
@@ -20,8 +24,6 @@ abstract interface class ResponseContract {
   Response type(ContentType type);
 
   Response status(int code);
-
-  Response render([Object? data]);
 }
 
 class Response extends Message<Body> implements ResponseContract {
@@ -29,6 +31,10 @@ class Response extends Message<Body> implements ResponseContract {
   late final $Request _reqInfo;
 
   int _statusCode = 200;
+
+  bool _ended = false;
+
+  bool get ended => _ended;
 
   int get statusCode => _statusCode;
 
@@ -38,13 +44,14 @@ class Response extends Message<Body> implements ResponseContract {
 
   @override
   Response type(ContentType type) {
-    updateHeaders((hds) => hds[HttpHeaders.contentTypeHeader] = type.value);
+    _updateOrThrowIfEnded((res) => res.updateHeaders(
+        (hds) => hds[HttpHeaders.contentTypeHeader] = type.value));
     return this;
   }
 
   @override
   Response status(int code) {
-    _statusCode = code;
+    _updateOrThrowIfEnded((res) => res._statusCode = code);
     return this;
   }
 
@@ -53,51 +60,94 @@ class Response extends Message<Body> implements ResponseContract {
     String url, [
     int statusCode = HttpStatus.found,
   ]) {
-    status(statusCode);
-    updateHeaders((hds) => hds[HttpHeaders.locationHeader] = url);
+    _updateOrThrowIfEnded(
+      (res) => res
+        ..status(statusCode)
+        ..updateHeaders((hds) => hds[HttpHeaders.locationHeader] = url)
+        ..end(),
+    );
     return this;
   }
 
   @override
   Response json(Object data) {
-    type(ContentType.json);
-    body = Body(jsonEncode(data), encoding);
+    _updateOrThrowIfEnded((res) => res
+      ..type(ContentType.json)
+      ..body = Body(jsonEncode(data), encoding)
+      ..end());
     return this;
   }
 
   @override
-  Response ok([Object? object]) {
-    status(200);
-    type(ContentType.text);
-    body = Body(object, encoding);
+  Response ok([String? data]) {
+    _updateOrThrowIfEnded((res) => res
+      ..type(ContentType.text)
+      ..body = Body(data == null ? null : jsonEncode(data), encoding)
+      ..status(200)
+      ..end());
     return this;
   }
 
   @override
   Response notFound([Object? object]) {
-    status(404);
-    object ??= PharoahErrorBody('Not found', _reqInfo.path, _statusCode,
-            method: _reqInfo.method)
-        .data;
-    return json(object);
+    _updateOrThrowIfEnded(
+      (res) {
+        res.status(404);
+
+        object ??= PharoahErrorBody(
+          'Not found',
+          _reqInfo.path,
+          res.statusCode,
+          method: _reqInfo.method,
+        ).data;
+
+        res
+          ..type(ContentType.json)
+          ..body = Body(jsonEncode(object))
+          ..end();
+      },
+    );
+    return this;
   }
 
   @override
   Response internalServerError([Object? object]) {
-    status(500);
-    object ??= PharoahErrorBody(
-            'Internal Server Error', _reqInfo.path, _statusCode,
-            method: _reqInfo.method)
-        .data;
-    return json(object);
+    _updateOrThrowIfEnded(
+      (res) {
+        res.status(500);
+
+        object ??= PharoahErrorBody(
+          'Internal Server Error',
+          _reqInfo.path,
+          res.statusCode,
+          method: _reqInfo.method,
+        ).data;
+
+        res
+          ..type(ContentType.json)
+          ..body = Body(jsonEncode(object))
+          ..end();
+      },
+    );
+    return this;
   }
 
   @override
   Response render([Object? data]) {
-    type(ContentType.html);
-    if (data != null) body = Body(data);
+    _updateOrThrowIfEnded((res) => res
+      ..type(ContentType.html).body = Body(data)
+      ..end());
     return this;
   }
 
-  void change(Response response) {}
+  @override
+  Response end() {
+    _ended = true;
+    return this;
+  }
+
+  void _updateOrThrowIfEnded(Function(Response res) update) {
+    if (_ended) throw PharoahException('Response lifecyle already ended');
+    update(this);
+  }
 }

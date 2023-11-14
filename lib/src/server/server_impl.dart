@@ -3,16 +3,12 @@ import 'dart:io';
 import 'package:mason_logger/mason_logger.dart';
 
 import '../../pharaoh.dart';
-import '../middleware/attach_necessary_headers.dart';
 import '../middleware/body_parser.dart';
 import '../router/handler.dart';
 import '../router/route.dart';
 import '../utils/exceptions.dart';
 
 class $PharaohImpl implements Pharaoh {
-  final List<RouteHandler> _routeHandlers = [];
-  final List<Middleware> _lastMiddlewares = [];
-
   late final PharoahRouter _router;
   late final HttpServer _server;
   late final Logger _logger;
@@ -20,8 +16,7 @@ class $PharaohImpl implements Pharaoh {
   $PharaohImpl()
       : _logger = Logger(),
         _router = PharoahRouter() {
-    _routeHandlers.add(bodyParser);
-    _lastMiddlewares.add(attachNecessaryHeaders());
+    _router.use(bodyParser);
   }
 
   @override
@@ -51,7 +46,7 @@ class $PharaohImpl implements Pharaoh {
   PharoahRouter router() => PharoahRouter();
 
   @override
-  List<Route> get routes => _routeHandlers.map((e) => e.route).toList();
+  List<Route> get routes => _router.routes;
 
   @override
   Pharaoh delete(String path, RequestHandlerFunc handler) {
@@ -90,8 +85,15 @@ class $PharaohImpl implements Pharaoh {
     MiddlewareFunc func = switch (handler.runtimeType) {
       Middleware => handler.handler,
       RequestHandler => (req, res, next) => handler.handler(req, res),
+      PharoahRouter => (req, res, next) async {
+          final result = await handler.prefix(path).handle(
+            (req: req, res: res),
+          );
+          next();
+          return result;
+        },
       Type() => throw PharoahException.value(
-          'Route Handler not known', handler.runtimeType),
+          'RouteHandler type not known', handler.runtimeType),
     };
 
     _router.use(func, route);
@@ -116,34 +118,23 @@ class $PharaohImpl implements Pharaoh {
     httpReq.response.headers.chunkedTransferEncoding = false;
 
     final request = Request.from(httpReq);
-    final response = Response.from(request);
 
-    final handlers = findHandlersForRequest(request, _routeHandlers);
-
-    // It means you don't have any request handlers for this route.
-    if (hasNoRequestHandlers(handlers)) {
-      return forward(httpReq.response, response.notFound());
-    }
-
-    if (_lastMiddlewares.isNotEmpty) {
-      handlers.addAll(_lastMiddlewares);
-    }
-
-    final handlerFncs = List<RouteHandler>.from(handlers);
-    ReqRes reqRes = (req: request, res: response);
-    while (handlerFncs.isNotEmpty) {
-      final handler = handlerFncs.removeAt(0);
-      final completed = handlerFncs.isEmpty;
-
-      try {
-        final data = await handler.handle(reqRes);
-        reqRes = data.reqRes;
-        if (!data.canNext) break;
-        if (completed) return forward(httpReq.response, reqRes.res);
-        continue;
-      } catch (e) {
-        return forward(httpReq.response, reqRes.res.internalServerError());
+    try {
+      final HandlerResult result = await _router.handle((
+        req: request,
+        res: Response.from(request),
+      ));
+      final res = result.reqRes.res;
+      if (res.ended) {
+        forward(httpReq.response, res);
+        return;
       }
+      forward(httpReq.response, res.notFound());
+    } catch (e) {
+      forward(
+        httpReq.response,
+        Response.from(request).internalServerError(),
+      );
     }
   }
 

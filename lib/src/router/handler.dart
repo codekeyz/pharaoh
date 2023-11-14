@@ -87,8 +87,10 @@ class RequestHandler extends RouteHandler<RequestHandlerFunc> {
   RequestHandler(this._func, this._route);
 
   @override
-  RequestHandler prefix(String prefix) =>
-      RequestHandler(_func, route.withPrefix(prefix));
+  RequestHandler prefix(String prefix) => RequestHandler(
+        _func,
+        route.withPrefix(prefix),
+      );
 
   @override
   RequestHandlerFunc get handler => _func;
@@ -114,7 +116,7 @@ class RequestHandler extends RouteHandler<RequestHandlerFunc> {
 ///  The foremost thing you should know is 'middl'
 typedef MiddlewareFunc = Function(Request req, Response res, Function next);
 
-class Middleware extends RouteHandler<MiddlewareFunc> {
+class Middleware extends RouteHandler<HandlerFunc> {
   final MiddlewareFunc _func;
   final Route _route;
   Middleware(this._func, this._route);
@@ -126,7 +128,7 @@ class Middleware extends RouteHandler<MiddlewareFunc> {
       );
 
   @override
-  MiddlewareFunc get handler => (req, res, _) => _func(
+  HandlerFunc get handler => (req, res) => _func(
         req,
         res,
         () => next(),
