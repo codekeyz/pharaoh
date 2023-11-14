@@ -41,7 +41,10 @@ _processBody(Request req, Response res, Function next) async {
   }
 
   final body = await utf8.decoder.bind(req.req).join();
-  if (body.isEmpty) return next();
+  if (body.isEmpty) {
+    next();
+    return;
+  }
 
   switch (mimeType) {
     case MimeType.applicationFormUrlEncoded:
