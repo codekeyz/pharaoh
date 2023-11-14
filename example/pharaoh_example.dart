@@ -18,19 +18,15 @@ void main() async {
     ..post('/post', (req, res) => res.json({"mee": "moo"}))
     ..put('/put', (req, res) => res.json({"pookey": "reyrey"}));
 
-  // final adminRouter = app.router()
-  //   // ..use((req, res, next) {
-  //   //   print('Admin was called today');
-  //   //   next();
-  //   // })
-  //   ..get('/user', (req, res) => res.json({"chima": "happy"}))
-  //   ..post('/hello', (req, res) => res.json({"name": "chima"}))
-  //   ..put('/put', (req, res) => null)
-  //   ..delete('/delete', (req, res) => null);
+  final adminRouter = app.router()
+    ..get('/user', (req, res) => res.json({"chima": "happy"}))
+    ..post('/hello', (req, res) => res.json({"name": "chima"}))
+    ..put('/put', (req, res) => res.json('String'))
+    ..delete('/delete', (req, res) => res.json(req.body));
 
   app.useOnPath('/guest', guestRouter);
 
-  // app.useOnPath('/admin', adminRouter);
+  app.useOnPath('/admin', adminRouter);
 
   await app.listen();
 }

@@ -71,9 +71,16 @@ class Response extends Message<Body> implements ResponseContract {
 
   @override
   Response json(Object data) {
+    try {
+      data = jsonEncode(data);
+    } catch (_) {
+      internalServerError(errorBody(message: _.toString()).toJson);
+      return this;
+    }
+
     _updateOrThrowIfEnded((res) => res
       ..type(ContentType.json)
-      ..body = Body(jsonEncode(data), encoding)
+      ..body = Body(data, encoding)
       ..end());
     return this;
   }
@@ -97,9 +104,8 @@ class Response extends Message<Body> implements ResponseContract {
         object ??= PharoahErrorBody(
           'Not found',
           _reqInfo.path,
-          res.statusCode,
           method: _reqInfo.method,
-        ).data;
+        ).toJson;
 
         res
           ..type(ContentType.json)
@@ -119,9 +125,8 @@ class Response extends Message<Body> implements ResponseContract {
         object ??= PharoahErrorBody(
           'Internal Server Error',
           _reqInfo.path,
-          res.statusCode,
           method: _reqInfo.method,
-        ).data;
+        ).toJson;
 
         res
           ..type(ContentType.json)
@@ -149,5 +154,13 @@ class Response extends Message<Body> implements ResponseContract {
   void _updateOrThrowIfEnded(Function(Response res) update) {
     if (_ended) throw PharoahException('Response lifecyle already ended');
     update(this);
+  }
+
+  PharoahErrorBody errorBody({String message = 'Internal Server Error'}) {
+    return PharoahErrorBody(
+      message,
+      _reqInfo.path,
+      method: _reqInfo.method,
+    );
   }
 }
