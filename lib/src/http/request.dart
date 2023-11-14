@@ -27,9 +27,7 @@ HTTPMethod getHttpMethod(HttpRequest req) {
   }
 }
 
-abstract interface class $Request extends Message<dynamic> {
-  $Request._(super.req);
-
+abstract interface class $Request<T> {
   String get path;
 
   String? get query;
@@ -45,6 +43,8 @@ abstract interface class $Request extends Message<dynamic> {
   HTTPMethod get method;
 
   Map<String, dynamic> get params;
+
+  T? get body;
 
   /// TODO(codekeyz) implement this so that we can retrieve objects
   /// from the current request context.
@@ -62,12 +62,12 @@ abstract interface class $Request extends Message<dynamic> {
   Object? operator [](String name);
 }
 
-class Request extends $Request {
+class Request extends Message<dynamic> implements $Request<dynamic> {
   final HttpRequest _req;
   final Map<String, dynamic> _params = {};
   final Map<String, dynamic> _context = {};
 
-  Request._(this._req) : super._(_req) {
+  Request._(this._req) : super(_req) {
     updateHeaders((headers) {
       req.headers.forEach((name, values) {
         headers[name] = values;

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import '../http/request.dart';
 import '../http/response.dart';
+import '../utils/exceptions.dart';
 import 'route.dart';
 
 typedef ReqRes = ({Request req, Response res});
@@ -33,45 +34,17 @@ abstract class RouteHandler<T> {
 
   RouteHandler prefix(String prefix);
 
-  Future<HandlerResult> handle(ReqRes reqRes) async {
+  Future<HandlerResult> handle(final ReqRes reqRes) async {
     final hdlrResult = await (handler as dynamic)(reqRes.req, reqRes.res);
-    if (hdlrResult is ReqRes) {
-      return (
-        canNext: canNext,
-        reqRes: hdlrResult,
-      );
-    } else if (hdlrResult is Request) {
-      return (
-        canNext: canNext,
-        reqRes: (req: hdlrResult, res: reqRes.res),
-      );
-    } else if (hdlrResult is Response) {
-      return (
-        canNext: canNext,
-        reqRes: (req: reqRes.req, res: hdlrResult),
-      );
-    } else if (hdlrResult == null) {
-      return (
-        canNext: canNext,
-        reqRes: reqRes,
-      );
-    } else if (hdlrResult is Map || hdlrResult is List) {
-      return (
-        canNext: canNext,
-        reqRes: (
-          req: reqRes.req,
-          res: Response.from(reqRes.req).json(hdlrResult)
-        )
-      );
-    }
 
-    return (
-      canNext: canNext,
-      reqRes: (
-        req: reqRes.req,
-        res: Response.from(reqRes.req).ok(hdlrResult.toString()),
-      ),
-    );
+    /// TODO(codekeyz) This is working fine now but i am not too confident. Spend time and resolve this
+    return switch (hdlrResult.runtimeType) {
+      // ignore: prefer_void_to_null
+      Null => (canNext: true, reqRes: reqRes),
+      Response => (canNext: true, reqRes: (req: reqRes.req, res: reqRes.res)),
+      Type() => throw PharoahException.value(
+          "Unknown result type from handler", hdlrResult),
+    };
   }
 }
 
