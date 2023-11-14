@@ -110,9 +110,17 @@ class $PharaohImpl implements Pharaoh {
   Future<Pharaoh> listen([int? port]) async {
     port ??= 3000;
     final progress = _logger.progress('Starting server');
-    _server = await HttpServer.bind('localhost', port);
-    _server.listen(handleRequest);
-    progress.complete('Server start on PORT: $port -> ${uri.toString()}');
+
+    try {
+      _server = await HttpServer.bind('localhost', port);
+      _server.listen(handleRequest);
+      progress.complete('Server start on PORT: $port -> ${uri.toString()}');
+    } catch (e) {
+      final errMsg =
+          (e as dynamic).message ?? 'An occurred while starting server';
+      progress.fail(errMsg);
+    }
+
     return this;
   }
 
