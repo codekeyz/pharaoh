@@ -22,12 +22,11 @@ abstract interface class RoutePathDefinitionContract<T> {
   T use(MiddlewareFunc reqResNext, [Route? route]);
 }
 
-mixin RouterMixin<T extends RouteHandler> on RouteHandler
+mixin RouterMixin<T extends RouteHandler<dynamic>> on RouteHandler
     implements RoutePathDefinitionContract<T> {
   RouteGroup _group = RouteGroup.path(BASE_PATH);
 
-  List<String> get routes =>
-      _group.handlers.map((e) => e.route.route!).toList();
+  List<Route> get routes => _group.handlers.map((e) => e.route).toList();
 
   @override
   Route get route => Route(_group.prefix, [HTTPMethod.ALL]);
@@ -39,9 +38,28 @@ mixin RouterMixin<T extends RouteHandler> on RouteHandler
   }
 
   @override
-  Future<HandlerResult> handle(ReqRes reqRes) {
-    next();
-    return super.handle(reqRes);
+  Future<HandlerResult> handle(ReqRes reqRes) async {
+    final h = _group.findHandlers(reqRes.req);
+    if (h.isEmpty) {
+      return (
+        canNext: true,
+        reqRes: (req: reqRes.req, res: reqRes.res.notFound())
+      );
+    }
+
+    final handlerFncs = List<RouteHandler>.from(h);
+
+    ReqRes result = reqRes;
+    while (handlerFncs.isNotEmpty) {
+      final handler = handlerFncs.removeAt(0);
+      final data = await handler.handle(reqRes);
+      result = data.reqRes;
+
+      final breakOut = data.canNext == false || result.res.ended;
+      if (breakOut) return (canNext: false, reqRes: result);
+    }
+
+    return super.handle(result);
   }
 
   @override
@@ -74,33 +92,16 @@ mixin RouterMixin<T extends RouteHandler> on RouteHandler
     _group.add(Middleware(reqResNext, route ?? Route.any()));
     return this as T;
   }
+
+  bool hasNoRequestHandlers(List<RouteHandler> handlers) =>
+      !handlers.any((e) => e is RequestHandler);
 }
 
-class PharoahRouter extends RouteHandler with RouterMixin<PharoahRouter> {
-  @override
-  HandlerFunc get handler => (req, res) async {
-        return (req: req, res: res);
-      };
-
+class PharoahRouter extends RouteHandler<dynamic>
+    with RouterMixin<PharoahRouter> {
   @override
   bool get internal => false;
-}
 
-class _$PharoahRouter {
-  // @override
-  // List<Route> get routes => _group.handlers.map((e) => e.route).toList();
-
-  // @override
-  // void group(String prefix, Function(RouterContract router) groupCtx) {
-  //   if (reservedPaths.contains(prefix)) {
-  //     throw PharoahException.value('Prefix not allowed for groups', prefix);
-  //   }
-  //   final router = _$PharoahRouter(group: RouteGroup(prefix: prefix));
-  //   groupCtx(router);
-  //   _subGroups[prefix] = router._group;
-  // }
-
-  // final key = _routes.keys.firstWhereOrNull(
-  //       (key) => path.contains(key) || pathToRegExp(key).hasMatch(path));
-  //   return key == null ? null : _routes[key];
+  @override
+  HandlerFunc get handler => (req, res) => (req: req, res: res);
 }
