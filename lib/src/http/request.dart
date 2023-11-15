@@ -48,19 +48,6 @@ abstract interface class $Request<T> {
 
   T? get body;
 
-  /// TODO(codekeyz) implement this so that we can retrieve objects
-  /// from the current request context.
-  /// This can be useful to middlewares that will want to make available
-  /// loggers, etc to other handlers in the route handler execution list
-  ///
-  /// Use this to get objects from the current request context
-  /// Middlewares can make available extra stuffs eg: Files during
-  /// a file upload.
-  /// Example:
-  /// ```dart
-  /// final files = req['files'];
-  /// print(result);
-  /// ```
   Object? operator [](String name);
 }
 
