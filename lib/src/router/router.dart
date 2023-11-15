@@ -50,16 +50,18 @@ mixin RouterMixin<T extends RouteHandler> on RouteHandler
     final handlerFncs = List<RouteHandler>.from(h);
 
     ReqRes result = reqRes;
+    bool canNext = false;
     while (handlerFncs.isNotEmpty) {
       final handler = handlerFncs.removeAt(0);
       final data = await handler.handle(reqRes);
       result = data.reqRes;
+      canNext = data.canNext;
 
-      final breakOut = result.res.ended || !data.canNext;
+      final breakOut = result.res.ended || !canNext;
       if (breakOut) return (canNext: true, reqRes: result);
     }
 
-    return (canNext: false, reqRes: result);
+    return (canNext: canNext, reqRes: result);
   }
 
   @override
