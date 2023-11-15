@@ -97,8 +97,5 @@ mixin RouterMixin<T extends RouteHandler<dynamic>> on RouteHandler
 class PharoahRouter extends RouteHandler<dynamic>
     with RouterMixin<PharoahRouter> {
   @override
-  bool get internal => false;
-
-  @override
   HandlerFunc get handler => (req, res) => (req: req, res: res);
 }

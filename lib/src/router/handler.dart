@@ -24,7 +24,6 @@ typedef HandlerResult = ({bool canNext, ReqRes reqRes});
 abstract class RouteHandler<T> {
   Route get route;
   T get handler;
-  bool get internal;
 
   Map<String, String> _routeParams = {};
 
@@ -85,9 +84,6 @@ class RequestHandler extends RouteHandler<RequestHandlerFunc> {
   Route get route => _route;
 
   @override
-  bool get internal => false;
-
-  @override
   Future<HandlerResult> handle(ReqRes reqRes) {
     next();
     return super.handle(reqRes);
@@ -122,13 +118,4 @@ class Middleware extends RouteHandler<HandlerFunc> {
 
   @override
   Route get route => _route;
-
-  @override
-  bool get internal => false;
-}
-
-class InternalMiddleware extends Middleware {
-  InternalMiddleware(super.func, super.route);
-  @override
-  bool get internal => true;
 }
