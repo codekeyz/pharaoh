@@ -68,16 +68,17 @@ void main() async {
   });
 
   /// example: http://localhost:3000/api/user/tobi/repos/?api-key=foo
-  /// TODO(codekeyz) resolve param from request path
-  // app.get('/api/user/:name/repos', (req, res) {
-  //   var name = req.params[name];
-  //   var user = userRepos[name];
+  app.get('/api/user/:name/repos', (req, res) {
+    var name = req.params['name'];
+    var user = userRepos[name];
 
-  //   if (user)
-  //     res.send(user);
-  //   else
-  //     next();
-  // });
+    if (user != null) {
+      res.json(user);
+      return;
+    }
+
+    res.notFound();
+  });
 
   await app.listen(port: 3000);
 }
