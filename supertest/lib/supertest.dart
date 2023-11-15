@@ -13,6 +13,11 @@ abstract interface class Tester {
     Map<String, String>? headers,
     Object? body,
   });
+
+  Future<http.Response> get(
+    String path, {
+    Map<String, String>? headers,
+  });
 }
 
 class _$TesterImpl extends Tester {
@@ -29,6 +34,13 @@ class _$TesterImpl extends Tester {
     Object? body,
   }) =>
       http.post(getUri(path), headers: headers, body: body);
+
+  @override
+  Future<http.Response> get(
+    String path, {
+    Map<String, String>? headers,
+  }) =>
+      http.get(getUri(path), headers: headers);
 }
 
 class TestAgent {
