@@ -1,5 +1,5 @@
-name: example
-description: example usages of Pharaoh.
+name: pharaoh_examples
+description: A set of examples showing effective use of Pharaoh.
 version: 1.0.0
 publish_to: none
 
@@ -9,7 +9,6 @@ environment:
 # Add regular dependencies here.
 dependencies:
   pharaoh:
-    path: ../
   shelf_cors_headers: ^0.1.5
 
 dev_dependencies:
