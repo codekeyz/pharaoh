@@ -30,6 +30,12 @@ class Route {
         path = ANY_PATH,
         prefix = null;
 
+  /// Any path with the following methods [HTTPMethod]
+  Route.path(String p, [HTTPMethod method = HTTPMethod.ALL])
+      : verbs = [method],
+        path = '/:route(.*)',
+        prefix = p;
+
   Route withPrefix(String prefix) => Route(
         path,
         verbs,

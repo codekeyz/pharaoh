@@ -108,4 +108,8 @@ class Request extends Message<dynamic> implements $Request<dynamic> {
 
   @override
   Object? operator [](String name) => _context[name];
+
+  void operator []=(String name, dynamic value) {
+    _context[name] = value;
+  }
 }

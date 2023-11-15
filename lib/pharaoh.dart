@@ -8,6 +8,7 @@ import 'src/router/handler.dart';
 import 'src/router/route.dart';
 import 'src/router/router.dart';
 
+export 'src/router/route.dart' hide RouteGroup;
 export 'src/router/router.dart';
 export 'src/middleware/request_logger.dart';
 export 'src/http/request.dart' show $Request;
