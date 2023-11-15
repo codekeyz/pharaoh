@@ -74,7 +74,7 @@ class $PharaohImpl implements Pharaoh {
   }
 
   @override
-  Pharaoh use(MiddlewareFunc reqResNext, [Route? route]) {
+  Pharaoh use(HandlerFunc reqResNext, [Route? route]) {
     _router.use(reqResNext, route);
     return this;
   }
@@ -85,20 +85,22 @@ class $PharaohImpl implements Pharaoh {
 
     if (handler is PharoahRouter) {
       _router.use((req, res, next) async {
-        await drainRouter(handler.prefix(path), (req: req, res: res));
-        next();
+        final result = await drainRouter(handler.prefix(path), (
+          req: req,
+          res: res,
+        ));
+
+        if (!result.canNext) {
+          next();
+          return;
+        }
+
+        next(result.reqRes.res);
       }, route);
       return this;
     }
 
-    MiddlewareFunc func = switch (handler.runtimeType) {
-      Middleware => handler.handler,
-      RequestHandler => (req, res, _) => handler.handler(req, res),
-      Type() => throw PharoahException.value(
-          'RouteHandler type not known', handler.runtimeType),
-    };
-
-    _router.use(func, route);
+    _router.use(handler.handler, route);
     return this;
   }
 
@@ -137,7 +139,10 @@ class $PharaohImpl implements Pharaoh {
       return forward(httpReq.response, res);
     }
 
-    return forward(httpReq.response, res.notFound());
+    return forward(
+      httpReq.response,
+      res.type(ContentType.json).notFound(),
+    );
   }
 
   Future<HandlerResult> drainRouter(
@@ -147,8 +152,11 @@ class $PharaohImpl implements Pharaoh {
     try {
       return await routerX.handle(reqRes);
     } catch (e) {
-      reqRes.res.internalServerError(e.toString());
-      return (canNext: true, reqRes: reqRes);
+      final res = reqRes.res.internalServerError(e.toString());
+      return (
+        canNext: true,
+        reqRes: (req: reqRes.req, res: res),
+      );
     }
   }
 
@@ -159,13 +167,6 @@ class $PharaohImpl implements Pharaoh {
     final body = res.body;
     if (body == null) {
       throw PharoahException('Body value must always be present');
-    }
-
-    httpRes.statusCode = res.statusCode;
-
-    for (final header in res.headers.entries) {
-      final value = header.value;
-      if (value != null) httpRes.headers.add(header.key, value);
     }
 
     httpRes.headers.add('X-Powered-By', 'Pharoah');
