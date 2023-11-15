@@ -25,7 +25,7 @@ abstract class Pharaoh implements RoutePathDefinitionContract<Pharaoh> {
 
   Pharaoh group(String path, RouteHandler handler);
 
-  Future<Pharaoh> listen([int? port]);
+  Future<Pharaoh> listen({int port = 3000});
 
   Future<void> shutdown();
 }

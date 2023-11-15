@@ -82,13 +82,13 @@ class $PharaohImpl implements Pharaoh {
 
   @override
   Pharaoh group(final String path, final RouteHandler handler) {
-    final route = Route(path, [HTTPMethod.ALL]);
+    final route = Route(ANY_PATH, [HTTPMethod.ALL], prefix: path);
 
     if (handler is PharoahRouter) {
       _router.use((req, res, next) async {
         await drainRouter(handler.prefix(path), (req: req, res: res));
         next();
-      });
+      }, route);
       return this;
     }
 
@@ -104,8 +104,7 @@ class $PharaohImpl implements Pharaoh {
   }
 
   @override
-  Future<Pharaoh> listen([int? port]) async {
-    port ??= 3000;
+  Future<Pharaoh> listen({int port = 3000}) async {
     final progress = _logger.progress('Starting server');
 
     try {

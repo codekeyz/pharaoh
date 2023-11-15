@@ -20,13 +20,13 @@ void main() async {
 
   final adminRouter = app.router()
     ..get('/user', (req, res) => res.json({"chima": "happy"}))
-    ..post('/hello', (req, res) => res.json({"name": "chima"}))
+    ..put('/hello', (req, res) => res.json({"name": "chima"}))
     ..post('/say-hello', (req, res) => res.notFound())
     ..delete('/delete', (req, res) => res.json(req.body));
 
-  app.group('/guest', guestRouter);
-
   app.group('/admin', adminRouter);
+
+  app.group('/guest', guestRouter);
 
   await app.listen();
 }

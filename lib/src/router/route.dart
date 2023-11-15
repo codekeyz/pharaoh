@@ -9,14 +9,25 @@ import 'router.dart';
 String verbString(List<HTTPMethod> verbs) => verbs.map((e) => e.name).join(':');
 
 class Route {
-  final String? path;
+  final String path;
   final List<HTTPMethod> verbs;
   final String? prefix;
 
-  String? get route {
+  String get route {
     if (prefix == null) return path;
-    if (path == ANY_PATH) return '$prefix';
+    if (path == ANY_PATH) return '$prefix/*';
     return '$prefix$path';
+  }
+
+  /// The library doesn't handle this well so we have to
+  /// do this ourself.
+  /// See here: https://github.com/leonsenft/path_to_regexp/issues/20
+  ///
+  /// If we are able to resolve this issue with support for wildcard
+  /// matching, then we can use [route] to do the matching
+  String get _routeToMatch {
+    if (prefix == null) return path;
+    return path == ANY_PATH ? prefix! : '$prefix$path';
   }
 
   const Route(
@@ -38,14 +49,18 @@ class Route {
       );
 
   bool canHandle(Request request) {
-    final fullRoute = route;
-    if (fullRoute == null) return false;
-
+    final reqPath = _cleanPath(request);
     final canMethod =
         verbs.contains(HTTPMethod.ALL) || verbs.contains(request.method);
     if (!canMethod) return false;
     if (route == ANY_PATH) return true;
-    return pathToRegExp(fullRoute).hasMatch(_cleanPath(request));
+
+    /// special case for prefixes. used in route group matching.
+    if (prefix != null) {
+      return pathToRegExp(_routeToMatch, prefix: true).hasMatch(reqPath);
+    }
+
+    return pathToRegExp(route, prefix: false).hasMatch(reqPath);
   }
 
   /// This is implemented in such a way that if a [Route]
@@ -105,7 +120,7 @@ class RouteGroup {
   /// check to make sure we don't have multiple [RequestHandler]
   /// registered on the same route. See: [Route.isSameAs].
   void add(RouteHandler newHandler) {
-    final newRoute = newHandler.route.route?.trim() ?? '';
+    final newRoute = newHandler.route.route.trim();
     if (newRoute.isEmpty) {
       throw PharoahException('Route cannot be an empty string');
     } else if (!reservedPaths.contains(newRoute[0])) {
