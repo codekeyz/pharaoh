@@ -4,7 +4,7 @@
 [![Pub Version](https://img.shields.io/pub/v/pharaoh?color=green)](https://pub.dev/packages/pharaoh)
 [![popularity](https://img.shields.io/pub/popularity/pharaoh?logo=dart)](https://pub.dev/packages/pharaoh/score)
 [![likes](https://img.shields.io/pub/likes/pharaoh?logo=dart)](https://pub.dev/packages/pharaoh/score)
-[![style: flutter lints](https://img.shields.io/pharaoh/style-flutter__lints-blue)](https://pub.dev/packages/flutter_lints)
+[![style: flutter lints](https://img.shields.io/badge/linter-dart__lints-blue)](https://pub.dev/packages/lints)
 
 ## Features
 
@@ -19,7 +19,7 @@ In your pubspec.yaml
 
 ```yaml
 dependencies:
-  pharaoh: ^1.0.0 # requires Dart => ^3.1.5
+  pharaoh: ^0.0.1 # requires Dart => ^3.1.5
 ```
 
 ## Basic Usage:
