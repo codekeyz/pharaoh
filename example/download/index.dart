@@ -33,7 +33,5 @@ void main() async {
     return res.send(file.openRead());
   });
 
-  print(app.routes.map((e) => e.route));
-
   await app.listen(port: 3000);
 }
