@@ -58,7 +58,7 @@ _processBody(Request req, Response res, Function next) async {
       break;
   }
 
-  next();
+  next(req);
 }
 
-const MiddlewareFunc bodyParser = _processBody;
+const HandlerFunc bodyParser = _processBody;

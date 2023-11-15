@@ -10,13 +10,11 @@ extension _ShelfResponseMixin on shelf.Response {
   /// actually work. That way we will know when a Shelf middleware
   /// allows us to continue execution or has terminated the request
   /// lifecyle.
-  void copyTo(Response res) {
-    res
+  Response copyTo(Response res) {
+    return res
       ..status(statusCode)
       ..body = shelf.Body(read())
-      ..updateHeaders((hders) => hders
-        ..clear()
-        ..addAll(headers));
+      ..updateHeaders((hders) => hders..addAll(headers));
   }
 }
 
@@ -38,12 +36,12 @@ shelf.Request _toShelfRequest($Request req) {
   );
 }
 
-MiddlewareFunc useShelfMiddleware(shelf.Middleware middleware) {
+HandlerFunc useShelfMiddleware(shelf.Middleware middleware) {
   return (Request req, Response res, Function next) async {
     final shelfResponse = await middleware(
         (req) => shelf.Response.ok(req.read()))(_toShelfRequest(req));
-    shelfResponse.copyTo(res);
+    res = shelfResponse.copyTo(res);
 
-    next();
+    next(res);
   };
 }
