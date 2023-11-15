@@ -19,7 +19,7 @@ In your pubspec.yaml
 
 ```yaml
 dependencies:
-  pharaoh: ^1.0.0 # requires Dart => ^3.1.5
+  pharaoh: ^0.0.1 # requires Dart => ^3.1.5
 ```
 
 ## Basic Usage:
