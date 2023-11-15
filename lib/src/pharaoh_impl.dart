@@ -7,7 +7,6 @@ import 'http/request.dart';
 import 'http/response.dart';
 import 'middleware/body_parser.dart';
 import 'router/handler.dart';
-import 'router/route.dart';
 import 'utils/exceptions.dart';
 
 class $PharaohImpl implements Pharaoh {
@@ -82,7 +81,7 @@ class $PharaohImpl implements Pharaoh {
 
   @override
   Pharaoh group(final String path, final RouteHandler handler) {
-    final route = Route('/:route(.*)', [HTTPMethod.ALL], prefix: path);
+    final route = Route.path(path);
 
     if (handler is PharoahRouter) {
       _router.use((req, res, next) async {
