@@ -167,6 +167,13 @@ class $PharaohImpl implements Pharaoh {
       if (value != null) httpRes.headers.add(header.key, value);
     }
 
+    httpRes.headers.add('X-Powered-By', 'Pharoah');
+    httpRes.headers.add(HttpHeaders.dateHeader, DateTime.now().toUtc());
+    final contentLength = res.contentLength;
+    if (contentLength != null) {
+      httpRes.headers.add(HttpHeaders.contentLengthHeader, contentLength);
+    }
+
     // TODO(codekeyz) research on handling chunked-encoding
     //
     //var coding = response.headers['transfer-encoding']?.join();
