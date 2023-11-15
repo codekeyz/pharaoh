@@ -146,15 +146,8 @@ class $PharaohImpl implements Pharaoh {
     try {
       return await routerX.handle(reqRes);
     } catch (e) {
-      print(e);
-
-      return (
-        canNext: true,
-        reqRes: (
-          req: reqRes.req,
-          res: Response.from(reqRes.req).internalServerError()
-        )
-      );
+      reqRes.res.internalServerError(e.toString());
+      return (canNext: true, reqRes: reqRes);
     }
   }
 
