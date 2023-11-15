@@ -19,10 +19,10 @@ abstract interface class RoutePathDefinitionContract<T> {
 
   T delete(String path, RequestHandlerFunc handler);
 
-  T use(MiddlewareFunc reqResNext, [Route? route]);
+  T use(HandlerFunc reqResNext, [Route? route]);
 }
 
-mixin RouterMixin<T extends RouteHandler<dynamic>> on RouteHandler
+mixin RouterMixin<T extends RouteHandler> on RouteHandler
     implements RoutePathDefinitionContract<T> {
   RouteGroup _group = RouteGroup.path(BASE_PATH);
 
@@ -88,14 +88,13 @@ mixin RouterMixin<T extends RouteHandler<dynamic>> on RouteHandler
   }
 
   @override
-  T use(MiddlewareFunc reqResNext, [Route? route]) {
+  T use(HandlerFunc reqResNext, [Route? route]) {
     _group.add(Middleware(reqResNext, route ?? Route.any()));
     return this as T;
   }
 }
 
-class PharoahRouter extends RouteHandler<dynamic>
-    with RouterMixin<PharoahRouter> {
+class PharoahRouter extends RouteHandler with RouterMixin<PharoahRouter> {
   @override
-  HandlerFunc get handler => (req, res) => (req: req, res: res);
+  HandlerFunc get handler => (req, res, next) => (req: req, res: res, next);
 }

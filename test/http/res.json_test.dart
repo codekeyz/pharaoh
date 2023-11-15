@@ -23,8 +23,7 @@ void main() {
     group('when given primitives', () {
       test('should respond with json for null', () async {
         final app = Pharaoh().use((req, res, next) {
-          next();
-          return res.json(null);
+          next(res.json(null));
         });
 
         final result = await (await request(app)).get('/');
