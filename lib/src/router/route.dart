@@ -15,19 +15,7 @@ class Route {
 
   String get route {
     if (prefix == null) return path;
-    if (path == ANY_PATH) return '$prefix/*';
     return '$prefix$path';
-  }
-
-  /// The library doesn't handle this well so we have to
-  /// do this ourself.
-  /// See here: https://github.com/leonsenft/path_to_regexp/issues/20
-  ///
-  /// If we are able to resolve this issue with support for wildcard
-  /// matching, then we can use [route] to do the matching
-  String get _routeToMatch {
-    if (prefix == null) return path;
-    return path == ANY_PATH ? prefix! : '$prefix$path';
   }
 
   const Route(
@@ -54,15 +42,7 @@ class Route {
         verbs.contains(HTTPMethod.ALL) || verbs.contains(request.method);
     if (!canMethod) return false;
     if (route == ANY_PATH) return true;
-
-    /// special case for prefixes used in route group matching.
-    if (prefix != null) {
-      final wildcardMatch = path == ANY_PATH;
-      return pathToRegExp(_routeToMatch, prefix: wildcardMatch)
-          .hasMatch(reqPath);
-    }
-
-    return pathToRegExp(route, prefix: false).hasMatch(reqPath);
+    return pathToRegExp(route).hasMatch(reqPath);
   }
 
   /// This is implemented in such a way that if a [Route]

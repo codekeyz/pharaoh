@@ -82,7 +82,7 @@ class $PharaohImpl implements Pharaoh {
 
   @override
   Pharaoh group(final String path, final RouteHandler handler) {
-    final route = Route(ANY_PATH, [HTTPMethod.ALL], prefix: path);
+    final route = Route('/:route(.*)', [HTTPMethod.ALL], prefix: path);
 
     if (handler is PharoahRouter) {
       _router.use((req, res, next) async {
