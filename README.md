@@ -10,8 +10,8 @@
 
 - Robust routing
 - Focus on high performance
-- Super-high test coverage
-- HTTP helpers (redirection, caching, etc)
+- Super-high test coverage _(need more hands, peep the issues and contribute)_
+- HTTP helpers (just like ExpressJS)
 
 ## Installing:
 
