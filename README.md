@@ -49,9 +49,7 @@ void main() async {
 
 ## Philosophy
 
-The Pharaoh philosophy is to provide small, robust tooling for HTTP servers, making
-it a great solution for single page applications, websites, hybrids, or public
-HTTP APIs.
+Pharaoh emerges as a backend framework, inspired by the likes of ExpressJS, to empower developers in building comprehensive server-side applications using Dart. The driving force behind Pharaoh's creation is a strong belief in the potential of Dart to serve as the primary language for developing the entire architecture of a company's product. Just as the JavaScript ecosystem has evolved, Pharaoh aims to contribute to the Dart ecosystem, providing a foundation for building scalable and feature-rich server-side applications.
 
 ## Contributors ✨
 
