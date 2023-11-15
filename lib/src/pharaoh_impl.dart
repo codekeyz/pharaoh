@@ -7,7 +7,6 @@ import 'http/request.dart';
 import 'http/response.dart';
 import 'middleware/body_parser.dart';
 import 'router/handler.dart';
-import 'router/route.dart';
 import 'utils/exceptions.dart';
 
 class $PharaohImpl implements Pharaoh {
@@ -82,7 +81,7 @@ class $PharaohImpl implements Pharaoh {
 
   @override
   Pharaoh group(final String path, final RouteHandler handler) {
-    final route = Route(ANY_PATH, [HTTPMethod.ALL], prefix: path);
+    final route = Route.path(path);
 
     if (handler is PharoahRouter) {
       _router.use((req, res, next) async {
@@ -147,15 +146,8 @@ class $PharaohImpl implements Pharaoh {
     try {
       return await routerX.handle(reqRes);
     } catch (e) {
-      print(e);
-
-      return (
-        canNext: true,
-        reqRes: (
-          req: reqRes.req,
-          res: Response.from(reqRes.req).internalServerError()
-        )
-      );
+      reqRes.res.internalServerError(e.toString());
+      return (canNext: true, reqRes: reqRes);
     }
   }
 
@@ -173,6 +165,13 @@ class $PharaohImpl implements Pharaoh {
     for (final header in res.headers.entries) {
       final value = header.value;
       if (value != null) httpRes.headers.add(header.key, value);
+    }
+
+    httpRes.headers.add('X-Powered-By', 'Pharoah');
+    httpRes.headers.add(HttpHeaders.dateHeader, DateTime.now().toUtc());
+    final contentLength = res.contentLength;
+    if (contentLength != null) {
+      httpRes.headers.add(HttpHeaders.contentLengthHeader, contentLength);
     }
 
     // TODO(codekeyz) research on handling chunked-encoding

@@ -15,11 +15,11 @@ abstract interface class $Response {
 
   Response ok([String? data]);
 
-  Response render([Object? data]);
+  Response send(Object data);
 
-  Response notFound([Object? data]);
+  Response notFound([String? message]);
 
-  Response internalServerError([Object? data]);
+  Response internalServerError([String? message]);
 
   Response type(ContentType type);
 
@@ -71,7 +71,7 @@ class Response extends Message<Body> implements $Response {
     try {
       data = jsonEncode(data);
     } catch (_) {
-      internalServerError(makeError(message: _.toString()).toJson);
+      internalServerError(_.toString());
       return this;
     }
 
@@ -83,24 +83,18 @@ class Response extends Message<Body> implements $Response {
   }
 
   @override
-  Response notFound([Object? object]) {
-    _updateOrThrowIfEnded(
-      (res) {
-        object ??= makeError(message: 'Not found').toJson;
-        res.status(404).json(object!);
-      },
-    );
+  Response notFound([String? message]) {
+    _updateOrThrowIfEnded((res) => res
+        .status(404)
+        .json(makeError(message: message ?? 'Not found').toJson));
     return this;
   }
 
   @override
-  Response internalServerError([Object? object]) {
-    _updateOrThrowIfEnded(
-      (res) {
-        object ??= makeError(message: 'Internal Server Error').toJson;
-        res.status(500).json(object!);
-      },
-    );
+  Response internalServerError([String? message]) {
+    _updateOrThrowIfEnded((res) => res
+        .status(500)
+        .json(makeError(message: message ?? 'Internal Server Error').toJson));
     return this;
   }
 
@@ -115,9 +109,9 @@ class Response extends Message<Body> implements $Response {
   }
 
   @override
-  Response render([Object? data]) {
+  Response send(Object data) {
     _updateOrThrowIfEnded((res) => res
-      ..type(ContentType.html).body = Body(data)
+      ..body = Body(data)
       ..end());
     return this;
   }

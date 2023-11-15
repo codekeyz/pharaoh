@@ -21,7 +21,6 @@ class PharoahException extends Error {
         _hasValue = true;
 
   String get _errorName => "Pharoah Error${!_hasValue ? "(s)" : ""}";
-  String get _errorExplanation => "";
 
   @override
   String toString() {
@@ -30,9 +29,8 @@ class PharoahException extends Error {
     String prefix = "$_errorName$messageString";
     if (!_hasValue) return prefix;
     // If we know the invalid value, we can try to describe the problem.
-    String explanation = _errorExplanation;
     String errorValue = Error.safeToString(invalidValue);
-    return "$prefix$explanation ---> $errorValue";
+    return "$prefix ---> $errorValue";
   }
 }
 

@@ -24,7 +24,10 @@ typedef HandlerResult = ({bool canNext, ReqRes reqRes});
 abstract class RouteHandler<T> {
   Route get route;
   T get handler;
-  bool get internal;
+
+  Map<String, String> _routeParams = {};
+
+  Map<String, String> get params => _routeParams;
 
   bool _canNext = false;
 
@@ -32,14 +35,25 @@ abstract class RouteHandler<T> {
 
   void next() => _canNext = true;
 
+  void setParams(Map<String, String> params) {
+    _routeParams = params;
+  }
+
   RouteHandler prefix(String prefix);
 
   Future<HandlerResult> handle(final ReqRes reqRes) async {
-    final hdlrResult = await (handler as dynamic)(reqRes.req, reqRes.res);
+    final req = reqRes.req;
+    if (_routeParams.isNotEmpty) {
+      for (final param in params.entries) {
+        req.updateParams(param.key, param.value);
+      }
+    }
+
+    final hdlrResult = await (handler as dynamic)(req, reqRes.res);
     return switch (hdlrResult.runtimeType) {
       // ignore: prefer_void_to_null
       Null => (canNext: true, reqRes: reqRes),
-      Response => (canNext: true, reqRes: (req: reqRes.req, res: reqRes.res)),
+      Response => (canNext: true, reqRes: (req: req, res: reqRes.res)),
       Type() => throw PharoahException.value(
           "Unknown result type from handler", hdlrResult),
     };
@@ -68,9 +82,6 @@ class RequestHandler extends RouteHandler<RequestHandlerFunc> {
 
   @override
   Route get route => _route;
-
-  @override
-  bool get internal => false;
 
   @override
   Future<HandlerResult> handle(ReqRes reqRes) {
@@ -107,13 +118,4 @@ class Middleware extends RouteHandler<HandlerFunc> {
 
   @override
   Route get route => _route;
-
-  @override
-  bool get internal => false;
-}
-
-class InternalMiddleware extends Middleware {
-  InternalMiddleware(super.func, super.route);
-  @override
-  bool get internal => true;
 }
