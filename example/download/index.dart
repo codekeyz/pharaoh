@@ -6,6 +6,8 @@ final app = Pharaoh();
 
 void main() async {
   final scriptDir = Directory.current;
+
+  /// path to where the files are stored on disk
   final publicDir = '${scriptDir.path}/example/download/public';
 
   app.get('/', (req, res) async {
@@ -14,17 +16,24 @@ void main() async {
     if (!exists) {
       return res.status(404).send('"Cant find that file, sorry!"');
     }
-
-    res.type(ContentType.html).send(file.openRead());
+    return res.type(ContentType.html).send(file.openRead());
   });
 
+  /// /files/* is accessed via req.params[0]
+  /// but here we name it :file
   app.get('/files/:file(.*)', (req, res) async {
-    final file = File('$publicDir/${req.path}');
-    final exists = await file.exists();
-    if (!exists) return res.notFound('File not found');
+    final pathToFile = req.params['file'];
 
-    res.send(file.openRead());
+    final file = File('$publicDir/files/$pathToFile');
+    final exists = await file.exists();
+    if (!exists) {
+      return res.status(404).send('"Cant find that file, sorry!"');
+    }
+
+    return res.send(file.openRead());
   });
+
+  print(app.routes.map((e) => e.route));
 
   await app.listen(port: 3000);
 }

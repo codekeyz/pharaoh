@@ -55,11 +55,11 @@ mixin RouterMixin<T extends RouteHandler> on RouteHandler
       final data = await handler.handle(reqRes);
       result = data.reqRes;
 
-      final breakOut = data.canNext == false || result.res.ended;
+      final breakOut = result.res.ended || !data.canNext;
       if (breakOut) return (canNext: true, reqRes: result);
     }
 
-    return (canNext: true, reqRes: result);
+    return (canNext: false, reqRes: result);
   }
 
   @override

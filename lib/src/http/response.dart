@@ -93,9 +93,7 @@ class Response extends Message<shelf.Body> implements $Response {
           .end();
 
   @override
-  Response send(Object data) => Response._(_httpReq)
-    ..body = shelf.Body(data)
-    ..end();
+  Response send(Object data) => Response._(_httpReq, shelf.Body(data)).end();
 
   @override
   Response end() => Response._(_httpReq, body).._ended = true;

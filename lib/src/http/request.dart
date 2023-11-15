@@ -70,8 +70,10 @@ class Request extends Message<dynamic> implements $Request<dynamic> {
   final Map<String, dynamic> _context = {};
 
   Request._(this._req) : super(_req) {
-    updateHeaders(
-        (hders) => req.headers.forEach((name, values) => hders[name] = values));
+    updateHeaders((hders) {
+      req.headers.forEach((name, values) => hders[name] = values);
+      hders.remove(HttpHeaders.transferEncodingHeader);
+    });
     _params.addAll(_req.uri.queryParameters);
   }
 
