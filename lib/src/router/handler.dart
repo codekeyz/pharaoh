@@ -49,7 +49,7 @@ abstract class RouteHandler {
     bool canGotoNext = false;
     await handler(request, reqRes.res, ([nr_]) {
       if (nr_ != null && nr_ is! Request && nr_ is! Response) {
-        throw PharoahException.value(
+        throw PharaohException.value(
             'Next Function result can only be Request or Response');
       }
 

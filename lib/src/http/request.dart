@@ -23,7 +23,7 @@ HTTPMethod getHttpMethod(HttpRequest req) {
     case 'TRACE':
       return HTTPMethod.TRACE;
     default:
-      throw PharoahException('Method ${req.method} not yet supported');
+      throw PharaohException('Method ${req.method} not yet supported');
   }
 }
 

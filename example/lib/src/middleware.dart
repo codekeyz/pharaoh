@@ -4,7 +4,7 @@ import 'package:shelf_cors_headers/shelf_cors_headers.dart';
 final app = Pharaoh();
 
 void main() async {
-  /// Using shelf_cors_header with Pharoah
+  /// Using shelf_cors_header with Pharaoh
   app.use(useShelfMiddleware(corsHeaders()));
   app.use(logRequests);
 

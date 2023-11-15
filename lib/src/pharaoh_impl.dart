@@ -12,13 +12,13 @@ import 'router/handler.dart';
 import 'shelf_interop/shelf.dart' as shelf;
 
 class $PharaohImpl implements Pharaoh {
-  late final PharoahRouter _router;
+  late final PharaohRouter _router;
   late final HttpServer _server;
   late final Logger _logger;
 
   $PharaohImpl()
       : _logger = Logger(),
-        _router = PharoahRouter() {
+        _router = PharaohRouter() {
     _router.use(bodyParser);
   }
 
@@ -46,7 +46,7 @@ class $PharaohImpl implements Pharaoh {
   }
 
   @override
-  PharoahRouter router() => PharoahRouter();
+  PharaohRouter router() => PharaohRouter();
 
   @override
   List<Route> get routes => _router.routes;
@@ -85,7 +85,7 @@ class $PharaohImpl implements Pharaoh {
   Pharaoh group(final String path, final RouteHandler handler) {
     final route = Route.path(path);
 
-    if (handler is PharoahRouter) {
+    if (handler is PharaohRouter) {
       _router.use((req, res, next) async {
         final result = await drainRouter(handler.prefix(path), (
           req: req,
@@ -147,7 +147,7 @@ class $PharaohImpl implements Pharaoh {
   }
 
   Future<HandlerResult> drainRouter(
-    PharoahRouter routerX,
+    PharaohRouter routerX,
     ReqRes reqRes,
   ) async {
     try {
@@ -187,7 +187,7 @@ class $PharaohImpl implements Pharaoh {
           .set(HttpHeaders.transferEncodingHeader, 'chunked');
     }
 
-    request.response.headers.add('X-Powered-By', 'Pharoah');
+    request.response.headers.add('X-Powered-By', 'Pharaoh');
     request.response.headers
         .add(HttpHeaders.dateHeader, DateTime.now().toUtc());
     final contentLength = res_.contentLength;

@@ -1,6 +1,6 @@
 import '../http/request.dart';
 
-class PharoahException extends Error {
+class PharaohException extends Error {
   /// Whether value was provided.
   final bool _hasValue;
 
@@ -11,16 +11,16 @@ class PharoahException extends Error {
   final dynamic message;
 
   @pragma("vm:entry-point")
-  PharoahException(this.message)
+  PharaohException(this.message)
       : invalidValue = null,
         _hasValue = false;
 
   @pragma("vm:entry-point")
-  PharoahException.value(this.message, [value])
+  PharaohException.value(this.message, [value])
       : invalidValue = value,
         _hasValue = true;
 
-  String get _errorName => "Pharoah Error${!_hasValue ? "(s)" : ""}";
+  String get _errorName => "Pharaoh Error${!_hasValue ? "(s)" : ""}";
 
   @override
   String toString() {
@@ -34,12 +34,12 @@ class PharoahException extends Error {
   }
 }
 
-class PharoahErrorBody {
+class PharaohErrorBody {
   final String path;
   final HTTPMethod method;
   final String message;
 
-  const PharoahErrorBody(
+  const PharaohErrorBody(
     this.message,
     this.path, {
     required this.method,

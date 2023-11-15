@@ -123,16 +123,16 @@ class RouteGroup {
   void add(RouteHandler newHandler) {
     final newRoute = newHandler.route.route.trim();
     if (newRoute.isEmpty) {
-      throw PharoahException('Route cannot be an empty string');
+      throw PharaohException('Route cannot be an empty string');
     } else if (!reservedPaths.contains(newRoute[0])) {
-      throw PharoahException.value('Route start with $BASE_PATH', newRoute);
+      throw PharaohException.value('Route start with $BASE_PATH', newRoute);
     }
 
     final existingHandler = handlers.firstWhereOrNull(
         (e) => e.route.isSameAs(newHandler.route) && e is RequestHandler);
     if (existingHandler != null && newHandler is RequestHandler) {
       final route = existingHandler.route;
-      throw PharoahException.value(
+      throw PharaohException.value(
         'Request handler already registered for route',
         '${verbString(route.verbs)} on ${route.route}',
       );

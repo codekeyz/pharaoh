@@ -1,4 +1,4 @@
-# Pharoah 🏇
+# Pharaoh 🏇
 
 [![Dart CI](https://github.com/codekeyz/pharaoh/workflows/Dart/badge.svg)](https://github.com/codekeyz/pharaoh/actions/workflows/dart.yml)
 [![Pub Version](https://img.shields.io/pub/v/pharaoh?color=green)](https://pub.dev/packages/pharaoh)
@@ -49,7 +49,7 @@ void main() async {
 
 ## Philosophy
 
-The Pharoah philosophy is to provide small, robust tooling for HTTP servers, making
+The Pharaoh philosophy is to provide small, robust tooling for HTTP servers, making
 it a great solution for single page applications, websites, hybrids, or public
 HTTP APIs.
 
@@ -70,7 +70,7 @@ $ dart test
 
 ## People
 
-The original author of Pharoah is [Chima Precious](https://github.com/codekeyz)
+The original author of Pharaoh is [Chima Precious](https://github.com/codekeyz)
 
 [List of all contributors](https://github.com/codekeyz/pharaoh/graphs/contributors)
 

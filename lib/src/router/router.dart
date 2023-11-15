@@ -96,7 +96,7 @@ mixin RouterMixin<T extends RouteHandler> on RouteHandler
   }
 }
 
-class PharoahRouter extends RouteHandler with RouterMixin<PharoahRouter> {
+class PharaohRouter extends RouteHandler with RouterMixin<PharaohRouter> {
   @override
   HandlerFunc get handler => (req, res, next) => (req: req, res: res, next);
 }

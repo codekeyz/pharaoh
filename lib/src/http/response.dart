@@ -98,6 +98,6 @@ class Response extends Message<shelf.Body> implements $Response {
   @override
   Response end() => Response._(_httpReq, body).._ended = true;
 
-  PharoahErrorBody makeError({required String message}) =>
-      PharoahErrorBody(message, _reqInfo.path, method: _reqInfo.method);
+  PharaohErrorBody makeError({required String message}) =>
+      PharaohErrorBody(message, _reqInfo.path, method: _reqInfo.method);
 }
