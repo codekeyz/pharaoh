@@ -47,7 +47,11 @@ class TestAgent {
   static _$TesterImpl? _instance;
 
   static Future<Tester> create<T>(TestApp app) async {
-    if (_instance != null) return _instance!;
+    if (_instance != null) {
+      await _instance!._server.close();
+      _instance = null;
+    }
+
     final server = await HttpServer.bind('127.0.0.1', 0)
       ..listen(app);
     _instance = _$TesterImpl(server);
