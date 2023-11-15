@@ -1,7 +1,7 @@
 name: pharaoh
-description: A starting point for Dart libraries or applications.
-version: 1.0.0
-repository: https://github.com/codekeyz/pharoah
+description: Fast, unopinionated, minimalist web framework for Dart
+version: 0.0.1
+repository: https://github.com/codekeyz/pharaoh
 
 environment:
   sdk: ^3.1.5
@@ -16,9 +16,6 @@ dependencies:
   mason_logger: ^0.2.10
   # We only need this to implement inter-operability for shelf
   shelf: ^1.4.1
-
-  # TODO(codekeyz) move this packages into example usages of pharoah. We don't need it to run Pharoah
-  shelf_cors_headers: ^0.1.5
 
 dev_dependencies:
   lints: ^2.0.0

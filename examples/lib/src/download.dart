@@ -7,6 +7,8 @@ final app = Pharaoh();
 void main() async {
   final scriptDir = Directory.current;
 
+  print(scriptDir);
+
   /// path to where the files are stored on disk
   final publicDir = '${scriptDir.path}/example/download/public';
 

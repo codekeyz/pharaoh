@@ -1,10 +1,10 @@
 # Pharoah 🏇
 
-[![Dart CI](https://github.com/codekeyz/pharoah/workflows/Dart/badge.svg)](https://github.com/codekeyz/pharoah/actions/workflows/dart.yml)
-[![Pub Version](https://img.shields.io/pub/v/pharoah?color=green)](https://pub.dev/packages/pharoah)
-[![popularity](https://img.shields.io/pub/popularity/pharoah?logo=dart)](https://pub.dev/packages/pharoah/score)
-[![likes](https://img.shields.io/pub/likes/pharoah?logo=dart)](https://pub.dev/packages/pharoah/score)
-[![style: flutter lints](https://img.shields.io/pharoah/style-flutter__lints-blue)](https://pub.dev/packages/flutter_lints)
+[![Dart CI](https://github.com/codekeyz/pharaoh/workflows/Dart/badge.svg)](https://github.com/codekeyz/pharaoh/actions/workflows/dart.yml)
+[![Pub Version](https://img.shields.io/pub/v/pharaoh?color=green)](https://pub.dev/packages/pharaoh)
+[![popularity](https://img.shields.io/pub/popularity/pharaoh?logo=dart)](https://pub.dev/packages/pharaoh/score)
+[![likes](https://img.shields.io/pub/likes/pharaoh?logo=dart)](https://pub.dev/packages/pharaoh/score)
+[![style: flutter lints](https://img.shields.io/pharaoh/style-flutter__lints-blue)](https://pub.dev/packages/flutter_lints)
 
 ## Features
 
@@ -19,7 +19,7 @@ In your pubspec.yaml
 
 ```yaml
 dependencies:
-  pharoah: ^1.0.0 # requires Dart => ^3.1.5
+  pharaoh: ^1.0.0 # requires Dart => ^3.1.5
 ```
 
 ## Basic Usage:
@@ -72,7 +72,7 @@ $ dart test
 
 The original author of Pharoah is [Chima Precious](https://github.com/codekeyz)
 
-[List of all contributors](https://github.com/codekeyz/pharoah/graphs/contributors)
+[List of all contributors](https://github.com/codekeyz/pharaoh/graphs/contributors)
 
 ## License
 
