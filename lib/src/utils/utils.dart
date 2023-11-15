@@ -1,11 +1,16 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 String encodeObject(dynamic object) {
   if (object == null) return 'null';
   if (object is Map) return jsonEncode(object);
   if (object is String) return object;
   return object.toString();
+}
+
+String contentTypeToString(ContentType type, {String charset = 'utf-8'}) {
+  return '${type.value}; charset=${type.charset ?? charset}';
 }
 
 /// Run [callback] and capture any errors that would otherwise be top-leveled.

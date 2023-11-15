@@ -13,4 +13,4 @@ Content-Type      ${req.mimeType}
   next();
 }
 
-const MiddlewareFunc logRequests = _processBody;
+const HandlerFunc logRequests = _processBody;

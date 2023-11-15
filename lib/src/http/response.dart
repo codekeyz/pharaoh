@@ -2,7 +2,8 @@ import 'dart:convert';
 import 'dart:io';
 
 import '../utils/exceptions.dart';
-import '../shelf_interop/shelf.dart';
+import '../shelf_interop/shelf.dart' as shelf;
+import '../utils/utils.dart';
 import 'message.dart';
 import 'request.dart';
 
@@ -11,7 +12,7 @@ abstract interface class $Response {
 
   Response end();
 
-  Response json(Object data);
+  Response json(Object? data);
 
   Response ok([String? data]);
 
@@ -26,106 +27,76 @@ abstract interface class $Response {
   Response status(int code);
 }
 
-class Response extends Message<Body> implements $Response {
+class Response extends Message<shelf.Body> implements $Response {
   /// This is just an interface that holds the current request information
   late final $Request _reqInfo;
 
-  int _statusCode = 200;
+  late final HttpRequest _httpReq;
 
   bool _ended = false;
 
   bool get ended => _ended;
 
-  int get statusCode => _statusCode;
+  Response._(this._httpReq, [shelf.Body? body])
+      : _reqInfo = Request.from(_httpReq),
+        super(_httpReq, body ?? shelf.Body(null)) {
+    updateHeaders((hders) => _httpReq.response.headers
+        .forEach((name, values) => hders[name] = values));
+  }
 
-  Response._(this._reqInfo) : super(null, Body(null));
-
-  factory Response.from($Request request) => Response._(request);
+  factory Response.from(HttpRequest request) => Response._(request);
 
   @override
   Response type(ContentType type) {
-    _updateOrThrowIfEnded((res) => res.updateHeaders(
-        (hds) => hds[HttpHeaders.contentTypeHeader] = type.value));
-    return this;
+    final value = contentTypeToString(type);
+    _httpReq.response.headers.set(HttpHeaders.contentTypeHeader, value);
+    return Response._(_httpReq, body);
   }
 
   @override
   Response status(int code) {
-    _updateOrThrowIfEnded((res) => res._statusCode = code);
-    return this;
+    _httpReq.response.statusCode = code;
+    return Response._(_httpReq);
   }
 
   @override
   Response redirect(String url, [int statusCode = HttpStatus.found]) {
-    _updateOrThrowIfEnded(
-      (res) => res
-        ..status(statusCode)
-        ..updateHeaders((hds) => hds[HttpHeaders.locationHeader] = url)
-        ..end(),
-    );
-    return this;
+    _httpReq.response.headers.set(HttpHeaders.locationHeader, url);
+    return Response._(_httpReq).status(statusCode).end();
   }
 
   @override
-  Response json(Object data) {
+  Response json(Object? data) {
+    late Object result;
     try {
-      data = jsonEncode(data);
+      result = jsonEncode(data);
     } catch (_) {
-      internalServerError(_.toString());
-      return this;
+      result = jsonEncode(makeError(message: _.toString()).toJson);
     }
-
-    _updateOrThrowIfEnded((res) => res
-      ..type(ContentType.json)
-      ..body = Body(data, encoding)
-      ..end());
-    return this;
+    return Response._(_httpReq, shelf.Body(result)).end();
   }
 
   @override
-  Response notFound([String? message]) {
-    _updateOrThrowIfEnded((res) => res
-        .status(404)
-        .json(makeError(message: message ?? 'Not found').toJson));
-    return this;
-  }
+  Response notFound([String? message]) => Response._(_httpReq)
+      .status(404)
+      .json(makeError(message: message ?? 'Not found').toJson);
 
   @override
-  Response internalServerError([String? message]) {
-    _updateOrThrowIfEnded((res) => res
-        .status(500)
-        .json(makeError(message: message ?? 'Internal Server Error').toJson));
-    return this;
-  }
+  Response internalServerError([String? message]) => Response._(_httpReq)
+      .status(500)
+      .json(makeError(message: message ?? 'Internal Server Error').toJson);
 
   @override
-  Response ok([String? data]) {
-    _updateOrThrowIfEnded((res) => res
-      ..type(ContentType.text)
-      ..body = Body(data, encoding)
-      ..status(200)
-      ..end());
-    return this;
-  }
+  Response ok([String? data]) =>
+      Response._(_httpReq, shelf.Body(data, encoding))
+          .type(ContentType.text)
+          .end();
 
   @override
-  Response send(Object data) {
-    _updateOrThrowIfEnded((res) => res
-      ..body = Body(data)
-      ..end());
-    return this;
-  }
+  Response send(Object data) => Response._(_httpReq, shelf.Body(data)).end();
 
   @override
-  Response end() {
-    _ended = true;
-    return this;
-  }
-
-  void _updateOrThrowIfEnded(Function(Response res) update) {
-    if (_ended) throw PharoahException('Response lifecyle already ended');
-    update(this);
-  }
+  Response end() => Response._(_httpReq, body).._ended = true;
 
   PharoahErrorBody makeError({required String message}) =>
       PharoahErrorBody(message, _reqInfo.path, method: _reqInfo.method);

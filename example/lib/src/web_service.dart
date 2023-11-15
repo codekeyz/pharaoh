@@ -40,32 +40,28 @@ void main() async {
 
     /// key isn't present
     if (key == null) {
-      res.status(400).json('API key required');
+      next(res.status(400).json('API key required'));
       return;
     }
 
     /// key is invalid
     if (!apiKeys.contains(key)) {
-      res.status(401).json('Invalid API key');
+      next(res.status(401).json('Invalid API key'));
       return;
     }
 
     req['key'] = key;
 
-    next();
+    next(req);
   }, Route.path('/api'));
 
   /// we now can assume the api key is valid,
   /// and simply expose the data
   /// example: http://localhost:3000/api/users/?api-key=foo
-  app.get('/api/users', (req, res) {
-    res.json(users);
-  });
+  app.get('/api/users', (req, res) => res.json(users));
 
   /// example: http://localhost:3000/api/repos/?api-key=foo
-  app.get('/api/repos', (req, res) {
-    res.json(repos);
-  });
+  app.get('/api/repos', (req, res) => res.json(repos));
 
   /// example: http://localhost:3000/api/user/tobi/repos/?api-key=foo
   app.get('/api/user/:name/repos', (req, res) {
@@ -73,11 +69,10 @@ void main() async {
     var user = userRepos[name];
 
     if (user != null) {
-      res.json(user);
-      return;
+      return res.json(user);
     }
 
-    res.notFound();
+    return res.notFound();
   });
 
   await app.listen(port: 3000);

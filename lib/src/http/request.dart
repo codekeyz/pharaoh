@@ -44,21 +44,10 @@ abstract interface class $Request<T> {
 
   Map<String, dynamic> get params;
 
+  Map<String, dynamic> get headers;
+
   T? get body;
 
-  /// TODO(codekeyz) implement this so that we can retrieve objects
-  /// from the current request context.
-  /// This can be useful to middlewares that will want to make available
-  /// loggers, etc to other handlers in the route handler execution list
-  ///
-  /// Use this to get objects from the current request context
-  /// Middlewares can make available extra stuffs eg: Files during
-  /// a file upload.
-  /// Example:
-  /// ```dart
-  /// final files = req['files'];
-  /// print(result);
-  /// ```
   Object? operator [](String name);
 }
 
@@ -68,10 +57,9 @@ class Request extends Message<dynamic> implements $Request<dynamic> {
   final Map<String, dynamic> _context = {};
 
   Request._(this._req) : super(_req) {
-    updateHeaders((headers) {
-      req.headers.forEach((name, values) {
-        headers[name] = values;
-      });
+    updateHeaders((hders) {
+      req.headers.forEach((name, values) => hders[name] = values);
+      hders.remove(HttpHeaders.transferEncodingHeader);
     });
     _params.addAll(_req.uri.queryParameters);
   }

@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:collection/collection.dart';
+import 'package:http_parser/http_parser.dart';
 import 'package:mason_logger/mason_logger.dart';
 
 import '../pharaoh.dart';
@@ -7,7 +9,7 @@ import 'http/request.dart';
 import 'http/response.dart';
 import 'middleware/body_parser.dart';
 import 'router/handler.dart';
-import 'utils/exceptions.dart';
+import 'shelf_interop/shelf.dart' as shelf;
 
 class $PharaohImpl implements Pharaoh {
   late final PharoahRouter _router;
@@ -74,7 +76,7 @@ class $PharaohImpl implements Pharaoh {
   }
 
   @override
-  Pharaoh use(MiddlewareFunc reqResNext, [Route? route]) {
+  Pharaoh use(HandlerFunc reqResNext, [Route? route]) {
     _router.use(reqResNext, route);
     return this;
   }
@@ -85,20 +87,22 @@ class $PharaohImpl implements Pharaoh {
 
     if (handler is PharoahRouter) {
       _router.use((req, res, next) async {
-        await drainRouter(handler.prefix(path), (req: req, res: res));
-        next();
+        final result = await drainRouter(handler.prefix(path), (
+          req: req,
+          res: res,
+        ));
+
+        if (!result.canNext) {
+          next();
+          return;
+        }
+
+        next(result.reqRes.res);
       }, route);
       return this;
     }
 
-    MiddlewareFunc func = switch (handler.runtimeType) {
-      Middleware => handler.handler,
-      RequestHandler => (req, res, _) => handler.handler(req, res),
-      Type() => throw PharoahException.value(
-          'RouteHandler type not known', handler.runtimeType),
-    };
-
-    _router.use(func, route);
+    _router.use(handler.handler, route);
     return this;
   }
 
@@ -125,18 +129,21 @@ class $PharaohImpl implements Pharaoh {
     // [response.headers] so that the user or Shelf can explicitly override it if
     // necessary.
     httpReq.response.headers.chunkedTransferEncoding = false;
+    httpReq.response.headers.clear();
 
     final req = Request.from(httpReq);
     final result =
-        await drainRouter(_router, (req: req, res: Response.from(req)));
+        await drainRouter(_router, (req: req, res: Response.from(httpReq)));
     if (result.canNext == false) return;
 
     final res = result.reqRes.res;
-    if (res.ended) {
-      return forward(httpReq.response, res);
-    }
+    if (res.ended) return forward(httpReq, res);
 
-    return forward(httpReq.response, res.notFound());
+    return forward(
+        httpReq,
+        res
+            .type(ContentType.json)
+            .notFound("No handlers registered for path: ${req.path}"));
   }
 
   Future<HandlerResult> drainRouter(
@@ -146,51 +153,52 @@ class $PharaohImpl implements Pharaoh {
     try {
       return await routerX.handle(reqRes);
     } catch (e) {
-      reqRes.res.internalServerError(e.toString());
-      return (canNext: true, reqRes: reqRes);
+      final res = reqRes.res.internalServerError(e.toString());
+      return (
+        canNext: true,
+        reqRes: (req: reqRes.req, res: res),
+      );
     }
   }
 
   bool hasNoRequestHandlers(List<RouteHandler> handlers) =>
       !handlers.any((e) => e is RequestHandler);
 
-  Future<void> forward(HttpResponse httpRes, Response res) {
-    final body = res.body;
-    if (body == null) {
-      throw PharoahException('Body value must always be present');
+  Future<void> forward(HttpRequest request, Response res_) async {
+    var coding = res_.headers['transfer-encoding'];
+
+    final statusCode = request.response.statusCode;
+    if (coding != null && !equalsIgnoreAsciiCase(coding, 'identity')) {
+      // If the response is already in a chunked encoding, de-chunk it because
+      // otherwise `dart:io` will try to add another layer of chunking.
+      //
+      // TODO(codekeyz): Do this more cleanly when sdk#27886 is fixed.
+      final newStream = chunkedCoding.decoder.bind(res_.body!.read());
+      res_ = Response.from(request)..body = shelf.Body(newStream);
+      request.headers.set(HttpHeaders.transferEncodingHeader, 'chunked');
+    } else if (statusCode >= 200 &&
+        statusCode != 204 &&
+        statusCode != 304 &&
+        res_.contentLength == null &&
+        res_.mimeType != 'multipart/byteranges') {
+      // If the response isn't chunked yet and there's no other way to tell its
+      // length, enable `dart:io`'s chunked encoding.
+      request.response.headers
+          .set(HttpHeaders.transferEncodingHeader, 'chunked');
     }
 
-    httpRes.statusCode = res.statusCode;
-
-    for (final header in res.headers.entries) {
-      final value = header.value;
-      if (value != null) httpRes.headers.add(header.key, value);
-    }
-
-    httpRes.headers.add('X-Powered-By', 'Pharoah');
-    httpRes.headers.add(HttpHeaders.dateHeader, DateTime.now().toUtc());
-    final contentLength = res.contentLength;
+    request.response.headers.add('X-Powered-By', 'Pharoah');
+    request.response.headers
+        .add(HttpHeaders.dateHeader, DateTime.now().toUtc());
+    final contentLength = res_.contentLength;
     if (contentLength != null) {
-      httpRes.headers.add(HttpHeaders.contentLengthHeader, contentLength);
+      request.response.headers
+          .add(HttpHeaders.contentLengthHeader, contentLength);
     }
 
-    // TODO(codekeyz) research on handling chunked-encoding
-    //
-    //var coding = response.headers['transfer-encoding']?.join();
-    // if (coding != null && !equalsIgnoreAsciiCase(coding, 'identity')) {
-    //   respBody = Body(chunkedCoding.decoder.bind(body!.read()));
-    //   response.headers.set(HttpHeaders.transferEncodingHeader, 'chunked');
-    // } else if (response.statusCode >= 200 &&
-    //     response.statusCode != 204 &&
-    //     response.statusCode != 304 &&
-    //     respBody.contentLength == null &&
-    //     mimeType != 'multipart/byteranges') {
-    //   // If the response isn't chunked yet and there's no other way to tell its
-    //   // length, enable `dart:io`'s chunked encoding.
-    //   response.headers.set(HttpHeaders.transferEncodingHeader, 'chunked');
-    // }
-
-    return httpRes.addStream(body.read()).then((value) => httpRes.close());
+    return request.response
+        .addStream(res_.body!.read())
+        .then((_) => request.response.close());
   }
 
   @override

@@ -7,6 +7,8 @@ import 'route.dart';
 
 typedef ReqRes = ({Request req, Response res});
 
+typedef NextFunction = dynamic Function([dynamic result]);
+
 /// This type of handler allows you to use the actual
 /// request instance [Request].
 ///
@@ -14,26 +16,20 @@ typedef ReqRes = ({Request req, Response res});
 /// request before it reaches other handlers in your application.
 ///
 /// See here: [Middleware]
-typedef HandlerFunc = FutureOr<dynamic> Function(Request req, Response res);
+typedef HandlerFunc = Function(Request req, Response res, NextFunction next);
 
 typedef HandlerResult = ({bool canNext, ReqRes reqRes});
 
 /// All route handler types must extend this class.
 ///
 /// See: [RequestHandler] and [Middleware] types
-abstract class RouteHandler<T> {
+abstract class RouteHandler {
   Route get route;
-  T get handler;
+  HandlerFunc get handler;
 
   Map<String, String> _routeParams = {};
 
   Map<String, String> get params => _routeParams;
-
-  bool _canNext = false;
-
-  bool get canNext => _canNext;
-
-  void next() => _canNext = true;
 
   void setParams(Map<String, String> params) {
     _routeParams = params;
@@ -42,21 +38,27 @@ abstract class RouteHandler<T> {
   RouteHandler prefix(String prefix);
 
   Future<HandlerResult> handle(final ReqRes reqRes) async {
-    final req = reqRes.req;
+    final request = reqRes.req;
     if (_routeParams.isNotEmpty) {
       for (final param in params.entries) {
-        req.updateParams(param.key, param.value);
+        request.updateParams(param.key, param.value);
       }
     }
 
-    final hdlrResult = await (handler as dynamic)(req, reqRes.res);
-    return switch (hdlrResult.runtimeType) {
-      // ignore: prefer_void_to_null
-      Null => (canNext: true, reqRes: reqRes),
-      Response => (canNext: true, reqRes: (req: req, res: reqRes.res)),
-      Type() => throw PharoahException.value(
-          "Unknown result type from handler", hdlrResult),
-    };
+    ReqRes result = reqRes;
+    bool canGotoNext = false;
+    await handler(request, reqRes.res, ([nr_]) {
+      if (nr_ != null && nr_ is! Request && nr_ is! Response) {
+        throw PharoahException.value(
+            'Next Function result can only be Request or Response');
+      }
+
+      if (nr_ is Request) result = (req: nr_, res: reqRes.res);
+      if (nr_ is Response) result = (req: reqRes.req, res: nr_);
+      canGotoNext = true;
+    });
+
+    return (canNext: canGotoNext, reqRes: result);
   }
 }
 
@@ -65,7 +67,7 @@ typedef RequestHandlerFunc = FutureOr<dynamic> Function(
   $Response res,
 );
 
-class RequestHandler extends RouteHandler<RequestHandlerFunc> {
+class RequestHandler extends RouteHandler {
   final RequestHandlerFunc _func;
   final Route _route;
 
@@ -78,28 +80,18 @@ class RequestHandler extends RouteHandler<RequestHandlerFunc> {
       );
 
   @override
-  RequestHandlerFunc get handler => _func;
+  HandlerFunc get handler => (req, res, next_) async {
+        final result = await _func(req, res);
+        next_(result);
+      };
 
   @override
   Route get route => _route;
-
-  @override
-  Future<HandlerResult> handle(ReqRes reqRes) {
-    next();
-    return super.handle(reqRes);
-  }
 }
 
 ///  [Middleware] type route handler
-///
-///
-///
-///
-///  The foremost thing you should know is 'middl'
-typedef MiddlewareFunc = Function(Request req, Response res, Function next);
-
-class Middleware extends RouteHandler<HandlerFunc> {
-  final MiddlewareFunc _func;
+class Middleware extends RouteHandler {
+  final HandlerFunc _func;
   final Route _route;
   Middleware(this._func, this._route);
 
@@ -110,11 +102,7 @@ class Middleware extends RouteHandler<HandlerFunc> {
       );
 
   @override
-  HandlerFunc get handler => (req, res) => _func(
-        req,
-        res,
-        () => next(),
-      );
+  HandlerFunc get handler => (req, res, next_) => _func(req, res, next_);
 
   @override
   Route get route => _route;
