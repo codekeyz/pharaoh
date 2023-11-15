@@ -8,6 +8,8 @@ import 'router.dart';
 
 String verbString(List<HTTPMethod> verbs) => verbs.map((e) => e.name).join(':');
 
+typedef RouteResult = ({bool hasMatch, Map<String, String> params});
+
 class Route {
   final String path;
   final List<HTTPMethod> verbs;
@@ -42,13 +44,24 @@ class Route {
         prefix: prefix,
       );
 
-  bool canHandle(Request request) {
+  RouteResult canHandle(Request request) {
     final reqPath = _cleanPath(request);
     final canMethod =
         verbs.contains(HTTPMethod.ALL) || verbs.contains(request.method);
-    if (!canMethod) return false;
-    if (route == ANY_PATH) return true;
-    return pathToRegExp(route).hasMatch(reqPath);
+    if (!canMethod) return (hasMatch: false, params: {});
+    if (route == ANY_PATH) return (hasMatch: true, params: {});
+
+    final parameters = <String>[];
+
+    final regExp = pathToRegExp(route, parameters: parameters);
+    final hasMatch = regExp.hasMatch(reqPath);
+    if (!hasMatch) return (hasMatch: false, params: {});
+
+    final match = regExp.matchAsPrefix(reqPath);
+    if (match == null) return (hasMatch: true, params: {});
+
+    final params = extract(parameters, match);
+    return (hasMatch: true, params: params);
   }
 
   /// This is implemented in such a way that if a [Route]
@@ -137,7 +150,18 @@ class RouteGroup {
 List<RouteHandler> findHandlersForRequest(
   Request request,
   List<RouteHandler> handlers,
-) =>
-    handlers.isEmpty
-        ? []
-        : handlers.where((e) => e.route.canHandle(request)).toList();
+) {
+  if (handlers.isEmpty) return [];
+
+  final List<RouteHandler> result = [];
+
+  for (final hdlr in handlers) {
+    final route = hdlr.route.canHandle(request);
+    if (!route.hasMatch) continue;
+
+    hdlr.setParams(route.params);
+    result.add(hdlr);
+  }
+
+  return result;
+}

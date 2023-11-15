@@ -82,6 +82,8 @@ class Request extends Message<dynamic> implements $Request<dynamic> {
 
   void putInContext(String key, Object object) => _context[key] = object;
 
+  void updateParams(String key, String value) => _params[key] = value;
+
   @override
   String get path => _req.uri.path;
 
