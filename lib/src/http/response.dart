@@ -15,9 +15,9 @@ abstract interface class $Response {
 
   Response ok([String? data]);
 
-  Response render([Object? data]);
+  Response send(Object data);
 
-  Response notFound([Object? data]);
+  Response notFound([String? message]);
 
   Response internalServerError([Object? data]);
 
@@ -83,13 +83,10 @@ class Response extends Message<Body> implements $Response {
   }
 
   @override
-  Response notFound([Object? object]) {
-    _updateOrThrowIfEnded(
-      (res) {
-        object ??= makeError(message: 'Not found').toJson;
-        res.status(404).json(object!);
-      },
-    );
+  Response notFound([String? message]) {
+    _updateOrThrowIfEnded((res) => res
+        .status(404)
+        .json(makeError(message: message ?? 'Not found').toJson));
     return this;
   }
 
@@ -115,9 +112,9 @@ class Response extends Message<Body> implements $Response {
   }
 
   @override
-  Response render([Object? data]) {
+  Response send(Object data) {
     _updateOrThrowIfEnded((res) => res
-      ..type(ContentType.html).body = Body(data)
+      ..body = Body(data)
       ..end());
     return this;
   }

@@ -106,7 +106,7 @@ class RouteGroup {
     if (newRoute.isEmpty) {
       throw PharoahException('Route cannot be an empty string');
     } else if (!reservedPaths.contains(newRoute[0])) {
-      throw PharoahException.value('Route should be with $BASE_PATH', newRoute);
+      throw PharoahException.value('Route start with $BASE_PATH', newRoute);
     }
 
     final existingHandler = handlers.firstWhereOrNull(
