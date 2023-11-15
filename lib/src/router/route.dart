@@ -55,9 +55,11 @@ class Route {
     if (!canMethod) return false;
     if (route == ANY_PATH) return true;
 
-    /// special case for prefixes. used in route group matching.
+    /// special case for prefixes used in route group matching.
     if (prefix != null) {
-      return pathToRegExp(_routeToMatch, prefix: true).hasMatch(reqPath);
+      final wildcardMatch = path == ANY_PATH;
+      return pathToRegExp(_routeToMatch, prefix: wildcardMatch)
+          .hasMatch(reqPath);
     }
 
     return pathToRegExp(route, prefix: false).hasMatch(reqPath);
