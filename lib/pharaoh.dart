@@ -3,11 +3,29 @@
 /// More dartdocs go here.
 library;
 
-export 'src/server.dart';
+import 'src/pharaoh_impl.dart';
+import 'src/router/handler.dart';
+import 'src/router/route.dart';
+import 'src/router/router.dart';
+
 export 'src/router/router.dart';
 export 'src/middleware/request_logger.dart';
-export 'src/http/request.dart';
-export 'src/http/response.dart' hide ResponseContract;
+export 'src/http/request.dart' show $Request;
+export 'src/http/response.dart' show $Response;
 export 'src/shelf_interop/adapter.dart';
 
-// TODO: Export any libraries intended for clients of this package.
+abstract class Pharaoh implements RoutePathDefinitionContract<Pharaoh> {
+  factory Pharaoh() => $PharaohImpl();
+
+  PharoahRouter router();
+
+  List<Route> get routes;
+
+  Uri get uri;
+
+  Pharaoh group(String path, RouteHandler handler);
+
+  Future<Pharaoh> listen({int port = 3000});
+
+  Future<void> shutdown();
+}

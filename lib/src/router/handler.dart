@@ -2,6 +2,7 @@ import 'dart:async';
 
 import '../http/request.dart';
 import '../http/response.dart';
+import '../utils/exceptions.dart';
 import 'route.dart';
 
 typedef ReqRes = ({Request req, Response res});
@@ -20,9 +21,9 @@ typedef HandlerResult = ({bool canNext, ReqRes reqRes});
 /// All route handler types must extend this class.
 ///
 /// See: [RequestHandler] and [Middleware] types
-abstract interface class RouteHandler {
+abstract class RouteHandler<T> {
   Route get route;
-  HandlerFunc get handler;
+  T get handler;
   bool get internal;
 
   bool _canNext = false;
@@ -33,70 +34,37 @@ abstract interface class RouteHandler {
 
   RouteHandler prefix(String prefix);
 
-  Future<HandlerResult> handle(ReqRes reqRes) async {
-    final hdlrResult = await handler(reqRes.req, reqRes.res);
-    if (hdlrResult is ReqRes) {
-      return (
-        canNext: canNext,
-        reqRes: hdlrResult,
-      );
-    } else if (hdlrResult is Request) {
-      return (
-        canNext: canNext,
-        reqRes: (req: hdlrResult, res: reqRes.res),
-      );
-    } else if (hdlrResult is Response) {
-      return (
-        canNext: canNext,
-        reqRes: (req: reqRes.req, res: hdlrResult),
-      );
-    } else if (hdlrResult == null) {
-      return (
-        canNext: canNext,
-        reqRes: reqRes,
-      );
-    } else if (hdlrResult is Map || hdlrResult is List) {
-      return (
-        canNext: canNext,
-        reqRes: (
-          req: reqRes.req,
-          res: Response.from(reqRes.req).json(hdlrResult)
-        )
-      );
-    }
-
-    return (
-      canNext: canNext,
-      reqRes: (
-        req: reqRes.req,
-        res: Response.from(reqRes.req).ok(hdlrResult.toString()),
-      ),
-    );
+  Future<HandlerResult> handle(final ReqRes reqRes) async {
+    final hdlrResult = await (handler as dynamic)(reqRes.req, reqRes.res);
+    return switch (hdlrResult.runtimeType) {
+      // ignore: prefer_void_to_null
+      Null => (canNext: true, reqRes: reqRes),
+      Response => (canNext: true, reqRes: (req: reqRes.req, res: reqRes.res)),
+      Type() => throw PharoahException.value(
+          "Unknown result type from handler", hdlrResult),
+    };
   }
 }
 
-/// This type of handler uses the Request interface [$Request]
-/// which is nothing but an interface. All you have on this are getter calls
-/// to get information about Requests reaching your application
-///
-/// See here: [RequestHandler]
 typedef RequestHandlerFunc = FutureOr<dynamic> Function(
   $Request req,
-  Response res,
+  $Response res,
 );
 
-class RequestHandler extends RouteHandler {
+class RequestHandler extends RouteHandler<RequestHandlerFunc> {
   final RequestHandlerFunc _func;
   final Route _route;
 
   RequestHandler(this._func, this._route);
 
   @override
-  RequestHandler prefix(String prefix) =>
-      RequestHandler(_func, route.withPrefix(prefix));
+  RequestHandler prefix(String prefix) => RequestHandler(
+        _func,
+        route.withPrefix(prefix),
+      );
 
   @override
-  HandlerFunc get handler => _func;
+  RequestHandlerFunc get handler => _func;
 
   @override
   Route get route => _route;
@@ -111,19 +79,31 @@ class RequestHandler extends RouteHandler {
   }
 }
 
+///  [Middleware] type route handler
+///
+///
+///
+///
+///  The foremost thing you should know is 'middl'
 typedef MiddlewareFunc = Function(Request req, Response res, Function next);
 
-class Middleware extends RouteHandler {
+class Middleware extends RouteHandler<HandlerFunc> {
   final MiddlewareFunc _func;
   final Route _route;
   Middleware(this._func, this._route);
 
   @override
-  Middleware prefix(String prefix) =>
-      Middleware(_func, route.withPrefix(prefix));
+  Middleware prefix(String prefix) => Middleware(
+        _func,
+        route.withPrefix(prefix),
+      );
 
   @override
-  HandlerFunc get handler => (req, res) => _func(req, res, () => next());
+  HandlerFunc get handler => (req, res) => _func(
+        req,
+        res,
+        () => next(),
+      );
 
   @override
   Route get route => _route;

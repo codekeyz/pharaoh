@@ -4,6 +4,12 @@ import '../router/handler.dart';
 import 'shelf.dart' as shelf;
 
 extension _ShelfResponseMixin on shelf.Response {
+  /// TODO(codekeyz)
+  ///
+  /// Investigate more on how the Shelf Middlewares
+  /// actually work. That way we will know when a Shelf middleware
+  /// allows us to continue execution or has terminated the request
+  /// lifecyle.
   void copyTo(Response res) {
     res
       ..status(statusCode)

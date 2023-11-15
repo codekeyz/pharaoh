@@ -1,49 +1,32 @@
-import 'dart:io';
-
 import 'package:pharaoh/pharaoh.dart';
 import 'package:shelf_cors_headers/shelf_cors_headers.dart';
 
-final pharaoh = Pharaoh();
+final app = Pharaoh();
 
 void main() async {
-  final app = pharaoh.router;
-
-  app.use(logRequests);
-
   /// Using shelf_cors_header with Pharoah
   app.use(useShelfMiddleware(corsHeaders()));
+  app.use(logRequests);
 
   app.get(
-    '/:user/json',
-    (req, res) => res.json({'foo': "bar", 'mee': 'moo'}),
+    '/chima',
+    (req, res) => res.json({"name": "Chima"}),
   );
 
-  app.get(
-    '/redirect',
-    (req, res) => res.redirect('http://google.com'),
-  );
+  final guestRouter = app.router()
+    ..get('/user', (req, res) => res.ok("Hello World"))
+    ..post('/post', (req, res) => res.json({"mee": "moo"}))
+    ..put('/put', (req, res) => res.json({"pookey": "reyrey"}));
 
-  app.group('/api/v1', (router) {
-    router.get(
-      '/version',
-      (req, res) => res.type(ContentType.text).ok('1.0.0'),
-    );
+  final adminRouter = app.router()
+    ..get('/user', (req, res) => res.json({"chima": "happy"}))
+    ..put('/hello', (req, res) => res.json({"name": "chima"}))
+    ..post('/say-hello', (req, res) => res.notFound())
+    ..delete('/delete', (req, res) => res.json(req.body));
 
-    router.get(
-      '/ping',
-      (req, res) => res.type(ContentType.text).ok('2.0.0'),
-    );
+  app.group('/admin', adminRouter);
 
-    router.get(
-      '/:user/boy',
-      (req, res) => res.json({"name": "Chima Precious"}),
-    );
+  app.group('/guest', guestRouter);
 
-    router.post(
-      '/sign-in',
-      (req, res) => res.json(req.body ?? {}),
-    );
-  });
-
-  await pharaoh.listen();
+  await app.listen();
 }

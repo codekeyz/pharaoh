@@ -15,8 +15,19 @@ class Route {
 
   String get route {
     if (prefix == null) return path;
-    if (path == ANY_PATH) return '$prefix';
+    if (path == ANY_PATH) return '$prefix/*';
     return '$prefix$path';
+  }
+
+  /// The library doesn't handle this well so we have to
+  /// do this ourself.
+  /// See here: https://github.com/leonsenft/path_to_regexp/issues/20
+  ///
+  /// If we are able to resolve this issue with support for wildcard
+  /// matching, then we can use [route] to do the matching
+  String get _routeToMatch {
+    if (prefix == null) return path;
+    return path == ANY_PATH ? prefix! : '$prefix$path';
   }
 
   const Route(
@@ -38,11 +49,20 @@ class Route {
       );
 
   bool canHandle(Request request) {
+    final reqPath = _cleanPath(request);
     final canMethod =
         verbs.contains(HTTPMethod.ALL) || verbs.contains(request.method);
     if (!canMethod) return false;
     if (route == ANY_PATH) return true;
-    return pathToRegExp(route, prefix: true).hasMatch(request.path);
+
+    /// special case for prefixes used in route group matching.
+    if (prefix != null) {
+      final wildcardMatch = path == ANY_PATH;
+      return pathToRegExp(_routeToMatch, prefix: wildcardMatch)
+          .hasMatch(reqPath);
+    }
+
+    return pathToRegExp(route, prefix: false).hasMatch(reqPath);
   }
 
   /// This is implemented in such a way that if a [Route]
@@ -67,19 +87,36 @@ class Route {
     return route.hashCode ^ verbs.hashCode;
   }
 
+  String _cleanPath(Request request) {
+    String path = request.path;
+    if (path == BASE_PATH) return path;
+    if (path.endsWith(BASE_PATH)) path = path.substring(0, path.length - 1);
+    return path;
+  }
+
   @override
-  String toString() => """ 
-  Route:       $route
-  Verbs:       ${verbString(verbs)}""";
+  String toString() => "Route:  $route    Verbs: ${verbString(verbs)}";
 }
 
 const reservedPaths = [BASE_PATH, ANY_PATH];
 
 class RouteGroup {
   final String prefix;
-  final List<RouteHandler> handlers = [];
+  final List<RouteHandler> handlers;
 
-  RouteGroup(this.prefix);
+  RouteGroup._(
+    this.prefix, {
+    List<RouteHandler>? handlers,
+  }) : handlers = handlers ?? [];
+
+  RouteGroup.path(String path)
+      : prefix = path,
+        handlers = [];
+
+  RouteGroup withPrefix(String prefix) => RouteGroup._(
+        prefix,
+        handlers: handlers.map((e) => e.prefix(prefix)).toList(),
+      );
 
   /// Adding routes the the current group does a very simple
   /// check to make sure we don't have multiple [RequestHandler]
@@ -90,10 +127,6 @@ class RouteGroup {
       throw PharoahException('Route cannot be an empty string');
     } else if (!reservedPaths.contains(newRoute[0])) {
       throw PharoahException.value('Route should be with $BASE_PATH', newRoute);
-    }
-
-    if (!reservedPaths.contains(prefix)) {
-      newHandler = newHandler.prefix(prefix);
     }
 
     final existingHandler = handlers.firstWhereOrNull(

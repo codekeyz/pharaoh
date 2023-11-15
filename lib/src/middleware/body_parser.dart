@@ -5,7 +5,6 @@ import 'package:mime/mime.dart';
 
 import '../http/request.dart';
 import '../http/response.dart';
-import '../router/route.dart';
 import '../router/handler.dart';
 
 class MimeType {
@@ -18,7 +17,10 @@ class MimeType {
 
 _processBody(Request req, Response res, Function next) async {
   final mimeType = req.contentType?.mimeType;
-  if (mimeType == null) return next();
+  if (mimeType == null) {
+    next();
+    return;
+  }
 
   if (mimeType == MimeType.multiPartForm) {
     final boundary = req.contentType!.parameters['boundary']!;
@@ -34,11 +36,15 @@ _processBody(Request req, Response res, Function next) async {
     }
 
     req.body = dataBag;
-    return next();
+    next();
+    return;
   }
 
   final body = await utf8.decoder.bind(req.req).join();
-  if (body.isEmpty) return next();
+  if (body.trim().isEmpty) {
+    next();
+    return;
+  }
 
   switch (mimeType) {
     case MimeType.applicationFormUrlEncoded:
@@ -52,7 +58,7 @@ _processBody(Request req, Response res, Function next) async {
       break;
   }
 
-  return next();
+  next();
 }
 
-final bodyParser = InternalMiddleware(_processBody, Route.any());
+const MiddlewareFunc bodyParser = _processBody;

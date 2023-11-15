@@ -40,19 +40,16 @@ class PharoahErrorBody {
   final String path;
   final HTTPMethod method;
   final String message;
-  final int statusCode;
 
   const PharoahErrorBody(
     this.message,
-    this.path,
-    this.statusCode, {
+    this.path, {
     required this.method,
   });
 
-  Map<String, dynamic> get data => {
+  Map<String, dynamic> get toJson => {
         "path": path,
         "method": method.name,
         "message": message,
-        "status_code": statusCode,
       };
 }

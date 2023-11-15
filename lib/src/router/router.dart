@@ -1,15 +1,8 @@
 // ignore_for_file: constant_identifier_names
 
 import 'dart:async';
-import 'dart:io';
-import 'package:collection/collection.dart';
-import 'package:path_to_regexp/path_to_regexp.dart';
 
-import '../middleware/attach_necessary_headers.dart';
-import '../middleware/body_parser.dart';
-import '../http/response.dart';
 import '../http/request.dart';
-import '../utils/exceptions.dart';
 import 'handler.dart';
 import 'route.dart';
 
@@ -17,171 +10,95 @@ const ANY_PATH = '*';
 
 const BASE_PATH = '/';
 
-abstract interface class RouterContract {
-  List<Route> get routes;
+abstract interface class RoutePathDefinitionContract<T> {
+  T get(String path, RequestHandlerFunc handler);
 
-  void get(String path, RequestHandlerFunc handler);
+  T post(String path, RequestHandlerFunc handler);
 
-  void post(String path, RequestHandlerFunc handler);
+  T put(String path, RequestHandlerFunc handler);
 
-  void put(String path, RequestHandlerFunc handler);
+  T delete(String path, RequestHandlerFunc handler);
 
-  void delete(String path, RequestHandlerFunc handler);
-
-  void any(String path, RequestHandlerFunc handler);
-
-  void use(MiddlewareFunc reqResNext, [Route? route]);
-
-  void group(String prefix, void Function(RouterContract router) groupCtx);
+  T use(MiddlewareFunc reqResNext, [Route? route]);
 }
 
-abstract class Router implements RouterContract {
-  static Router get getInstance => _$PharoahRouter();
+mixin RouterMixin<T extends RouteHandler<dynamic>> on RouteHandler
+    implements RoutePathDefinitionContract<T> {
+  RouteGroup _group = RouteGroup.path(BASE_PATH);
 
-  void handleRequest(HttpRequest request);
-}
-
-class _$PharoahRouter extends Router {
-  late final RouteGroup _group;
-  final Map<String, RouteGroup> _subGroups = {};
-  final List<InternalMiddleware> _lastMiddlewares = [];
-
-  _$PharoahRouter({RouteGroup? group}) {
-    if (group == null) {
-      _group = RouteGroup(BASE_PATH)..add(bodyParser);
-      _lastMiddlewares.add(attachNecessaryHeaders());
-      return;
-    }
-    _group = group;
-  }
-
-  @override
   List<Route> get routes => _group.handlers.map((e) => e.route).toList();
 
   @override
-  void get(String path, RequestHandlerFunc handler) {
-    _group.add(RequestHandler(
-        handler, Route(path, [HTTPMethod.GET, HTTPMethod.HEAD])));
+  Route get route => Route(_group.prefix, [HTTPMethod.ALL]);
+
+  @override
+  T prefix(String prefix) {
+    _group = _group.withPrefix(prefix);
+    return this as T;
   }
 
   @override
-  void post(String path, RequestHandlerFunc handler) {
-    _group.add(RequestHandler(handler, Route(path, [HTTPMethod.POST])));
-  }
-
-  @override
-  void put(String path, RequestHandlerFunc handler) {
-    _group.add(RequestHandler(handler, Route(path, [HTTPMethod.PUT])));
-  }
-
-  @override
-  void delete(String path, RequestHandlerFunc handler) {
-    _group.add(RequestHandler(handler, Route(path, [HTTPMethod.DELETE])));
-  }
-
-  @override
-  void any(String path, RequestHandlerFunc handler) {
-    _group.add(RequestHandler(handler, Route.any()));
-  }
-
-  @override
-  void group(String prefix, Function(RouterContract router) groupCtx) {
-    if (reservedPaths.contains(prefix)) {
-      throw PharoahException.value('Prefix not allowed for groups', prefix);
-    }
-    final router = _$PharoahRouter(group: RouteGroup(prefix));
-    groupCtx(router);
-    _subGroups[prefix] = router._group;
-  }
-
-  @override
-  void handleRequest(HttpRequest httpReq) async {
-    // An adapter must not add or modify the `Transfer-Encoding` parameter, but
-    // the Dart SDK sets it by default. Set this before we fill in
-    // [response.headers] so that the user or Shelf can explicitly override it if
-    // necessary.
-    httpReq.response.headers.chunkedTransferEncoding = false;
-
-    final request = Request.from(httpReq);
-    final response = Response.from(request);
-
-    final handlers = _group.findHandlers(request);
-    final group = findRouteGroup(request.path);
-    if (group != null) {
-      final subHdls = group.findHandlers(request);
-      if (subHdls.isNotEmpty) handlers.addAll(subHdls);
+  Future<HandlerResult> handle(ReqRes reqRes) async {
+    final h = _group.findHandlers(reqRes.req);
+    if (h.isEmpty) {
+      return (
+        canNext: true,
+        reqRes: (req: reqRes.req, res: reqRes.res.notFound())
+      );
     }
 
-    // It means you don't have any request handlers for this route.
-    if (hasNoRequestHandlers(handlers)) {
-      return forward(httpReq.response, response.notFound());
-    }
+    final handlerFncs = List<RouteHandler>.from(h);
 
-    final lastHandlers = findHandlersForRequest(request, _lastMiddlewares);
-    handlers.addAll(lastHandlers);
-
-    final handlerFncs = List<RouteHandler>.from(handlers);
-    ReqRes reqRes = (req: request, res: response);
+    ReqRes result = reqRes;
     while (handlerFncs.isNotEmpty) {
       final handler = handlerFncs.removeAt(0);
-      final completed = handlerFncs.isEmpty;
+      final data = await handler.handle(reqRes);
+      result = data.reqRes;
 
-      try {
-        final data = await handler.handle(reqRes);
-        reqRes = data.reqRes;
-        if (!data.canNext) break;
-        if (completed) return forward(httpReq.response, reqRes.res);
-        continue;
-      } catch (e) {
-        return forward(httpReq.response, reqRes.res.internalServerError());
-      }
-    }
-  }
-
-  RouteGroup? findRouteGroup(String path) {
-    if (_subGroups.isEmpty) return null;
-    final key = _subGroups.keys.firstWhereOrNull(
-        (key) => path.contains(key) || pathToRegExp(key).hasMatch(path));
-    return key == null ? null : _subGroups[key];
-  }
-
-  bool hasNoRequestHandlers(List<RouteHandler> handlers) =>
-      !handlers.any((e) => e is RequestHandler);
-
-  Future<void> forward(HttpResponse httpRes, Response res) {
-    final body = res.body;
-    if (body == null) {
-      throw PharoahException('Body value must always be present');
+      final breakOut = data.canNext == false || result.res.ended;
+      if (breakOut) return (canNext: true, reqRes: result);
     }
 
-    httpRes.statusCode = res.statusCode;
-
-    for (final header in res.headers.entries) {
-      final value = header.value;
-      if (value != null) httpRes.headers.add(header.key, value);
-    }
-
-    // TODO(codekeyz) research on handling chunked-encoding
-    //
-    //var coding = response.headers['transfer-encoding']?.join();
-    // if (coding != null && !equalsIgnoreAsciiCase(coding, 'identity')) {
-    //   respBody = Body(chunkedCoding.decoder.bind(body!.read()));
-    //   response.headers.set(HttpHeaders.transferEncodingHeader, 'chunked');
-    // } else if (response.statusCode >= 200 &&
-    //     response.statusCode != 204 &&
-    //     response.statusCode != 304 &&
-    //     respBody.contentLength == null &&
-    //     mimeType != 'multipart/byteranges') {
-    //   // If the response isn't chunked yet and there's no other way to tell its
-    //   // length, enable `dart:io`'s chunked encoding.
-    //   response.headers.set(HttpHeaders.transferEncodingHeader, 'chunked');
-    // }
-
-    return httpRes.addStream(body.read()).then((value) => httpRes.close());
+    return (canNext: true, reqRes: result);
   }
 
   @override
-  void use(MiddlewareFunc reqResNext, [Route? route]) {
-    _group.add(Middleware(reqResNext, route ?? Route.any()));
+  T get(String path, RequestHandlerFunc handler) {
+    _group.add(RequestHandler(
+        handler, Route(path, [HTTPMethod.GET, HTTPMethod.HEAD])));
+    return this as T;
   }
+
+  @override
+  T post(String path, RequestHandlerFunc handler) {
+    _group.add(RequestHandler(handler, Route(path, [HTTPMethod.POST])));
+    return this as T;
+  }
+
+  @override
+  T put(String path, RequestHandlerFunc handler) {
+    _group.add(RequestHandler(handler, Route(path, [HTTPMethod.PUT])));
+    return this as T;
+  }
+
+  @override
+  T delete(String path, RequestHandlerFunc handler) {
+    _group.add(RequestHandler(handler, Route(path, [HTTPMethod.DELETE])));
+    return this as T;
+  }
+
+  @override
+  T use(MiddlewareFunc reqResNext, [Route? route]) {
+    _group.add(Middleware(reqResNext, route ?? Route.any()));
+    return this as T;
+  }
+}
+
+class PharoahRouter extends RouteHandler<dynamic>
+    with RouterMixin<PharoahRouter> {
+  @override
+  bool get internal => false;
+
+  @override
+  HandlerFunc get handler => (req, res) => (req: req, res: res);
 }
