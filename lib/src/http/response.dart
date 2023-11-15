@@ -12,7 +12,7 @@ abstract interface class $Response {
 
   Response end();
 
-  Response json(Object data);
+  Response json(Object? data);
 
   Response ok([String? data]);
 
@@ -77,7 +77,7 @@ class Response extends Message<shelf.Body> implements $Response {
   }
 
   @override
-  Response json(Object data) {
+  Response json(Object? data) {
     late Object result;
     try {
       result = jsonEncode(data);
