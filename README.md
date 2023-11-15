@@ -6,6 +6,13 @@
 [![likes](https://img.shields.io/pub/likes/pharoah?logo=dart)](https://pub.dev/packages/pharoah/score)
 [![style: flutter lints](https://img.shields.io/pharoah/style-flutter__lints-blue)](https://pub.dev/packages/flutter_lints)
 
+## Features
+
+- Robust routing
+- Focus on high performance
+- Super-high test coverage
+- HTTP helpers (redirection, caching, etc)
+
 ## Installing:
 
 In your pubspec.yaml
@@ -40,6 +47,33 @@ void main() async {
 
 ```
 
+## Philosophy
+
+The Pharoah philosophy is to provide small, robust tooling for HTTP servers, making
+it a great solution for single page applications, websites, hybrids, or public
+HTTP APIs.
+
 ## Contributors ✨
 
-Contributions of any kind welcome!
+The Pharaoh project welcomes all constructive contributions. Contributions take many forms,
+from code for bug fixes and enhancements, to additions and fixes to documentation, additional
+tests, triaging incoming pull requests and issues, and more!
+
+### Running Tests
+
+To run the test suite, first install the dependencies, then run `dart test`:
+
+```console
+$ dart pub get
+$ dart test
+```
+
+## People
+
+The original author of Pharoah is [Chima Precious](https://github.com/codekeyz)
+
+[List of all contributors](https://github.com/codekeyz/pharoah/graphs/contributors)
+
+## License
+
+[MIT](LICENSE)
