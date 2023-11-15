@@ -33,47 +33,36 @@ class Response extends Message<shelf.Body> implements $Response {
 
   late final HttpRequest _httpReq;
 
-  int _statusCode = 200;
-
   bool _ended = false;
 
   bool get ended => _ended;
 
-  int get statusCode => _statusCode;
-
-  Response._(this._httpReq, shelf.Body body) : super(_httpReq, body) {
-    _reqInfo = Request.from(_httpReq);
+  Response._(this._httpReq, [shelf.Body? body])
+      : _reqInfo = Request.from(_httpReq),
+        super(_httpReq, body ?? shelf.Body(null)) {
     updateHeaders((hders) => _httpReq.response.headers
         .forEach((name, values) => hders[name] = values));
   }
 
-  factory Response.from(HttpRequest request) => Response._(
-        request,
-        shelf.Body(null),
-      );
+  factory Response.from(HttpRequest request) => Response._(request);
 
   @override
   Response type(ContentType type) {
     final value = contentTypeToString(type);
     _httpReq.response.headers.set(HttpHeaders.contentTypeHeader, value);
-    return Response._(_httpReq, body!);
+    return Response._(_httpReq, body);
   }
 
   @override
   Response status(int code) {
-    _updateOrThrowIfEnded((res) => res._statusCode = code);
-    return this;
+    _httpReq.response.statusCode = code;
+    return Response._(_httpReq);
   }
 
   @override
   Response redirect(String url, [int statusCode = HttpStatus.found]) {
-    _updateOrThrowIfEnded(
-      (res) => res
-        ..status(statusCode)
-        ..updateHeaders((hds) => hds[HttpHeaders.locationHeader] = url)
-        ..end(),
-    );
-    return this;
+    _httpReq.response.headers.set(HttpHeaders.locationHeader, url);
+    return Response._(_httpReq).status(statusCode).end();
   }
 
   @override
@@ -88,48 +77,28 @@ class Response extends Message<shelf.Body> implements $Response {
   }
 
   @override
-  Response notFound([String? message]) {
-    _updateOrThrowIfEnded((res) => res
-        .status(404)
-        .json(makeError(message: message ?? 'Not found').toJson));
-    return this;
-  }
+  Response notFound([String? message]) => Response._(_httpReq)
+      .status(404)
+      .json(makeError(message: message ?? 'Not found').toJson);
 
   @override
-  Response internalServerError([String? message]) {
-    _updateOrThrowIfEnded((res) => res
-        .status(500)
-        .json(makeError(message: message ?? 'Internal Server Error').toJson));
-    return this;
-  }
+  Response internalServerError([String? message]) => Response._(_httpReq)
+      .status(500)
+      .json(makeError(message: message ?? 'Internal Server Error').toJson);
 
   @override
-  Response ok([String? data]) {
-    _updateOrThrowIfEnded((res) => res
-      ..type(ContentType.text)
-      ..body = shelf.Body(data, encoding)
-      ..status(200)
-      ..end());
-    return this;
-  }
+  Response ok([String? data]) =>
+      Response._(_httpReq, shelf.Body(data, encoding))
+          .type(ContentType.text)
+          .end();
 
   @override
-  Response send(Object data) {
-    _updateOrThrowIfEnded((res) => res
-      ..body = shelf.Body(data)
-      ..end());
-    return this;
-  }
+  Response send(Object data) => Response._(_httpReq)
+    ..body = shelf.Body(data)
+    ..end();
 
   @override
-  Response end() {
-    return Response._(_httpReq, body!).._ended = true;
-  }
-
-  void _updateOrThrowIfEnded(Function(Response res) update) {
-    if (_ended) throw PharoahException('Response lifecyle already ended');
-    update(this);
-  }
+  Response end() => Response._(_httpReq, body).._ended = true;
 
   PharoahErrorBody makeError({required String message}) =>
       PharoahErrorBody(message, _reqInfo.path, method: _reqInfo.method);

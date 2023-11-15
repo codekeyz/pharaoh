@@ -18,7 +18,7 @@ void main() async {
 
       repos.add(repos.last);
 
-      res.json(repos);
+      return res.json(repos);
     })
     ..delete('/delete/:index', (req, res) async {
       final index = int.tryParse(req.params['index']);
@@ -31,7 +31,7 @@ void main() async {
 
       repos.removeAt(index);
 
-      res.json(repos);
+      return res.json(repos);
     });
 
   app.group('/github', repoRouter);
