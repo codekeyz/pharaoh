@@ -125,10 +125,11 @@ class $PharaohImpl implements Pharaoh {
     // [response.headers] so that the user or Shelf can explicitly override it if
     // necessary.
     httpReq.response.headers.chunkedTransferEncoding = false;
+    httpReq.response.headers.clear();
 
     final req = Request.from(httpReq);
     final result =
-        await drainRouter(_router, (req: req, res: Response.from(req)));
+        await drainRouter(_router, (req: req, res: Response.from(httpReq)));
     if (result.canNext == false) return;
 
     final res = result.reqRes.res;

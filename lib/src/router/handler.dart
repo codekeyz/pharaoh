@@ -49,13 +49,13 @@ abstract class RouteHandler<T> {
       }
     }
 
-    final hdlrResult = await (handler as dynamic)(req, reqRes.res);
-    return switch (hdlrResult.runtimeType) {
+    final r = await (handler as dynamic)(req, reqRes.res);
+    return switch (r.runtimeType) {
       // ignore: prefer_void_to_null
       Null => (canNext: true, reqRes: reqRes),
-      Response => (canNext: true, reqRes: (req: req, res: reqRes.res)),
-      Type() => throw PharoahException.value(
-          "Unknown result type from handler", hdlrResult),
+      Response => (canNext: true, reqRes: (req: req, res: (r as Response))),
+      Type() =>
+        throw PharoahException.value("Unknown result type from handler", r),
     };
   }
 }

@@ -44,6 +44,8 @@ abstract interface class $Request<T> {
 
   Map<String, dynamic> get params;
 
+  Map<String, dynamic> get headers;
+
   T? get body;
 
   /// TODO(codekeyz) implement this so that we can retrieve objects
@@ -68,11 +70,8 @@ class Request extends Message<dynamic> implements $Request<dynamic> {
   final Map<String, dynamic> _context = {};
 
   Request._(this._req) : super(_req) {
-    updateHeaders((headers) {
-      req.headers.forEach((name, values) {
-        headers[name] = values;
-      });
-    });
+    updateHeaders(
+        (hders) => req.headers.forEach((name, values) => hders[name] = values));
     _params.addAll(_req.uri.queryParameters);
   }
 

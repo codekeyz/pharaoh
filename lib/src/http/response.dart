@@ -2,7 +2,8 @@ import 'dart:convert';
 import 'dart:io';
 
 import '../utils/exceptions.dart';
-import '../shelf_interop/shelf.dart';
+import '../shelf_interop/shelf.dart' as shelf;
+import '../utils/utils.dart';
 import 'message.dart';
 import 'request.dart';
 
@@ -26,9 +27,11 @@ abstract interface class $Response {
   Response status(int code);
 }
 
-class Response extends Message<Body> implements $Response {
+class Response extends Message<shelf.Body> implements $Response {
   /// This is just an interface that holds the current request information
   late final $Request _reqInfo;
+
+  late final HttpRequest _httpReq;
 
   int _statusCode = 200;
 
@@ -38,15 +41,22 @@ class Response extends Message<Body> implements $Response {
 
   int get statusCode => _statusCode;
 
-  Response._(this._reqInfo) : super(null, Body(null));
+  Response._(this._httpReq, shelf.Body body) : super(_httpReq, body) {
+    _reqInfo = Request.from(_httpReq);
+    updateHeaders((hders) => _httpReq.response.headers
+        .forEach((name, values) => hders[name] = values));
+  }
 
-  factory Response.from($Request request) => Response._(request);
+  factory Response.from(HttpRequest request) => Response._(
+        request,
+        shelf.Body(null),
+      );
 
   @override
   Response type(ContentType type) {
-    _updateOrThrowIfEnded((res) => res.updateHeaders(
-        (hds) => hds[HttpHeaders.contentTypeHeader] = type.value));
-    return this;
+    final value = contentTypeToString(type);
+    _httpReq.response.headers.set(HttpHeaders.contentTypeHeader, value);
+    return Response._(_httpReq, body!);
   }
 
   @override
@@ -68,18 +78,13 @@ class Response extends Message<Body> implements $Response {
 
   @override
   Response json(Object data) {
+    late Object result;
     try {
-      data = jsonEncode(data);
+      result = jsonEncode(data);
     } catch (_) {
-      internalServerError(_.toString());
-      return this;
+      result = jsonEncode(makeError(message: _.toString()).toJson);
     }
-
-    _updateOrThrowIfEnded((res) => res
-      ..type(ContentType.json)
-      ..body = Body(data, encoding)
-      ..end());
-    return this;
+    return Response._(_httpReq, shelf.Body(result)).end();
   }
 
   @override
@@ -102,7 +107,7 @@ class Response extends Message<Body> implements $Response {
   Response ok([String? data]) {
     _updateOrThrowIfEnded((res) => res
       ..type(ContentType.text)
-      ..body = Body(data, encoding)
+      ..body = shelf.Body(data, encoding)
       ..status(200)
       ..end());
     return this;
@@ -111,15 +116,14 @@ class Response extends Message<Body> implements $Response {
   @override
   Response send(Object data) {
     _updateOrThrowIfEnded((res) => res
-      ..body = Body(data)
+      ..body = shelf.Body(data)
       ..end());
     return this;
   }
 
   @override
   Response end() {
-    _ended = true;
-    return this;
+    return Response._(_httpReq, body!).._ended = true;
   }
 
   void _updateOrThrowIfEnded(Function(Response res) update) {
