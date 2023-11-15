@@ -5,12 +5,8 @@ import 'package:pharaoh/pharaoh.dart';
 final app = Pharaoh();
 
 void main() async {
-  final scriptDir = Directory.current;
-
-  print(scriptDir);
-
   /// path to where the files are stored on disk
-  final publicDir = '${scriptDir.path}/example/download/public';
+  final publicDir = '${Directory.current.path}/public/web_demo_1';
 
   app.get('/', (req, res) async {
     final file = File('$publicDir/index.html');
