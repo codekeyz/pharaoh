@@ -1,12 +1,8 @@
-// ignore_for_file: constant_identifier_names
-
 import 'dart:async';
 
 import '../http/request.dart';
 import 'handler.dart';
 import 'route.dart';
-
-const ANY_PATH = '*';
 
 const BASE_PATH = '/';
 

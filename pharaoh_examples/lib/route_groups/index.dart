@@ -9,6 +9,7 @@ void main() async {
     ..put('/yoo', (req, res) => res.json({"pookey": "reyrey"}));
 
   final adminRouter = app.router()
+    ..use(logRequests)
     ..get('/user', (req, res) => res.json({"chima": "happy"}))
     ..put('/hello', (req, res) => res.json({"name": "chima"}))
     ..post('/say-hello', (req, res) => res.notFound())
