@@ -7,7 +7,7 @@ void main() async {
   /// Using shelf_cors_header with Pharaoh
   app.use(useShelfMiddleware(corsHeaders()));
 
-  app.get('/foo', (req, res) => res.json(req.headers));
+  app.get('/', (req, res) => res.json(req.headers));
 
   await app.listen();
 }
