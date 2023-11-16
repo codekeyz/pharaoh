@@ -7,9 +7,9 @@ name: Dart
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
   build:
@@ -26,6 +26,9 @@ jobs:
 
       - name: Install dependencies
         run: dart pub get
+
+      - name: Install dependencies for pharaoh examples
+        run: cd pharaoh_examples && dart pub get
 
       # Uncomment this step to verify the use of 'dart format' on each commit.
       # - name: Verify formatting
