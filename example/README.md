@@ -2,7 +2,7 @@
 
 ### API Service
 
-API service with a database access, secured with `:api-key` using a Middleware on PATH: `/api` and 3 routes.
+API service with a database access, secured with `:api-key` using a Middleware on PATH: `/api` and 3 has routes.
 
 - GET: `/api/users`
 - GET: `/api/repos`
