@@ -8,7 +8,7 @@ API service with a database access, secured with `:api-key` using a Middleware o
 - GET: `/api/repos`
 - GET: `/api/user/:name/repos`
 
-[Jump to Source](https://github.com/codekeyz/pharaoh/tree/main/pharaoh_examples/lib/api_service)
+[Jump to Source](https://github.com/codekeyz/pharaoh/tree/main/pharaoh_examples/lib/api_service/index.dart)
 
 ### Route Groups
 
