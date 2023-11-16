@@ -14,6 +14,24 @@ abstract interface class Tester {
     Object? body,
   });
 
+  Future<http.Response> put(
+    String path, {
+    Map<String, String>? headers,
+    Object? body,
+  });
+
+  Future<http.Response> patch(
+    String path, {
+    Map<String, String>? headers,
+    Object? body,
+  });
+
+  Future<http.Response> delete(
+    String path, {
+    Map<String, String>? headers,
+    Object? body,
+  });
+
   Future<http.Response> get(
     String path, {
     Map<String, String>? headers,
@@ -41,12 +59,36 @@ class _$TesterImpl extends Tester {
     Map<String, String>? headers,
   }) =>
       http.get(getUri(path), headers: headers);
+
+  @override
+  Future<http.Response> delete(
+    String path, {
+    Map<String, String>? headers,
+    Object? body,
+  }) =>
+      http.delete(getUri(path), headers: headers, body: body);
+
+  @override
+  Future<http.Response> patch(
+    String path, {
+    Map<String, String>? headers,
+    Object? body,
+  }) =>
+      http.patch(getUri(path), headers: headers, body: body);
+
+  @override
+  Future<http.Response> put(
+    String path, {
+    Map<String, String>? headers,
+    Object? body,
+  }) =>
+      http.put(getUri(path), headers: headers, body: body);
 }
 
 class TestAgent {
   static _$TesterImpl? _instance;
 
-  static Future<Tester> create<T>(TestApp app) async {
+  static Future<Tester> create(TestApp app) async {
     if (_instance != null) {
       await _instance!._server.close();
       _instance = null;
@@ -77,6 +119,6 @@ Uri getServerUri(HttpServer server) {
 }
 
 Future<Tester> request<T>(T app) async {
-  final tester = await TestAgent.create<T>((app as dynamic).handleRequest);
+  final tester = await TestAgent.create((app as dynamic).handleRequest);
   return tester;
 }
