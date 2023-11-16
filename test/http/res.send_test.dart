@@ -7,8 +7,8 @@ import 'package:supertest/supertest.dart';
 import 'package:test/test.dart';
 
 void main() {
-  group('.send(String)', () {
-    test('should send as html', () async {
+  group('.send(Object)', () {
+    test('should send <String> send as html', () async {
       final app = Pharaoh();
 
       app.use((req, res, next) {
@@ -64,7 +64,7 @@ void main() {
       expect(result.body, 'Hey');
     });
 
-    test('should keep charset in Content-Type for Buffers', () async {
+    test('should keep charset in Content-Type for <Buffers>', () async {
       final app = Pharaoh();
 
       app.use((req, res, next) {
@@ -81,10 +81,8 @@ void main() {
       expect(result.statusCode, 200);
       expect(result.body, 'Hello World');
     });
-  });
 
-  group('.send(Buffer)', () {
-    test('should send as octet-stream', () async {
+    test('should send <Buffer> as octet-stream', () async {
       final app = Pharaoh();
 
       app.use((req, res, next) {
