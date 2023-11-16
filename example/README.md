@@ -1,0 +1,36 @@
+# Examples
+
+### API Service
+
+API service with a database access, secured with `:api-key` using a Middleware on PATH: `/api` and 3 routes.
+
+- GET: `/api/users`
+- GET: `/api/repos`
+- GET: `/api/user/:name/repos`
+
+[Jump to Source](https://github.com/codekeyz/pharaoh/tree/main/pharaoh_examples/lib/api_service)
+
+### Route Groups
+
+API service with two route groups `/guest` and `/admin`.
+
+- Group: `/admin`
+- Group: `/guest`
+
+[Jump to Source](https://github.com/codekeyz/pharaoh/tree/main/pharaoh_examples/lib/route_groups)
+
+### Middleware
+
+API service with Logger Middleware that logs every request that hits our server.
+
+[Jump to Source](https://github.com/codekeyz/pharaoh/tree/main/pharaoh_examples/lib/middleware)
+
+### Shelf Middleware with Pharaoh
+
+Add CORS to our Pharaoah server using [shelf_cors_headers](https://pub.dev/packages/shelf_cors_headers)
+
+[Jump to Source](https://github.com/codekeyz/pharaoh/tree/main/pharaoh_examples/lib/shelf_middleware)
+
+### Serve Webpages and Files
+
+[Jump to Source](https://github.com/codekeyz/pharaoh/tree/main/pharaoh_examples/lib/serve_files)
