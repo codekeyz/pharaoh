@@ -48,8 +48,8 @@ class Response extends Message<shelf.Body> implements $Response {
 
   @override
   Response type(ContentType type) {
-    final value = contentTypeToString(type);
-    _httpReq.response.headers.set(HttpHeaders.contentTypeHeader, value);
+    _httpReq.response.headers
+        .set(HttpHeaders.contentTypeHeader, type.toString());
     return Response._(_httpReq, body);
   }
 
@@ -75,8 +75,7 @@ class Response extends Message<shelf.Body> implements $Response {
     }
 
     final response = Response._(_httpReq, shelf.Body(result));
-    final contentType = headers[HttpHeaders.contentTypeHeader];
-    if (contentType == null) return response.type(ContentType.json).end();
+    if (mediaType == null) return response.type(ContentType.json).end();
     return response.end();
   }
 
@@ -97,11 +96,36 @@ class Response extends Message<shelf.Body> implements $Response {
           .end();
 
   @override
-  Response send(Object data) => Response._(_httpReq, shelf.Body(data)).end();
+  Response send(Object data) {
+    final response = Response._(_httpReq, shelf.Body(data)).end();
+    final ctype = _getContentType(data, valueIfNull: ContentType.html);
+    return response.type(ctype).end();
+  }
 
   @override
   Response end() => Response._(_httpReq, body).._ended = true;
 
   PharaohErrorBody makeError({required String message}) =>
       PharaohErrorBody(message, _reqInfo.path, method: _reqInfo.method);
+
+  ContentType _getContentType(
+    Object object, {
+    required ContentType valueIfNull,
+  }) {
+    final mType = mediaType;
+    final isBuffer = _isBuffer(object);
+    if (mType == null) {
+      return isBuffer
+          ? ContentType('application', 'octet-stream')
+          : valueIfNull;
+    }
+
+    /// Always use charset :utf-8 unless
+    /// we have to deal with buffers.
+    final charset = isBuffer ? mType.parameters['charset'] : 'utf-8';
+    return ContentType.parse('${mType.mimeType}; charset=$charset');
+  }
+
+  /// TODO research on how to tell if an object is a buffer
+  bool _isBuffer(Object object) => object is! String;
 }

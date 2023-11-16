@@ -8,11 +8,13 @@ void main() {
   group('.json(Object)', () {
     test('should not override previous Content-Types', () async {
       final app = Pharaoh().get('/', (req, res) {
-        return res.type(ContentType.parse('application/vnd.example+json')).json({"hello": "world"});
+        return res
+            .type(ContentType.parse('application/vnd.example+json'))
+            .json({"hello": "world"});
       });
 
       final result = await (await request<Pharaoh>(app)).get('/');
-      expect(result.headers['content-type'], 'application/vnd.example+json; charset=utf-8');
+      expect(result.headers['content-type'], 'application/vnd.example+json');
       expect(result.statusCode, 200);
       expect(result.body, '{"hello":"world"}');
     });
