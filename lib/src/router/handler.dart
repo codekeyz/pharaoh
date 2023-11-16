@@ -47,14 +47,14 @@ abstract class RouteHandler {
 
     ReqRes result = reqRes;
     bool canGotoNext = false;
-    await handler(request, reqRes.res, ([nr_]) {
-      if (nr_ != null && nr_ is! Request && nr_ is! Response) {
+    await handler(request, reqRes.res, ([nextFn]) {
+      if (nextFn != null && nextFn is! Request && nextFn is! Response) {
         throw PharaohException.value(
             'Next Function result can only be Request or Response');
       }
 
-      if (nr_ is Request) result = (req: nr_, res: reqRes.res);
-      if (nr_ is Response) result = (req: reqRes.req, res: nr_);
+      if (nextFn is Request) result = (req: nextFn, res: reqRes.res);
+      if (nextFn is Response) result = (req: reqRes.req, res: nextFn);
       canGotoNext = true;
     });
 
