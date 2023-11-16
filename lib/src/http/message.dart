@@ -25,7 +25,7 @@ abstract class Message<T> {
   /// the MIME type, without any Content-Type parameters.
   ///
   /// If [headers] doesn't have a Content-Type header, this will be `null`.
-  MediaType? get contentType {
+  MediaType? get mediaType {
     if (_contentTypeCache != null) return _contentTypeCache;
     var type = headers[HttpHeaders.contentTypeHeader];
     if (type == null) return null;
@@ -33,7 +33,7 @@ abstract class Message<T> {
     return _contentTypeCache = MediaType.parse(type);
   }
 
-  String? get mimeType => contentType?.mimeType;
+  String? get mimeType => mediaType?.mimeType;
 
   /// The encoding of the message body.
   ///
@@ -43,7 +43,7 @@ abstract class Message<T> {
   /// If [headers] doesn't have a Content-Type header or it specifies an
   /// encoding that `dart:convert` doesn't support, this will be `null`.
   Encoding? get encoding {
-    var ctype = contentType;
+    var ctype = mediaType;
     if (ctype == null) return null;
     if (!ctype.parameters.containsKey('charset')) return null;
     return Encoding.getByName(ctype.parameters['charset']);

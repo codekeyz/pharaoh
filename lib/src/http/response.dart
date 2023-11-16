@@ -3,9 +3,10 @@ import 'dart:io';
 
 import '../utils/exceptions.dart';
 import '../shelf_interop/shelf.dart' as shelf;
-import '../utils/utils.dart';
 import 'message.dart';
 import 'request.dart';
+
+final applicationOctetStreamType = ContentType('application', 'octet-stream');
 
 abstract interface class $Response {
   Response redirect(String url, [int statusCode = HttpStatus.found]);
@@ -48,8 +49,8 @@ class Response extends Message<shelf.Body> implements $Response {
 
   @override
   Response type(ContentType type) {
-    final value = contentTypeToString(type);
-    _httpReq.response.headers.set(HttpHeaders.contentTypeHeader, value);
+    _httpReq.response.headers
+        .set(HttpHeaders.contentTypeHeader, type.toString());
     return Response._(_httpReq, body);
   }
 
@@ -69,14 +70,17 @@ class Response extends Message<shelf.Body> implements $Response {
   Response json(Object? data) {
     late Object result;
     try {
+      if (data is Set) data = data.toList();
       result = jsonEncode(data);
     } catch (_) {
-      result = jsonEncode(makeError(message: _.toString()).toJson);
+      final result = jsonEncode(makeError(message: _.toString()).toJson);
+      return status(500)
+        ..body = shelf.Body(result)
+        ..end();
     }
 
     final response = Response._(_httpReq, shelf.Body(result));
-    final contentType = headers[HttpHeaders.contentTypeHeader];
-    if (contentType == null) return response.type(ContentType.json).end();
+    if (mediaType == null) return response.type(ContentType.json).end();
     return response.end();
   }
 
@@ -97,11 +101,38 @@ class Response extends Message<shelf.Body> implements $Response {
           .end();
 
   @override
-  Response send(Object data) => Response._(_httpReq, shelf.Body(data)).end();
+  Response send(Object data) {
+    final ctype = _getContentType(data, valueWhenNull: ContentType.html);
+    return type(ctype)
+      ..body = shelf.Body(data)
+      ..end();
+  }
 
   @override
-  Response end() => Response._(_httpReq, body).._ended = true;
+  Response end() {
+    _ended = true;
+    return this;
+  }
 
   PharaohErrorBody makeError({required String message}) =>
       PharaohErrorBody(message, _reqInfo.path, method: _reqInfo.method);
+
+  ContentType _getContentType(
+    Object data, {
+    required ContentType valueWhenNull,
+  }) {
+    final isBuffer = _isBuffer(data);
+    final mType = mediaType;
+    if (mType == null) {
+      return isBuffer ? applicationOctetStreamType : valueWhenNull;
+    }
+
+    /// Always use charset :utf-8 unless
+    /// we have to deal with buffers.
+    final charset = isBuffer ? mType.parameters['charset'] : 'utf-8';
+    return ContentType.parse('${mType.mimeType}; charset=$charset');
+  }
+
+  /// TODO research on how to tell if an object is a buffer
+  bool _isBuffer(Object object) => object is! String;
 }

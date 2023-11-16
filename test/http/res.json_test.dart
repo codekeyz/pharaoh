@@ -8,17 +8,19 @@ void main() {
   group('.json(Object)', () {
     test('should not override previous Content-Types', () async {
       final app = Pharaoh().get('/', (req, res) {
-        return res.type(ContentType.parse('application/vnd.example+json')).json({"hello": "world"});
+        return res
+            .type(ContentType.parse('application/vnd.example+json'))
+            .json({"hello": "world"});
       });
 
       final result = await (await request<Pharaoh>(app)).get('/');
-      expect(result.headers['content-type'], 'application/vnd.example+json; charset=utf-8');
+      expect(result.headers['content-type'], 'application/vnd.example+json');
       expect(result.statusCode, 200);
       expect(result.body, '{"hello":"world"}');
     });
 
     group('when given primitives', () {
-      test('should respond with json for null', () async {
+      test('should respond with json for <null>', () async {
         final app = Pharaoh().use((req, res, next) {
           next(res.json(null));
         });
@@ -30,7 +32,7 @@ void main() {
             result.headers['content-type'], 'application/json; charset=utf-8');
       });
 
-      test('should respond with json for Integer', () async {
+      test('should respond with json for <int>', () async {
         final app = Pharaoh().use((req, res, next) {
           next(res.json(300));
         });
@@ -42,7 +44,7 @@ void main() {
             result.headers['content-type'], 'application/json; charset=utf-8');
       });
 
-      test('should respond with json for Double', () async {
+      test('should respond with json for <double>', () async {
         final app = Pharaoh().use((req, res, next) {
           next(res.json(300.34));
         });
@@ -54,7 +56,7 @@ void main() {
             result.headers['content-type'], 'application/json; charset=utf-8');
       });
 
-      test('should respond with json for String', () async {
+      test('should respond with json for <String>', () async {
         final app = Pharaoh().use((req, res, next) {
           next(res.json("str"));
         });
@@ -66,7 +68,7 @@ void main() {
             result.headers['content-type'], 'application/json; charset=utf-8');
       });
 
-      test('should respond with json for Boolean', () async {
+      test('should respond with json for <bool>', () async {
         final app = Pharaoh().use((req, res, next) {
           next(res.json(true));
         });
@@ -79,8 +81,8 @@ void main() {
       });
     });
 
-    group('when given an array', () {
-      test('should respond with json', () async {
+    group('when given a collection type', () {
+      test('<List> should respond with json', () async {
         final app = Pharaoh().use((req, res, next) {
           next(res.json(["foo", "bar", "baz"]));
         });
@@ -88,6 +90,30 @@ void main() {
         final result = await (await request(app)).get('/');
         expect(result.statusCode, 200);
         expect(result.body, '["foo","bar","baz"]');
+        expect(
+            result.headers['content-type'], 'application/json; charset=utf-8');
+      });
+
+      test('<Map> should respond with json', () async {
+        final app = Pharaoh().use((req, res, next) {
+          next(res.json({"name": "Foo bar", "age": 23.45}));
+        });
+
+        final result = await (await request(app)).get('/');
+        expect(result.statusCode, 200);
+        expect(result.body, '{"name":"Foo bar","age":23.45}');
+        expect(
+            result.headers['content-type'], 'application/json; charset=utf-8');
+      });
+
+      test('<Set> should respond with json', () async {
+        final app = Pharaoh().use((req, res, next) {
+          next(res.json({"Chima", "Foo", "Bar"}));
+        });
+
+        final result = await (await request(app)).get('/');
+        expect(result.statusCode, 200);
+        expect(result.body, '["Chima","Foo","Bar"]');
         expect(
             result.headers['content-type'], 'application/json; charset=utf-8');
       });

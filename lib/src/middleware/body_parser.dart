@@ -16,14 +16,14 @@ class MimeType {
 }
 
 _processBody(Request req, Response res, Function next) async {
-  final mimeType = req.contentType?.mimeType;
+  final mimeType = req.mediaType?.mimeType;
   if (mimeType == null) {
     next();
     return;
   }
 
   if (mimeType == MimeType.multiPartForm) {
-    final boundary = req.contentType!.parameters['boundary']!;
+    final boundary = req.mediaType!.parameters['boundary']!;
     final parts = MimeMultipartTransformer(boundary).bind(req.req);
 
     Map<String, dynamic> dataBag = {};
