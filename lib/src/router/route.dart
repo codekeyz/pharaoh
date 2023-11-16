@@ -6,6 +6,9 @@ import '../utils/exceptions.dart';
 import 'handler.dart';
 import 'router.dart';
 
+// ignore: constant_identifier_names
+const ANY_PATH = '/:route(.*)';
+
 String verbString(List<HTTPMethod> verbs) => verbs.map((e) => e.name).join(':');
 
 typedef RouteResult = ({bool hasMatch, Map<String, String> params});
@@ -35,7 +38,7 @@ class Route {
   /// Any path with the following methods [HTTPMethod]
   Route.path(String p, [HTTPMethod method = HTTPMethod.ALL])
       : verbs = [method],
-        path = '/:route(.*)',
+        path = ANY_PATH,
         prefix = p;
 
   Route withPrefix(String prefix) => Route(
