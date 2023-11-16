@@ -73,7 +73,11 @@ class Response extends Message<shelf.Body> implements $Response {
     } catch (_) {
       result = jsonEncode(makeError(message: _.toString()).toJson);
     }
-    return Response._(_httpReq, shelf.Body(result)).end();
+
+    final response = Response._(_httpReq, shelf.Body(result));
+    final contentType = headers[HttpHeaders.contentTypeHeader];
+    if (contentType == null) return response.type(ContentType.json).end();
+    return response.end();
   }
 
   @override
