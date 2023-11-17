@@ -1,4 +1,12 @@
-# [0.0.1]
+# 0.0.2
+
+- Made fixes to Middlewares in Route Group
+- Improve adapter for Shelf Middlewares
+- Add more examples & fix pub.dev scores
+
+I'm actively looking for contributors. Do checkout the project and leave a star if you find this useful. 👋
+
+# 0.0.1
 
 - Initial version
 
