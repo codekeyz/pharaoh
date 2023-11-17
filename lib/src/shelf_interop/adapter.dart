@@ -20,8 +20,7 @@ HandlerFunc useShelfMiddleware(dynamic middleware) {
     return (req, res, next) async {
       final shelfResponse = await middleware(
           (req) => shelf.Response.ok(req.read()))(_toShelfRequest(req));
-
-      res = _fromShelfResponse(req, shelfResponse);
+      res = _fromShelfResponse((req: req, res: res), shelfResponse);
 
       next(res);
     };
@@ -30,9 +29,11 @@ HandlerFunc useShelfMiddleware(dynamic middleware) {
   if (middleware is ShelfMiddlewareType2) {
     return (req, res, next) async {
       final shelfResponse = await middleware(_toShelfRequest(req));
-      res = _fromShelfResponse(req, shelfResponse);
+      res = _fromShelfResponse((req: req, res: res), shelfResponse);
 
-      next(res);
+      /// TODO(codekeyz) find out how to end or let the request continue
+      /// based off the shelf response
+      next(res.end());
     };
   }
 
@@ -57,18 +58,15 @@ shelf.Request _toShelfRequest($Request req) {
   );
 }
 
-Response _fromShelfResponse(Request req, shelf.Response response) {
-  Map<String, dynamic> headers = {};
+Response _fromShelfResponse(ReqRes reqRes, shelf.Response response) {
+  Map<String, dynamic> headers = reqRes.res.headers;
   response.headers.forEach((key, value) => headers[key] = value);
   return Response(
-    req.req,
+    reqRes.req.req,
     body: shelf.Body(response.read()),
     headers: headers,
     statusCode: response.statusCode,
     encoding: response.encoding,
-
-    /// TODO(codekeyz) find out how to set this based off
-    /// the shelf response
     ended: false,
   );
 }
