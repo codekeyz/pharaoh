@@ -167,7 +167,7 @@ class $PharaohImpl implements Pharaoh {
   Future<void> forward(HttpRequest request, Response res_) async {
     var coding = res_.headers['transfer-encoding'];
 
-    final statusCode = request.response.statusCode;
+    final statusCode = res_.statusCode;
     if (coding != null && !equalsIgnoreAsciiCase(coding, 'identity')) {
       // If the response is already in a chunked encoding, de-chunk it because
       // otherwise `dart:io` will try to add another layer of chunking.
@@ -206,6 +206,8 @@ class $PharaohImpl implements Pharaoh {
             .add(HttpHeaders.contentLengthHeader, contentLength);
       }
     }
+
+    request.response.statusCode = statusCode;
 
     return request.response
         .addStream(res_.body!.read())
