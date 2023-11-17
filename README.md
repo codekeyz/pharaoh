@@ -19,7 +19,7 @@ In your pubspec.yaml
 
 ```yaml
 dependencies:
-  pharaoh: ^0.0.1 # requires Dart => ^3.1.5
+  pharaoh: ^0.0.2 # requires Dart => ^3.1.5
 ```
 
 ## Basic Usage:
@@ -46,6 +46,8 @@ void main() async {
 }
 
 ```
+
+See the [Pharaoh Examples](./pharaoh_examples/lib/) directly for more practical use-cases.
 
 ## Philosophy
 
