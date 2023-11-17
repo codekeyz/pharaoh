@@ -167,7 +167,7 @@ class $PharaohImpl implements Pharaoh {
   Future<void> forward(HttpRequest request, Response res_) async {
     var coding = res_.headers['transfer-encoding'];
 
-    final statusCode = request.response.statusCode;
+    final statusCode = res_.statusCode;
     if (coding != null && !equalsIgnoreAsciiCase(coding, 'identity')) {
       // If the response is already in a chunked encoding, de-chunk it because
       // otherwise `dart:io` will try to add another layer of chunking.
@@ -187,14 +187,27 @@ class $PharaohImpl implements Pharaoh {
           .set(HttpHeaders.transferEncodingHeader, 'chunked');
     }
 
-    request.response.headers.add('X-Powered-By', 'Pharaoh');
-    request.response.headers
-        .add(HttpHeaders.dateHeader, DateTime.now().toUtc());
-    final contentLength = res_.contentLength;
-    if (contentLength != null) {
-      request.response.headers
-          .add(HttpHeaders.contentLengthHeader, contentLength);
+    // headers to write to the response
+    final hders = res_.headers;
+
+    hders.forEach((key, value) => request.response.headers.add(key, value));
+
+    if (!hders.containsKey(_XPoweredByHeader)) {
+      request.response.headers.add(_XPoweredByHeader, 'Pharaoh');
     }
+    if (!hders.containsKey(HttpHeaders.dateHeader)) {
+      request.response.headers
+          .add(HttpHeaders.dateHeader, DateTime.now().toUtc());
+    }
+    if (!hders.containsKey(HttpHeaders.contentLengthHeader)) {
+      final contentLength = res_.contentLength;
+      if (contentLength != null) {
+        request.response.headers
+            .add(HttpHeaders.contentLengthHeader, contentLength);
+      }
+    }
+
+    request.response.statusCode = statusCode;
 
     return request.response
         .addStream(res_.body!.read())
@@ -206,3 +219,6 @@ class $PharaohImpl implements Pharaoh {
     await _server.close();
   }
 }
+
+// ignore: constant_identifier_names
+const _XPoweredByHeader = 'X-Powered-By';

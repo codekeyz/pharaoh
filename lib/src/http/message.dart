@@ -5,21 +5,21 @@ import 'package:http_parser/http_parser.dart';
 
 import '../shelf_interop/shelf.dart';
 
-abstract class Message<T> {
-  final Map<String, dynamic> _headers = {};
+/// [T] generic type that should either be [Request] or [Response]
+/// the reason i'm accepting this type here is to be able to return instance of this as [T]
+/// for methods that exist on this class.
 
-  Map<String, dynamic> get headers => _headers;
+abstract class Message<T> {
+  final Map<String, dynamic> headers;
 
   T? body;
 
   MediaType? _contentTypeCache;
 
-  Message(HttpRequest? req, [T? value]) : body = value;
-
-  void updateHeaders(void Function(Map<String, dynamic> headers) update) {
-    update(_headers);
-    _contentTypeCache = null;
-  }
+  Message(
+    this.body, {
+    required this.headers,
+  });
 
   /// This is parsed from the Content-Type header in [headers]. It contains only
   /// the MIME type, without any Content-Type parameters.

@@ -31,6 +31,14 @@ Add CORS to our Pharaoah server using [shelf_cors_headers](https://pub.dev/packa
 
 [Jump to Source](https://github.com/codekeyz/pharaoh/tree/main/pharaoh_examples/lib/shelf_middleware/index.dart)
 
-### Serve Webpages and Files
+### Serve Webpages and Files 1
 
-[Jump to Source](https://github.com/codekeyz/pharaoh/tree/main/pharaoh_examples/lib/serve_files/index.dart)
+Serve a Webpage, and files using Pharaoh
+
+[Jump to Source](https://github.com/codekeyz/pharaoh/tree/main/pharaoh_examples/lib/serve_files_1/index.dart)
+
+### Serve Webpages and Files 2
+
+Serve a Webpage, favicon and Image using [shelf_static](https://pub.dev/packages/shelf_static)
+
+[Jump to Source](https://github.com/codekeyz/pharaoh/tree/main/pharaoh_examples/lib/serve_files_2/index.dart)

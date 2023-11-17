@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:http_parser/http_parser.dart';
 
 import '../utils/exceptions.dart';
 import '../shelf_interop/shelf.dart' as shelf;
@@ -9,9 +10,11 @@ import 'request.dart';
 final applicationOctetStreamType = ContentType('application', 'octet-stream');
 
 abstract interface class $Response {
-  Response redirect(String url, [int statusCode = HttpStatus.found]);
+  Response set(String headerKey, String headerValue);
 
-  Response end();
+  Response type(ContentType type);
+
+  Response status(int code);
 
   Response json(Object? data);
 
@@ -21,50 +24,114 @@ abstract interface class $Response {
 
   Response notFound([String? message]);
 
+  Response redirect(String url, [int statusCode = HttpStatus.found]);
+
   Response internalServerError([String? message]);
 
-  Response type(ContentType type);
-
-  Response status(int code);
+  Response end();
 }
 
-class Response extends Message<shelf.Body> implements $Response {
+class Response extends Message<shelf.Body?> implements $Response {
   /// This is just an interface that holds the current request information
   late final $Request _reqInfo;
 
   late final HttpRequest _httpReq;
 
-  bool _ended = false;
+  final bool ended;
 
-  bool get ended => _ended;
+  final int statusCode;
 
-  Response._(this._httpReq, [shelf.Body? body])
-      : _reqInfo = Request.from(_httpReq),
-        super(_httpReq, body ?? shelf.Body(null)) {
-    updateHeaders((hders) => _httpReq.response.headers
-        .forEach((name, values) => hders[name] = values));
+  DateTime? _expiresCache;
+
+  /// The date and time after which the response's data should be considered
+  /// stale.
+  ///
+  /// This is parsed from the Expires header in [headers]. If [headers] doesn't
+  /// have an Expires header, this will be `null`.
+  DateTime? get expires {
+    if (_expiresCache != null) return _expiresCache;
+    if (!headers.containsKey('expires')) return null;
+    _expiresCache = parseHttpDate(headers['expires']!);
+    return _expiresCache;
   }
 
-  factory Response.from(HttpRequest request) => Response._(request);
+  /// The date and time the source of the response's data was last modified.
+  ///
+  /// This is parsed from the Last-Modified header in [headers]. If [headers]
+  /// doesn't have a Last-Modified header, this will be `null`.
+  DateTime? get lastModified {
+    if (_lastModifiedCache != null) return _lastModifiedCache;
+    if (!headers.containsKey('last-modified')) return null;
+    _lastModifiedCache = parseHttpDate(headers['last-modified']!);
+    return _lastModifiedCache;
+  }
+
+  DateTime? _lastModifiedCache;
+
+  /// Constructs an HTTP response with the given [statusCode].
+  ///
+  /// [statusCode] must be greater than or equal to 100.
+  ///
+  /// {@macro shelf_response_body_and_encoding_param}
+  Response(
+    this._httpReq, {
+    shelf.Body? body,
+    int? statusCode,
+    this.ended = false,
+    Encoding? encoding,
+    Map<String, dynamic>? headers,
+  })  : _reqInfo = Request.from(_httpReq),
+        statusCode = statusCode ?? 200,
+        super(shelf.Body(body, encoding), headers: headers ?? {}) {
+    if (this.statusCode < 100) {
+      throw PharaohException('Invalid status code: $statusCode.');
+    }
+  }
+
+  factory Response.from(HttpRequest request, {shelf.Body? body}) =>
+      Response(request);
 
   @override
-  Response type(ContentType type) {
-    _httpReq.response.headers
-        .set(HttpHeaders.contentTypeHeader, type.toString());
-    return Response._(_httpReq, body);
-  }
+  Response set(String headerKey, String headerValue) => Response(
+        _httpReq,
+        headers: headers..[headerKey] = headerValue,
+        body: body,
+        encoding: encoding,
+        ended: ended,
+        statusCode: statusCode,
+      );
 
   @override
-  Response status(int code) {
-    _httpReq.response.statusCode = code;
-    return Response._(_httpReq);
-  }
+  Response type(ContentType type) => Response(
+        _httpReq,
+        headers: headers..[HttpHeaders.contentTypeHeader] = type.toString(),
+        body: body,
+        ended: ended,
+        statusCode: statusCode,
+        encoding: encoding,
+      );
 
   @override
-  Response redirect(String url, [int statusCode = HttpStatus.found]) {
-    _httpReq.response.headers.set(HttpHeaders.locationHeader, url);
-    return Response._(_httpReq).status(statusCode).end();
-  }
+  Response status(int code) => Response(
+        _httpReq,
+        statusCode: code,
+        body: body,
+        ended: ended,
+        encoding: encoding,
+        headers: headers,
+      );
+
+  @override
+  Response redirect(
+    String url, [
+    int statusCode = HttpStatus.found,
+  ]) =>
+      Response(
+        _httpReq,
+        statusCode: statusCode,
+        headers: headers..[HttpHeaders.locationHeader] = url,
+        ended: true,
+      );
 
   @override
   Response json(Object? data) {
@@ -73,46 +140,78 @@ class Response extends Message<shelf.Body> implements $Response {
       if (data is Set) data = data.toList();
       result = jsonEncode(data);
     } catch (_) {
-      final result = jsonEncode(makeError(message: _.toString()).toJson);
-      return status(500)
-        ..body = shelf.Body(result)
-        ..end();
+      final errStr = jsonEncode(makeError(message: _.toString()).toJson);
+      return Response(
+        _httpReq,
+        statusCode: 500,
+        body: shelf.Body(errStr),
+        headers: headers,
+      ).type(ContentType.json).end();
     }
 
-    final response = Response._(_httpReq, shelf.Body(result));
-    if (mediaType == null) return response.type(ContentType.json).end();
-    return response.end();
+    final res = Response(
+      _httpReq,
+      body: shelf.Body(result),
+      statusCode: statusCode,
+      encoding: encoding,
+      headers: headers,
+      ended: true,
+    );
+    return mediaType == null ? res.type(ContentType.json) : res;
   }
 
   @override
-  Response notFound([String? message]) => Response._(_httpReq)
-      .status(404)
-      .json(makeError(message: message ?? 'Not found').toJson);
+  Response notFound([String? message]) => Response(
+        _httpReq,
+        body: body,
+        encoding: encoding,
+        statusCode: 404,
+        headers: headers,
+      ).json(makeError(message: message ?? 'Not found').toJson);
 
   @override
-  Response internalServerError([String? message]) => Response._(_httpReq)
-      .status(500)
-      .json(makeError(message: message ?? 'Internal Server Error').toJson);
+  Response internalServerError([String? message]) => Response(
+        _httpReq,
+        body: body,
+        encoding: encoding,
+        statusCode: statusCode,
+        headers: headers,
+        ended: ended,
+      )
+          .status(500)
+          .json(makeError(message: message ?? 'Internal Server Error').toJson);
 
   @override
-  Response ok([String? data]) =>
-      Response._(_httpReq, shelf.Body(data, encoding))
-          .type(ContentType.text)
-          .end();
+  Response ok([String? data]) => Response(
+        _httpReq,
+        body: shelf.Body(data, encoding),
+        statusCode: statusCode,
+        headers: headers,
+        encoding: encoding,
+        ended: true,
+      ).type(ContentType.text);
 
   @override
   Response send(Object data) {
     final ctype = _getContentType(data, valueWhenNull: ContentType.html);
-    return type(ctype)
-      ..body = shelf.Body(data)
-      ..end();
+    return Response(_httpReq,
+            body: shelf.Body(data),
+            encoding: encoding,
+            statusCode: statusCode,
+            headers: headers,
+            ended: true)
+        .type(ctype);
   }
 
   @override
-  Response end() {
-    _ended = true;
-    return this;
-  }
+  Response end() => Response(
+        _httpReq,
+        body: body,
+        ended: true,
+        headers: headers,
+        statusCode: statusCode,
+        encoding: encoding,
+      );
 
   PharaohErrorBody makeError({required String message}) =>
       PharaohErrorBody(message, _reqInfo.path, method: _reqInfo.method);
