@@ -5,10 +5,6 @@ import 'package:http_parser/http_parser.dart';
 
 import '../shelf_interop/shelf.dart';
 
-/// [T] generic type that should either be [Request] or [Response]
-/// the reason i'm accepting this type here is to be able to return instance of this as [T]
-/// for methods that exist on this class.
-
 abstract class Message<T> {
   final Map<String, dynamic> headers;
 
