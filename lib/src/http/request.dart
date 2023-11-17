@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:http_parser/http_parser.dart';
+
 import '../utils/exceptions.dart';
 import 'message.dart';
 
@@ -8,8 +10,10 @@ enum HTTPMethod { GET, HEAD, POST, PUT, DELETE, ALL, PATCH, OPTIONS, TRACE }
 
 HTTPMethod getHttpMethod(HttpRequest req) {
   switch (req.method) {
-    case 'GET' || 'HEAD':
+    case 'GET':
       return HTTPMethod.GET;
+    case 'HEAD':
+      return HTTPMethod.HEAD;
     case 'POST':
       return HTTPMethod.POST;
     case 'PUT':
@@ -28,6 +32,8 @@ HTTPMethod getHttpMethod(HttpRequest req) {
 }
 
 abstract interface class $Request<T> {
+  Uri get uri;
+
   String get path;
 
   String? get query;
@@ -69,6 +75,27 @@ class Request extends Message<dynamic> implements $Request<dynamic> {
   void putInContext(String key, Object object) => _context[key] = object;
 
   void updateParams(String key, String value) => _params[key] = value;
+
+  /// If this is non-`null` and the requested resource hasn't been modified
+  /// since this date and time, the server should return a 304 Not Modified
+  /// response.
+  ///
+  /// This is parsed from the If-Modified-Since header in [headers]. If
+  /// [headers] doesn't have an If-Modified-Since header, this will be `null`.
+  ///
+  /// Throws [FormatException], if incoming HTTP request has an invalid
+  /// If-Modified-Since header.
+  DateTime? get ifModifiedSince {
+    if (_ifModifiedSinceCache != null) return _ifModifiedSinceCache;
+    if (!headers.containsKey('if-modified-since')) return null;
+    _ifModifiedSinceCache = parseHttpDate(headers['if-modified-since']!);
+    return _ifModifiedSinceCache;
+  }
+
+  DateTime? _ifModifiedSinceCache;
+
+  @override
+  Uri get uri => _req.uri;
 
   @override
   String get path => _req.uri.path;
