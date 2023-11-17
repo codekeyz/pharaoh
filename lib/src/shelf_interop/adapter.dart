@@ -58,9 +58,17 @@ shelf.Request _toShelfRequest($Request req) {
 }
 
 Response _fromShelfResponse(Request req, shelf.Response response) {
-  return Response.from(req.req, body: shelf.Body(response.read()))
-      .status(response.statusCode)
-      .updateHeaders(
-          (hdrs) => response.headers.forEach((key, value) => hdrs[key] = value))
-      .end();
+  Map<String, dynamic> headers = {};
+  response.headers.forEach((key, value) => headers[key] = value);
+  return Response(
+    req.req,
+    body: shelf.Body(response.read()),
+    headers: headers,
+    statusCode: response.statusCode,
+    encoding: response.encoding,
+
+    /// TODO(codekeyz) find out how to set this based off
+    /// the shelf response
+    ended: false,
+  );
 }
