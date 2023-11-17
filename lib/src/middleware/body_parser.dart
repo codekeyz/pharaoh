@@ -15,7 +15,7 @@ class MimeType {
   static const String textPlain = 'text/plain';
 }
 
-_processBody(Request req, Response res, Function next) async {
+_processBody(Request req, Response res, NextFunction next) async {
   final mimeType = req.mediaType?.mimeType;
   if (mimeType == null) {
     next();

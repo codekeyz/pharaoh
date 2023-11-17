@@ -22,9 +22,13 @@ abstract interface class $Response {
 
   Response send(Object data);
 
+  Response notModified({Map<String, dynamic>? headers});
+
   Response notFound([String? message]);
 
   Response redirect(String url, [int statusCode = HttpStatus.found]);
+
+  Response movedPermanently(String url);
 
   Response internalServerError([String? message]);
 
@@ -132,6 +136,33 @@ class Response extends Message<shelf.Body?> implements $Response {
         headers: headers..[HttpHeaders.locationHeader] = url,
         ended: true,
       );
+
+  @override
+  Response movedPermanently(String url) => Response(
+        _httpReq,
+        statusCode: 301,
+        headers: headers..[HttpHeaders.locationHeader] = url,
+        ended: true,
+      );
+
+  @override
+  Response notModified({Map<String, dynamic>? headers}) {
+    final existingHeaders = this.headers;
+    if (headers != null) {
+      headers.forEach((key, val) => existingHeaders[key] = val);
+    }
+
+    existingHeaders
+        .removeWhere((name, _) => name.toLowerCase() == 'content-length');
+    existingHeaders[HttpHeaders.dateHeader] = formatHttpDate(DateTime.now());
+
+    return Response(
+      _httpReq,
+      ended: true,
+      statusCode: 304,
+      headers: existingHeaders,
+    );
+  }
 
   @override
   Response json(Object? data) {

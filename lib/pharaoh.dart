@@ -8,12 +8,14 @@ import 'src/router/handler.dart';
 import 'src/router/route.dart';
 import 'src/router/router.dart';
 
-export 'src/router/route.dart' hide RouteGroup;
-export 'src/router/router.dart';
 export 'src/middleware/request_logger.dart';
-export 'src/http/request.dart' show $Request;
-export 'src/http/response.dart' show $Response;
 export 'src/shelf_interop/adapter.dart';
+export 'src/shelf_interop/shelf.dart' show Body;
+export 'src/router/handler.dart';
+export 'src/router/route.dart' show Route;
+export 'src/http/response.dart';
+export 'src/http/request.dart';
+export 'src/utils/exceptions.dart';
 
 abstract class Pharaoh implements RoutePathDefinitionContract<Pharaoh> {
   factory Pharaoh() => $PharaohImpl();

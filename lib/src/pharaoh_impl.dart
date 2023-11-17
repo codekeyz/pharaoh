@@ -5,10 +5,8 @@ import 'package:http_parser/http_parser.dart';
 import 'package:mason_logger/mason_logger.dart';
 
 import '../pharaoh.dart';
-import 'http/request.dart';
-import 'http/response.dart';
 import 'middleware/body_parser.dart';
-import 'router/handler.dart';
+import 'router/router.dart';
 import 'shelf_interop/shelf.dart' as shelf;
 
 class $PharaohImpl implements Pharaoh {

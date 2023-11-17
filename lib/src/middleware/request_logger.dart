@@ -2,7 +2,7 @@ import '../http/request.dart';
 import '../http/response.dart';
 import '../router/handler.dart';
 
-void _processBody(Request req, Response res, Function next) async {
+void _processBody(Request req, Response res, NextFunction next) async {
   final logLines = """
 -------------------------------------------------------
 Path:             ${req.path}
