@@ -28,7 +28,7 @@ abstract interface class $Response {
   Response status(int code);
 }
 
-class Response extends Message<shelf.Body> implements $Response {
+class Response extends Message<Response, shelf.Body> implements $Response {
   /// This is just an interface that holds the current request information
   late final $Request _reqInfo;
 
@@ -45,7 +45,8 @@ class Response extends Message<shelf.Body> implements $Response {
         .forEach((name, values) => hders[name] = values));
   }
 
-  factory Response.from(HttpRequest request) => Response._(request);
+  factory Response.from(HttpRequest request, {shelf.Body? body}) =>
+      Response._(request, body);
 
   @override
   Response type(ContentType type) {

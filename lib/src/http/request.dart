@@ -51,7 +51,7 @@ abstract interface class $Request<T> {
   Object? operator [](String name);
 }
 
-class Request extends Message<dynamic> implements $Request<dynamic> {
+class Request extends Message<Request, dynamic> implements $Request<dynamic> {
   final HttpRequest _req;
   final Map<String, dynamic> _params = {};
   final Map<String, dynamic> _context = {};

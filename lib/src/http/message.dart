@@ -5,7 +5,13 @@ import 'package:http_parser/http_parser.dart';
 
 import '../shelf_interop/shelf.dart';
 
-abstract class Message<T> {
+/// [I] generic type that should either be [Request] or [Response]
+/// the reason i'm accepting this type here is to be able to return instance of this as [T]
+/// for methods that exist on this class.
+///
+/// [T] generic type that should that is set by [Request] and [Response].
+/// See their implementation to understand what is happening and why that is in place.
+abstract class Message<I, T> {
   final Map<String, dynamic> _headers = {};
 
   Map<String, dynamic> get headers => _headers;
@@ -16,9 +22,10 @@ abstract class Message<T> {
 
   Message(HttpRequest? req, [T? value]) : body = value;
 
-  void updateHeaders(void Function(Map<String, dynamic> headers) update) {
-    update(_headers);
+  I updateHeaders(void Function(Map<String, dynamic> headers) update) {
     _contentTypeCache = null;
+    update(_headers);
+    return this as I;
   }
 
   /// This is parsed from the Content-Type header in [headers]. It contains only
