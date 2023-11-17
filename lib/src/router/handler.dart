@@ -37,6 +37,20 @@ abstract class RouteHandler {
 
   RouteHandler prefix(String prefix);
 
+  /// the way this function is written can fly over
+  /// your head if you don't understand the operation of middlewares
+  /// and request handlers.
+  /// Peep their implementation to understand how they behave.
+  ///
+  /// When an HttpRequest hits our server, either a [RequestHandler] or [Middleware]
+  /// can handle it.
+  ///
+  /// - [RequestHandler] has one job. return a response. So automatically, they call
+  /// next. hence the reason there's no next function. See [RequestHandlerFunc].
+  ///
+  /// - [Middleware] with middlewares, you get a `req`, `res`, and `next` function.
+  /// you do your processing and then notify us to proceed when you call the next.
+  /// If you don't call next, we will be stuck in limbo.
   Future<HandlerResult> handle(final ReqRes reqRes) async {
     final request = reqRes.req;
     if (_routeParams.isNotEmpty) {
@@ -47,14 +61,15 @@ abstract class RouteHandler {
 
     ReqRes result = reqRes;
     bool canGotoNext = false;
-    await handler(request, reqRes.res, ([nextFn]) {
-      if (nextFn != null && nextFn is! Request && nextFn is! Response) {
+
+    await handler(request, reqRes.res, ([nr_]) {
+      if (nr_ != null && nr_ is! Request && nr_ is! Response) {
         throw PharaohException.value(
             'Next Function result can only be Request or Response');
       }
 
-      if (nextFn is Request) result = (req: nextFn, res: reqRes.res);
-      if (nextFn is Response) result = (req: reqRes.req, res: nextFn);
+      if (nr_ is Request) result = (req: nr_, res: reqRes.res);
+      if (nr_ is Response) result = (req: reqRes.req, res: nr_);
       canGotoNext = true;
     });
 
