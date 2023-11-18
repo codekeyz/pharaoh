@@ -22,6 +22,8 @@ abstract interface class $Response {
 
   Response send(Object data);
 
+  Response format(Map<String, Function(Response res)> data);
+
   Response notFound([String? message]);
 
   Response redirect(String url, [int statusCode = HttpStatus.found]);
@@ -234,4 +236,16 @@ class Response extends Message<shelf.Body?> implements $Response {
 
   /// TODO research on how to tell if an object is a buffer
   bool _isBuffer(Object object) => object is! String;
+
+  /// TODO(baba) try and resolve this
+  @override
+  Response format(Map<String, Function(Response res)> resFormatMap) {
+    var reqContentType = _reqInfo.headers[HttpHeaders.contentTypeHeader];
+    if (reqContentType is Iterable) reqContentType = reqContentType.join();
+
+    final handler = resFormatMap[reqContentType];
+    if (handler == null) return end();
+
+    return handler.call(this);
+  }
 }
