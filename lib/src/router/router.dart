@@ -4,7 +4,7 @@ import '../http/request.dart';
 import 'handler.dart';
 import 'route.dart';
 
-const BASE_PATH = '/';
+const basePath = '/';
 
 abstract interface class RoutePathDefinitionContract<T> {
   T get(String path, RequestHandlerFunc handler);
@@ -20,7 +20,7 @@ abstract interface class RoutePathDefinitionContract<T> {
 
 mixin RouterMixin<T extends RouteHandler> on RouteHandler
     implements RoutePathDefinitionContract<T> {
-  RouteGroup _group = RouteGroup.path(BASE_PATH);
+  RouteGroup _group = RouteGroup.path(basePath);
 
   List<Route> get routes => _group.handlers.map((e) => e.route).toList();
 
