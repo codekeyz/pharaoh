@@ -2,26 +2,36 @@
 
 # Root Directories
 ROOT_DIRECTORIES=(
+    "./**"
     "packages/**"
 )
 
-echo "Performing types in packages, Hold tight 👀"
+echo "Checking you haven't broken anything. Hold tight 🎅"
+
+has_pubspec_file() {
+  if [ -f "$1/pubspec.yaml" ]; then
+    return 0
+  else
+    return 1 
+  fi
+}
 
 check_types() {
   local dir="$1"
-  if [ -f "$dir/pubspec.yaml" ]; then
-    (cd "$dir" && dart pub get && dart analyze && dart test)
-    if [ $? -ne 0 ]; then
-      echo "TypeScript type checking failed in $dir"
-      exit 1
-    else  
-      echo "$dir ✅"
-    fi
+  (cd "$dir" && dart pub get && dart analyze && dart test)
+  if [ $? -ne 0 ]; then
+    echo "Your change broke something in $dir 👀"
+    exit 1
+  else  
+    echo "$dir ✅"
   fi
 }
 
 for root_dir in "${ROOT_DIRECTORIES[@]}"; do
   for dir in $root_dir; do
-    check_types "$dir"
+    if has_pubspec_file "$dir"; then
+      echo "$dir has a pubspec file"
+      check_types "$dir"
+    fi
   done
 done
