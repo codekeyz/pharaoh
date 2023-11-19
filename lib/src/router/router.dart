@@ -4,7 +4,7 @@ import '../http/request.dart';
 import 'handler.dart';
 import 'route.dart';
 
-const BASE_PATH = '/';
+const basePath = '/';
 
 abstract interface class RoutePathDefinitionContract<T> {
   T get(String path, RequestHandlerFunc handler);
@@ -20,7 +20,7 @@ abstract interface class RoutePathDefinitionContract<T> {
 
 mixin RouterMixin<T extends RouteHandler> on RouteHandler
     implements RoutePathDefinitionContract<T> {
-  RouteGroup _group = RouteGroup.path(BASE_PATH);
+  RouteGroup _group = RouteGroup.path(basePath);
 
   List<Route> get routes => _group.handlers.map((e) => e.route).toList();
 
@@ -35,15 +35,15 @@ mixin RouterMixin<T extends RouteHandler> on RouteHandler
 
   @override
   Future<HandlerResult> handle(ReqRes reqRes) async {
-    final h = _group.findHandlers(reqRes.req);
-    if (h.isEmpty) {
+    final handlers = _group.findHandlers(reqRes.req);
+    if (handlers.isEmpty) {
       return (
         canNext: true,
         reqRes: (req: reqRes.req, res: reqRes.res.notFound())
       );
     }
 
-    final handlerFncs = List<RouteHandler>.from(h);
+    final handlerFncs = List<RouteHandler>.from(handlers);
 
     ReqRes result = reqRes;
     bool canNext = false;

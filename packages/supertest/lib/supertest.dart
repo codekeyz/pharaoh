@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 
@@ -7,6 +8,8 @@ abstract interface class Tester {
   late final HttpServer _server;
 
   Tester._(HttpServer server) : _server = server;
+
+  Tester auth(String user, String pass);
 
   Future<http.Response> post(
     String path, {
@@ -45,20 +48,38 @@ class _$TesterImpl extends Tester {
 
   Uri getUri(String path) => Uri.parse('$serverUri$path');
 
+  final Map<String, String> _headers = {};
+
+  Map<String, String> mergeHeaders(Map<String, String> headers) {
+    final map = Map<String, String>.from(_headers);
+    for (final key in headers.keys) {
+      final value = headers[key];
+      if (value != null) map[key] = value;
+    }
+    return map;
+  }
+
   @override
   Future<http.Response> post(
     String path, {
     Map<String, String>? headers,
     Object? body,
   }) =>
-      http.post(getUri(path), headers: headers, body: body);
+      http.post(
+        getUri(path),
+        headers: mergeHeaders(headers ?? {}),
+        body: body,
+      );
 
   @override
   Future<http.Response> get(
     String path, {
     Map<String, String>? headers,
   }) =>
-      http.get(getUri(path), headers: headers);
+      http.get(
+        getUri(path),
+        headers: mergeHeaders(headers ?? {}),
+      );
 
   @override
   Future<http.Response> delete(
@@ -66,7 +87,11 @@ class _$TesterImpl extends Tester {
     Map<String, String>? headers,
     Object? body,
   }) =>
-      http.delete(getUri(path), headers: headers, body: body);
+      http.delete(
+        getUri(path),
+        headers: mergeHeaders(headers ?? {}),
+        body: body,
+      );
 
   @override
   Future<http.Response> patch(
@@ -74,7 +99,11 @@ class _$TesterImpl extends Tester {
     Map<String, String>? headers,
     Object? body,
   }) =>
-      http.patch(getUri(path), headers: headers, body: body);
+      http.patch(
+        getUri(path),
+        headers: mergeHeaders(headers ?? {}),
+        body: body,
+      );
 
   @override
   Future<http.Response> put(
@@ -82,7 +111,18 @@ class _$TesterImpl extends Tester {
     Map<String, String>? headers,
     Object? body,
   }) =>
-      http.put(getUri(path), headers: headers, body: body);
+      http.put(
+        getUri(path),
+        headers: mergeHeaders(headers ?? {}),
+        body: body,
+      );
+
+  @override
+  Tester auth(String user, String pass) {
+    final basicAuth = base64Encode(utf8.encode('$user:$pass'));
+    _headers[HttpHeaders.authorizationHeader] = 'Basic $basicAuth';
+    return this;
+  }
 }
 
 class TestAgent {

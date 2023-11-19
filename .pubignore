@@ -1,6 +1,7 @@
-example/
+pharaoh_examples/
 supertest/
-
+packages/
 
 cliff.toml
 dart_test.yml
+**/pubspec_overrides.yaml

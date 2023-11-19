@@ -92,8 +92,8 @@ class Route {
 
   String _cleanPath(Request request) {
     String path = request.path;
-    if (path == BASE_PATH) return path;
-    if (path.endsWith(BASE_PATH)) path = path.substring(0, path.length - 1);
+    if (path == basePath) return path;
+    if (path.endsWith(basePath)) path = path.substring(0, path.length - 1);
     return path;
   }
 
@@ -101,7 +101,7 @@ class Route {
   String toString() => "Route:  $route    Verbs: ${verbString(verbs)}";
 }
 
-const reservedPaths = [BASE_PATH, ANY_PATH];
+const reservedPaths = [basePath, ANY_PATH];
 
 class RouteGroup {
   final String prefix;
@@ -129,7 +129,7 @@ class RouteGroup {
     if (newRoute.isEmpty) {
       throw PharaohException('Route cannot be an empty string');
     } else if (!reservedPaths.contains(newRoute[0])) {
-      throw PharaohException.value('Route start with $BASE_PATH', newRoute);
+      throw PharaohException.value('Route start with $basePath', newRoute);
     }
 
     final existingHandler = handlers.firstWhereOrNull(
