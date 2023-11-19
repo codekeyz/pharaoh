@@ -35,15 +35,15 @@ mixin RouterMixin<T extends RouteHandler> on RouteHandler
 
   @override
   Future<HandlerResult> handle(ReqRes reqRes) async {
-    final h = _group.findHandlers(reqRes.req);
-    if (h.isEmpty) {
+    final handlers = _group.findHandlers(reqRes.req);
+    if (handlers.isEmpty) {
       return (
         canNext: true,
         reqRes: (req: reqRes.req, res: reqRes.res.notFound())
       );
     }
 
-    final handlerFncs = List<RouteHandler>.from(h);
+    final handlerFncs = List<RouteHandler>.from(handlers);
 
     ReqRes result = reqRes;
     bool canNext = false;

@@ -37,20 +37,6 @@ abstract class RouteHandler {
 
   RouteHandler prefix(String prefix);
 
-  /// the way this function is written can fly over
-  /// your head if you don't understand the operation of middlewares
-  /// and request handlers.
-  /// Peep their implementation to understand how they behave.
-  ///
-  /// When an HttpRequest hits our server, either a [RequestHandler] or [Middleware]
-  /// can handle it.
-  ///
-  /// - [RequestHandler] has one job. return a response. So automatically, they call
-  /// next. hence the reason there's no next function. See [RequestHandlerFunc].
-  ///
-  /// - [Middleware] with middlewares, you get a `req`, `res`, and `next` function.
-  /// you do your processing and then notify us to proceed when you call the next.
-  /// If you don't call next, we will be stuck in limbo.
   Future<HandlerResult> handle(final ReqRes reqRes) async {
     final request = reqRes.req;
     if (_routeParams.isNotEmpty) {
@@ -82,6 +68,8 @@ typedef RequestHandlerFunc = FutureOr<dynamic> Function(
   $Response res,
 );
 
+/// - [RequestHandler] calls `next` automatically,
+///  hence the reason there's no next function. See [RequestHandlerFunc].
 class RequestHandler extends RouteHandler {
   final RequestHandlerFunc _func;
   final Route _route;
@@ -104,7 +92,8 @@ class RequestHandler extends RouteHandler {
   Route get route => _route;
 }
 
-///  [Middleware] type route handler
+/// With middlewares, you get a `req`, `res`, and `next` function.
+/// you do your processing and then notify us to proceed when you call `next`.
 class Middleware extends RouteHandler {
   final HandlerFunc _func;
   final Route _route;

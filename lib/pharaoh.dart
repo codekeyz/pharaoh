@@ -10,6 +10,7 @@ import 'src/router/router.dart';
 
 export 'src/router/route.dart' hide RouteGroup;
 export 'src/router/router.dart';
+export 'src/router/handler.dart';
 export 'src/middleware/request_logger.dart';
 export 'src/http/request.dart' show $Request;
 export 'src/http/response.dart' show $Response;
