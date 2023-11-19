@@ -49,8 +49,9 @@ class Route {
 
   RouteResult canHandle(Request request) {
     final reqPath = _cleanPath(request);
-    final canMethod =
-        verbs.contains(HTTPMethod.ALL) || verbs.contains(request.method);
+    final canMethod = verbs.contains(HTTPMethod.ALL) ||
+        verbs.contains(request.method) ||
+        request.method == HTTPMethod.HEAD && verbs.contains(HTTPMethod.GET);
     if (!canMethod) return (hasMatch: false, params: {});
     if (route == ANY_PATH) return (hasMatch: true, params: {});
 

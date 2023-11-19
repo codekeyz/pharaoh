@@ -10,6 +10,8 @@ dependencies:
   pharaoh:
   shelf_cors_headers: ^0.1.5
   shelf_static: ^1.1.2
+  pharaoh_static:
+    path: ../packages/pharaoh_static
 
 dev_dependencies:
   lints: ^3.0.0
