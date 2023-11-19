@@ -24,6 +24,8 @@ abstract interface class $Response {
 
   Response notFound([String? message]);
 
+  Response unauthorized({Object? data});
+
   Response redirect(String url, [int statusCode = HttpStatus.found]);
 
   Response internalServerError([String? message]);
@@ -168,6 +170,12 @@ class Response extends Message<shelf.Body?> implements $Response {
         statusCode: 404,
         headers: headers,
       ).json(makeError(message: message ?? 'Not found').toJson);
+
+  @override
+  Response unauthorized({Object? data}) {
+    final error = data ?? makeError(message: 'Unauthorized').toJson;
+    return status(401).json(error);
+  }
 
   @override
   Response internalServerError([String? message]) => Response(

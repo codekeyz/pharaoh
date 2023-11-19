@@ -40,6 +40,8 @@ abstract interface class $Request<T> {
 
   String get protocolVersion;
 
+  dynamic get auth;
+
   HTTPMethod get method;
 
   Map<String, dynamic> get params;
@@ -52,6 +54,8 @@ abstract interface class $Request<T> {
 }
 
 class Request extends Message<dynamic> implements $Request<dynamic> {
+  static const String authKey = 'auth';
+
   final HttpRequest _req;
   final Map<String, dynamic> _params = {};
   final Map<String, dynamic> _context = {};
@@ -100,4 +104,9 @@ class Request extends Message<dynamic> implements $Request<dynamic> {
   void operator []=(String name, dynamic value) {
     _context[name] = value;
   }
+
+  @override
+  dynamic get auth => _context[Request.authKey];
+
+  set auth(dynamic value) => _context[Request.authKey] = value;
 }
