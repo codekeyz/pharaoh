@@ -30,7 +30,6 @@ check_types() {
 for root_dir in "${ROOT_DIRECTORIES[@]}"; do
   for dir in $root_dir; do
     if has_pubspec_file "$dir"; then
-      echo "$dir has a pubspec file"
       check_types "$dir"
     fi
   done
