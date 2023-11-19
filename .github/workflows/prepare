@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+# Root Directories
+ROOT_DIRECTORIES=(
+    "packages/**"
+)
+
+echo "Performing types in packages, Hold tight 👀"
+
+check_types() {
+  local dir="$1"
+  if [ -f "$dir/pubspec.yaml" ]; then
+    (cd "$dir" && dart pub get && dart analyze && dart test)
+    if [ $? -ne 0 ]; then
+      echo "TypeScript type checking failed in $dir"
+      exit 1
+    else  
+      echo "$dir ✅"
+    fi
+  fi
+}
+
+for root_dir in "${ROOT_DIRECTORIES[@]}"; do
+  for dir in $root_dir; do
+    check_types "$dir"
+  done
+done
