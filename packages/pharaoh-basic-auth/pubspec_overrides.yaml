@@ -1,0 +1,5 @@
+dependency_overrides:
+  pharaoh:
+    path: ../../
+  supertest:
+    path: ../supertest
