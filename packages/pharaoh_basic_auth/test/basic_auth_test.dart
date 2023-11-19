@@ -27,8 +27,11 @@ void main() {
 
       setUpAll(() {
         // requires basic auth with username 'Admin' and password 'secret1234'
-        final staticUserAuth =
-            basicAuth(users: {"Admin": "secret1234"}, challenge: false);
+        final staticUserAuth = basicAuth(
+          users: {"Admin": "secret1234"},
+          challenge: false,
+          unauthorizedResponse: (_) => 'Username & password is required!',
+        );
         app = Pharaoh()
             .use(staticUserAuth)
             .get(endpoint, (req, res) => res.send('You passed'));
@@ -37,6 +40,7 @@ void main() {
       test('should reject on missing header', () async {
         final result = await (await request<Pharaoh>(app)).get(endpoint);
         expect(result.statusCode, 401);
+        expect(result.body, '"Username & password is required!"');
       });
 
       test('should reject on wrong credentials', () async {
@@ -81,7 +85,10 @@ void main() {
         ) =>
             username.startsWith('A') && password.startsWith('secret');
 
-        final customAuthorizerAuth = basicAuth(authorizer: myAuthorizer);
+        final customAuthorizerAuth = basicAuth(
+          authorizer: myAuthorizer,
+          unauthorizedResponse: (_) => 'Ohmygod, credentials is required!',
+        );
         app = Pharaoh()
             .use(customAuthorizerAuth)
             .get(endpoint, (req, res) => res.send('You passed'));
@@ -97,6 +104,7 @@ void main() {
             .auth('dude', 'stuff')
             .get(endpoint);
         expect(result.statusCode, 401);
+        expect(result.body, '"Ohmygod, credentials is required!"');
       });
 
       test('should accept fitting credentials', () async {

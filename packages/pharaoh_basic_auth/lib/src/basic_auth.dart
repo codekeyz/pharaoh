@@ -38,7 +38,8 @@ HandlerFunc basicAuth({
         if (realmName != null) challengeString += ' realm="$realmName"';
         res.set(HttpHeaders.wwwAuthenticateHeader, challengeString);
       }
-      next(res.unauthorized());
+      final errorMsg = unauthorizedResponse?.call(req);
+      next(res.unauthorized(data: errorMsg));
     }
 
     final authHeader = req.headers[HttpHeaders.authorizationHeader];
