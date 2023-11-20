@@ -8,8 +8,8 @@ In your pubspec.yaml
 
 ```yaml
 dependencies:
-  pharaoh: ^0.0.2
-  pharaoh_basic_auth:
+  pharaoh: ^0.0.3
+  pharaoh_basic_auth: ^1.0.0
 ```
 
 ## Basic Usage:
@@ -65,7 +65,7 @@ when comparing user input with secret credentials, as that would make you vulner
 function instead - always provide the user input as its first argument.
 
 ```dart
-bool myComparingAuthorizer(username, password) =>
+bool myAuthorizer(username, password) =>
               safeCompare(username, 'customuser') &&
               safeCompare(password, 'custompassword');
 
