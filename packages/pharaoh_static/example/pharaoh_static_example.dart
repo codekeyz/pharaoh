@@ -11,7 +11,5 @@ void main() async {
 
   app.use(serveStatic);
 
-  app.get('/', (req, res) => res.ok('Hurray 🔥'));
-
   await app.listen();
 }
