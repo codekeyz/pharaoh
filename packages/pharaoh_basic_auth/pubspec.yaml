@@ -1,6 +1,6 @@
 name: pharaoh_basic_auth
 description: Simple plug & play HTTP basic auth middleware for Pharaoh.
-version: 1.0.0
+version: 0.0.1
 repository: https://github.com/codekeyz/pharaoh
 
 environment:
