@@ -1,4 +1,4 @@
-# pharaoh_static
+# pharaoh_static 🗃
 
 PHaraoh Middleware that serves static files such as images, CSS files, and JavaScript files. It takes a root directory as an argument, which is the directory from which to serve static files.
 
