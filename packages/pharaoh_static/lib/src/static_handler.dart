@@ -12,13 +12,10 @@ import 'package:mime/mime.dart';
 import 'package:path/path.dart' as p;
 import 'package:pharaoh/pharaoh.dart';
 
-import 'directory_listing.dart';
 import 'utils.dart';
 
 /// The default resolver for MIME types based on file extensions.
 final _defaultMimeTypeResolver = MimeTypeResolver();
-
-// TODO option to exclude hidden files?
 
 /// Creates [HandlerFunc] that serves files from the provided
 /// [rootdir].
@@ -31,9 +28,6 @@ final _defaultMimeTypeResolver = MimeTypeResolver();
 /// the directory is checked for a file with that name. If it exists, it is
 /// served.
 ///
-/// If no [defaultDocument] is found and [listDirectories] is true, then the
-/// handler produces a listing of the directory.
-///
 /// If [useHeaderBytesForContentType] is `true`, the contents of the
 /// file will be used along with the file path to determine the content type.
 ///
@@ -44,7 +38,6 @@ HandlerFunc createStaticHandler(
   bool serveFilesOutsidePath = false,
   bool fallthrough = true,
   String? defaultDocument,
-  bool listDirectories = false,
   bool useHeaderBytesForContentType = false,
   MimeTypeResolver? contentTypeResolver,
 }) {
@@ -77,7 +70,6 @@ HandlerFunc createStaticHandler(
     final segs = [rootdir, ...uri.pathSegments];
 
     final fsPath = p.joinAll(segs);
-
     final entityType = FileSystemEntity.typeSync(fsPath);
 
     File? fileFound;
@@ -86,17 +78,10 @@ HandlerFunc createStaticHandler(
       fileFound = File(fsPath);
     } else if (entityType == FileSystemEntityType.directory) {
       fileFound = _tryDefaultFile(fsPath, defaultDocument);
-      if (fileFound == null && listDirectories) {
-        if (!uri.path.endsWith('/')) {
-          return next(_redirectToAddTrailingSlash(res, uri));
-        }
-
-        return listDirectory(rootdir, fsPath);
-      }
     }
 
     if (fileFound == null) {
-      return next(res.notFound());
+      return next(res.notFound('File not found on path $uri'));
     }
 
     final file = fileFound;
@@ -164,7 +149,7 @@ File? _tryDefaultFile(String dirPath, String? defaultFile) {
   return null;
 }
 
-/// Creates a shelf [Handler] that serves the file at [path].
+/// Creates a middleware [HandlerFunc] that serves the file at [path].
 ///
 /// This returns a 404 response for any requests whose [Request.url] doesn't
 /// match [url]. The [url] defaults to the basename of [path].
@@ -175,9 +160,9 @@ File? _tryDefaultFile(String dirPath, String? defaultFile) {
 HandlerFunc createFileHandler(String path, {String? url, String? contentType}) {
   final file = File(path);
   if (!file.existsSync()) {
-    throw ArgumentError.value(path, 'path', 'does not exist.');
+    throw PharaohException.value('Path does not exist.', path);
   } else if (url != null && !p.url.isRelative(url)) {
-    throw ArgumentError.value(url, 'url', 'must be relative.');
+    throw PharaohException.value('Url must be relative.', url);
   }
 
   final mimeType = contentType ?? _defaultMimeTypeResolver.lookup(path);
