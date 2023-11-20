@@ -20,12 +20,12 @@ final _defaultMimeTypeResolver = MimeTypeResolver();
 
 // TODO option to exclude hidden files?
 
-/// Creates a Shelf [Handler] that serves files from the provided
-/// [fileSystemPath].
+/// Creates [HandlerFunc] that serves files from the provided
+/// [rootdir].
 ///
 /// Accessing a path containing symbolic links will succeed only if the resolved
-/// path is within [fileSystemPath]. To allow access to paths outside of
-/// [fileSystemPath], set [serveFilesOutsidePath] to `true`.
+/// path is within [rootdir]. To allow access to paths outside of
+/// [rootdir], set [serveFilesOutsidePath] to `true`.
 ///
 /// When a existing directory is requested and a [defaultDocument] is specified
 /// the directory is checked for a file with that name. If it exists, it is
@@ -40,7 +40,7 @@ final _defaultMimeTypeResolver = MimeTypeResolver();
 /// Specify a custom [contentTypeResolver] to customize automatic content type
 /// detection.
 HandlerFunc createStaticHandler(
-  String fileSystemPath, {
+  String rootdir, {
   bool serveFilesOutsidePath = false,
   bool fallthrough = true,
   String? defaultDocument,
@@ -48,14 +48,13 @@ HandlerFunc createStaticHandler(
   bool useHeaderBytesForContentType = false,
   MimeTypeResolver? contentTypeResolver,
 }) {
-  final rootDir = Directory(fileSystemPath);
+  final rootDir = Directory(rootdir);
   if (!rootDir.existsSync()) {
     throw PharaohException.value(
-        'A directory corresponding to fileSystemPath not found',
-        fileSystemPath);
+        'A directory corresponding to fileSystemPath not found', rootdir);
   }
 
-  fileSystemPath = rootDir.resolveSymbolicLinksSync();
+  rootdir = rootDir.resolveSymbolicLinksSync();
 
   if (defaultDocument != null) {
     if (defaultDocument != p.basename(defaultDocument)) {
@@ -66,7 +65,7 @@ HandlerFunc createStaticHandler(
   final mimeResolver = contentTypeResolver ?? _defaultMimeTypeResolver;
 
   return (request, res, next) async {
-    if ([HTTPMethod.GET, HTTPMethod.HEAD].contains(request.method)) {
+    if (![HTTPMethod.GET, HTTPMethod.HEAD].contains(request.method)) {
       if (fallthrough) return next();
       return next(res
           .status(HttpStatus.methodNotAllowed)
@@ -75,7 +74,7 @@ HandlerFunc createStaticHandler(
     }
 
     final uri = request.uri;
-    final segs = [fileSystemPath, ...uri.pathSegments];
+    final segs = [rootdir, ...uri.pathSegments];
 
     final fsPath = p.joinAll(segs);
 
@@ -92,7 +91,7 @@ HandlerFunc createStaticHandler(
           return next(_redirectToAddTrailingSlash(res, uri));
         }
 
-        return listDirectory(fileSystemPath, fsPath);
+        return listDirectory(rootdir, fsPath);
       }
     }
 
@@ -106,7 +105,7 @@ HandlerFunc createStaticHandler(
       final resolvedPath = file.resolveSymbolicLinksSync();
 
       // Do not serve a file outside of the original fileSystemPath
-      if (!p.isWithin(fileSystemPath, resolvedPath)) {
+      if (!p.isWithin(rootdir, resolvedPath)) {
         return next(res.notFound());
       }
     }
