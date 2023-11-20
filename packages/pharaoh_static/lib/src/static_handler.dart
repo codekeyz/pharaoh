@@ -42,6 +42,7 @@ final _defaultMimeTypeResolver = MimeTypeResolver();
 HandlerFunc createStaticHandler(
   String fileSystemPath, {
   bool serveFilesOutsidePath = false,
+  bool fallthrough = true,
   String? defaultDocument,
   bool listDirectories = false,
   bool useHeaderBytesForContentType = false,
@@ -65,6 +66,14 @@ HandlerFunc createStaticHandler(
   final mimeResolver = contentTypeResolver ?? _defaultMimeTypeResolver;
 
   return (request, res, next) async {
+    if ([HTTPMethod.GET, HTTPMethod.HEAD].contains(request.method)) {
+      if (fallthrough) return next();
+      return next(res
+          .status(HttpStatus.methodNotAllowed)
+          .set(HttpHeaders.acceptHeader, 'GET, HEAD')
+          .end());
+    }
+
     final uri = request.uri;
     final segs = [fileSystemPath, ...uri.pathSegments];
 
