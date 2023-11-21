@@ -47,7 +47,7 @@ abstract interface class Tester {
 class _$TesterImpl extends Tester {
   Uri get serverUri => getServerUri(_server);
 
-  _$TesterImpl(HttpServer server) : super._(server) {
+  _$TesterImpl(super.server) : super._() {
     _headers.clear();
   }
 

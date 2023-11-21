@@ -1,7 +1,6 @@
 import 'package:pharaoh/pharaoh.dart';
 import 'package:pharaoh_basic_auth/src/basic_auth.dart';
 import 'package:supertest/supertest.dart';
-import 'package:test/test.dart';
 
 final app = Pharaoh().get('/', (req, res) => res);
 
