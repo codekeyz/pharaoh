@@ -15,10 +15,12 @@ void main() {
         next(res.send("<p>Hey</p>"));
       });
 
-      final result = await (await request<Pharaoh>(app)).get('/');
-      expect(result.headers['content-type'], 'text/html; charset=utf-8');
-      expect(result.statusCode, 200);
-      expect(result.body, '<p>Hey</p>');
+      await (await request<Pharaoh>(app))
+          .get('/')
+          .status(200)
+          .body('<p>Hey</p>')
+          .contentType('text/html; charset=utf-8')
+          .test();
     });
 
     test('should not override previous Content-Types', () async {
@@ -28,10 +30,12 @@ void main() {
         next(res.send("<p>Hey</p>"));
       });
 
-      final result = await (await request<Pharaoh>(app)).get('/');
-      expect(result.headers['content-type'], 'text/html; charset=utf-8');
-      expect(result.statusCode, 200);
-      expect(result.body, '<p>Hey</p>');
+      await (await request<Pharaoh>(app))
+          .get('/')
+          .contentType('text/html; charset=utf-8')
+          .status(200)
+          .body('<p>Hey</p>')
+          .test();
     });
 
     test('should not override previous Content-Types', () async {
@@ -41,10 +45,12 @@ void main() {
         next(res.type(ContentType.text).send("<p>Hey</p>"));
       });
 
-      final result = await (await request<Pharaoh>(app)).get('/');
-      expect(result.headers['content-type'], 'text/plain; charset=utf-8');
-      expect(result.statusCode, 200);
-      expect(result.body, '<p>Hey</p>');
+      await (await request<Pharaoh>(app))
+          .get('/')
+          .contentType('text/plain; charset=utf-8')
+          .status(200)
+          .body('<p>Hey</p>')
+          .test();
     });
 
     test('should override charset in Content-Type', () async {
@@ -56,10 +62,12 @@ void main() {
         next(res.send('Hey'));
       });
 
-      final result = await (await request<Pharaoh>(app)).get('/');
-      expect(result.headers['content-type'], 'text/plain; charset=utf-8');
-      expect(result.statusCode, 200);
-      expect(result.body, 'Hey');
+      await (await request<Pharaoh>(app))
+          .get('/')
+          .status(200)
+          .contentType('text/plain; charset=utf-8')
+          .body('Hey')
+          .test();
     });
 
     test('should keep charset in Content-Type for <Buffers>', () async {
@@ -72,10 +80,12 @@ void main() {
         next(res.send(buffer));
       });
 
-      final result = await (await request<Pharaoh>(app)).get('/');
-      expect(result.headers['content-type'], 'text/plain; charset=iso-8859-1');
-      expect(result.statusCode, 200);
-      expect(result.body, 'Hello World');
+      await (await request<Pharaoh>(app))
+          .get('/')
+          .status(200)
+          .contentType('text/plain; charset=iso-8859-1')
+          .body('Hello World')
+          .test();
     });
 
     test('should send <Buffer> as octet-stream', () async {
@@ -86,10 +96,12 @@ void main() {
         next(res.send(buffer));
       });
 
-      final result = await (await request<Pharaoh>(app)).get('/');
-      expect(result.headers['content-type'], 'application/octet-stream');
-      expect(result.statusCode, 200);
-      expect(result.body, "Hello World");
+      await (await request<Pharaoh>(app))
+          .get('/')
+          .status(200)
+          .body('Hello World')
+          .contentType('application/octet-stream')
+          .test();
     });
   });
 }

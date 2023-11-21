@@ -37,40 +37,51 @@ void main() {
             .get(endpoint, (req, res) => res.send('You passed'));
       });
 
-      test('should reject on missing header', () async {
-        final result = await (await request<Pharaoh>(app)).get(endpoint);
-        expect(result.statusCode, 401);
-        expect(result.body, '"Username & password is required!"');
-      });
+      test(
+        'should reject on missing header',
+        () async => (await request<Pharaoh>(app))
+            .get(endpoint)
+            .status(401)
+            .body('"Username & password is required!"')
+            .test(),
+      );
 
-      test('should reject on wrong credentials', () async {
-        final result = await (await request<Pharaoh>(app))
+      test(
+        'should reject on wrong credentials',
+        () async => (await request<Pharaoh>(app))
             .auth('dude', 'stuff')
-            .get(endpoint);
-        expect(result.statusCode, 401);
-      });
+            .get(endpoint)
+            .status(401)
+            .test(),
+      );
 
-      test('should reject on shorter prefix', () async {
-        final result = await (await request<Pharaoh>(app))
+      test(
+        'should reject on shorter prefix',
+        () async => (await request<Pharaoh>(app))
             .auth('Admin', 'secret')
-            .get(endpoint);
-        expect(result.statusCode, 401);
-      });
+            .get(endpoint)
+            .status(401)
+            .test(),
+      );
 
-      test('should reject without challenge', () async {
-        final result = await (await request<Pharaoh>(app))
+      test(
+        'should reject without challenge',
+        () async => (await request<Pharaoh>(app))
             .auth('dude', 'stuff')
-            .get(endpoint);
-        expect(result.statusCode, 401);
-        expect(result.headers['WWW-Authenticate'], isNull);
-      });
+            .get(endpoint)
+            .status(401)
+            .header('WWW-Authenticate', isNull)
+            .test(),
+      );
 
-      test('should accept correct credentials', () async {
-        final result = await (await request<Pharaoh>(app))
+      test(
+        'should accept correct credentials',
+        () async => await (await request<Pharaoh>(app))
             .auth('Admin', 'secret1234')
-            .get(endpoint);
-        expect(result.statusCode, 200);
-      });
+            .get(endpoint)
+            .status(200)
+            .test(),
+      );
     });
 
     group('custom authorizer', () {
@@ -94,26 +105,35 @@ void main() {
             .get(endpoint, (req, res) => res.send('You passed'));
       });
 
-      test('should reject on missing header', () async {
-        final result = await (await request<Pharaoh>(app)).get(endpoint);
-        expect(result.statusCode, 401);
-      });
+      test(
+        'should reject on missing header',
+        () async => (await request<Pharaoh>(
+          app,
+        ))
+            .get(endpoint)
+            .status(401)
+            .test(),
+      );
 
-      test('should reject on wrong credentials', () async {
-        final result = await (await request<Pharaoh>(app))
+      test(
+        'should reject on wrong credentials',
+        () async => (await request<Pharaoh>(app))
             .auth('dude', 'stuff')
-            .get(endpoint);
-        expect(result.statusCode, 401);
-        expect(result.body, '"Ohmygod, credentials is required!"');
-      });
+            .get(endpoint)
+            .status(401)
+            .body('"Ohmygod, credentials is required!"')
+            .test(),
+      );
 
-      test('should accept fitting credentials', () async {
-        final result = await (await request<Pharaoh>(app))
+      test(
+        'should accept fitting credentials',
+        () async => (await request<Pharaoh>(app))
             .auth('Aloha', 'secretverymuch')
-            .get(endpoint);
-        expect(result.statusCode, 200);
-        expect(result.body, 'You passed');
-      });
+            .get(endpoint)
+            .status(200)
+            .body('You passed')
+            .test(),
+      );
 
       group('with safe compare', () {
         const endpoint = '/custom-compare';
@@ -129,20 +149,24 @@ void main() {
               .get(endpoint, (req, res) => res.send('You passed'));
         });
 
-        test('should reject wrong credentials', () async {
-          final result = await (await request<Pharaoh>(app))
+        test(
+          'should reject wrong credentials',
+          () async => (await request<Pharaoh>(app))
               .auth('bla', 'blub')
-              .get(endpoint);
-          expect(result.statusCode, 401);
-        });
+              .get(endpoint)
+              .status(401)
+              .test(),
+        );
 
-        test('should accept fitting credentials', () async {
-          final result = await (await request<Pharaoh>(app))
+        test(
+          'should accept fitting credentials',
+          () async => (await request<Pharaoh>(app))
               .auth('Testeroni', 'testsecret')
-              .get(endpoint);
-          expect(result.statusCode, 200);
-          expect(result.body, 'You passed');
-        });
+              .get(endpoint)
+              .status(200)
+              .body('You passed')
+              .test(),
+        );
       });
     });
   });
