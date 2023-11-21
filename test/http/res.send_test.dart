@@ -19,7 +19,7 @@ void main() {
           .get('/')
           .status(200)
           .body('<p>Hey</p>')
-          .header('content-type', 'text/html; charset=utf-8')
+          .contentType('text/html; charset=utf-8')
           .test();
     });
 
@@ -32,7 +32,7 @@ void main() {
 
       await (await request<Pharaoh>(app))
           .get('/')
-          .header('content-type', 'text/html; charset=utf-8')
+          .contentType('text/html; charset=utf-8')
           .status(200)
           .body('<p>Hey</p>')
           .test();
@@ -47,7 +47,7 @@ void main() {
 
       await (await request<Pharaoh>(app))
           .get('/')
-          .header('content-type', 'text/plain; charset=utf-8')
+          .contentType('text/plain; charset=utf-8')
           .status(200)
           .body('<p>Hey</p>')
           .test();
@@ -65,7 +65,7 @@ void main() {
       await (await request<Pharaoh>(app))
           .get('/')
           .status(200)
-          .header('content-type', 'text/plain; charset=utf-8')
+          .contentType('text/plain; charset=utf-8')
           .body('Hey')
           .test();
     });
@@ -83,7 +83,7 @@ void main() {
       await (await request<Pharaoh>(app))
           .get('/')
           .status(200)
-          .header('content-type', 'text/plain; charset=iso-8859-1')
+          .contentType('text/plain; charset=iso-8859-1')
           .body('Hello World')
           .test();
     });
@@ -100,7 +100,7 @@ void main() {
           .get('/')
           .status(200)
           .body('Hello World')
-          .header('content-type', 'application/octet-stream')
+          .contentType('application/octet-stream')
           .test();
     });
   });

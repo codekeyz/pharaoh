@@ -16,7 +16,7 @@ void main() {
       await (await request<Pharaoh>(app))
           .get('/')
           .status(200)
-          .header('content-type', 'application/vnd.example+json')
+          .contentType('application/vnd.example+json')
           .body('{"hello":"world"}')
           .test();
     });
@@ -31,7 +31,7 @@ void main() {
             .get('/')
             .status(200)
             .body('null')
-            .header('content-type', 'application/json; charset=utf-8')
+            .contentType('application/json; charset=utf-8')
             .test();
       });
 
@@ -44,7 +44,7 @@ void main() {
             .get('/')
             .status(200)
             .body('300')
-            .header('content-type', 'application/json; charset=utf-8')
+            .contentType('application/json; charset=utf-8')
             .test();
       });
 
@@ -57,7 +57,7 @@ void main() {
             .get('/')
             .status(200)
             .body('300.34')
-            .header('content-type', 'application/json; charset=utf-8')
+            .contentType('application/json; charset=utf-8')
             .test();
       });
 
@@ -70,7 +70,7 @@ void main() {
             .get('/')
             .status(200)
             .body('"str"')
-            .header('content-type', 'application/json; charset=utf-8')
+            .contentType('application/json; charset=utf-8')
             .test();
       });
 
@@ -83,7 +83,7 @@ void main() {
             .get('/')
             .status(200)
             .body('true')
-            .header('content-type', 'application/json; charset=utf-8')
+            .contentType('application/json; charset=utf-8')
             .test();
       });
     });
@@ -98,7 +98,7 @@ void main() {
             .get('/')
             .status(200)
             .body('["foo","bar","baz"]')
-            .header('content-type', 'application/json; charset=utf-8')
+            .contentType('application/json; charset=utf-8')
             .test();
       });
 
@@ -111,7 +111,7 @@ void main() {
             .get('/')
             .status(200)
             .body('{"name":"Foo bar","age":23.45}')
-            .header('content-type', 'application/json; charset=utf-8')
+            .contentType('application/json; charset=utf-8')
             .test();
       });
 
@@ -124,7 +124,7 @@ void main() {
             .get('/')
             .status(200)
             .body('["Chima","Foo","Bar"]')
-            .header('content-type', 'application/json; charset=utf-8')
+            .contentType('application/json; charset=utf-8')
             .test();
       });
     });

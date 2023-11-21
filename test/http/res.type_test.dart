@@ -17,7 +17,7 @@ void main() {
           .get('/')
           .status(200)
           .body('var name = "tj";')
-          .header('content-type', 'application/vnd.amazon.ebook; charset=utf-8')
+          .contentType('application/vnd.amazon.ebook; charset=utf-8')
           .test();
     });
   });

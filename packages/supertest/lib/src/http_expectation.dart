@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:test/test.dart';
 import 'package:http/http.dart' as http;
 
@@ -21,6 +23,15 @@ class HttpResponseExpection
   HttpResponseExpection header(String header, dynamic matcher) {
     final MatchCase test =
         (value: (resp) => resp.headers[header], matcher: matcher);
+    _matchcases.add(test);
+    return this;
+  }
+
+  HttpResponseExpection contentType(dynamic matcher) {
+    final MatchCase test = (
+      value: (resp) => resp.headers[HttpHeaders.contentTypeHeader],
+      matcher: matcher
+    );
     _matchcases.add(test);
     return this;
   }

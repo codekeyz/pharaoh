@@ -12,7 +12,7 @@ void main() {
 
       await (await request<Pharaoh>(app))
           .get('/')
-          .header('content-type', 'text/x-foo; charset=utf-8')
+          .contentType('text/x-foo; charset=utf-8')
           .status(200)
           .test();
     });
