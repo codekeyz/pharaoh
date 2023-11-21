@@ -279,11 +279,16 @@ class Response extends Message<shelf.Body?> implements $Response {
   /// TODO(baba) try and resolve this
   @override
   Response format(Map<String, Function(Response res)> resFormatMap) {
-    var reqContentType = _reqInfo.headers[HttpHeaders.contentTypeHeader];
-    if (reqContentType is Iterable) reqContentType = reqContentType.join();
+    var reqAcceptType = _reqInfo.headers[HttpHeaders.acceptHeader];
+    // Resolving Negotiation conflict where 
+    // the Accept header is not sent by the client
+    reqAcceptType ??= "text/html";
 
-    final handler = resFormatMap[reqContentType];
-    if (handler == null) return end();
+    if (reqAcceptType is Iterable) reqAcceptType = reqAcceptType.join();
+
+    final handler = resFormatMap[reqAcceptType];
+
+    if (handler == null) return json({ "code": 406, "message": "Not Acceptable"});
 
     return handler.call(this);
   }
