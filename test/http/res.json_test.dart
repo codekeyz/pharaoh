@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:pharaoh/pharaoh.dart';
-import 'package:supertest/supertest.dart';
+import 'package:spookie/spookie.dart';
 
 void main() {
   group('.json(Object)', () {

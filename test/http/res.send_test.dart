@@ -3,7 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:pharaoh/pharaoh.dart';
-import 'package:supertest/supertest.dart';
+import 'package:spookie/spookie.dart';
 
 void main() {
   group('.send(Object)', () {
