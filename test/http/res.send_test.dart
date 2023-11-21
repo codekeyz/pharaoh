@@ -4,7 +4,6 @@ import 'dart:typed_data';
 
 import 'package:pharaoh/pharaoh.dart';
 import 'package:supertest/supertest.dart';
-import 'package:test/test.dart';
 
 void main() {
   group('.send(Object)', () {
