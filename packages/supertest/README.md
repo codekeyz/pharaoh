@@ -42,3 +42,12 @@ void main() async {
     });
 }
 ```
+
+## Tests
+
+The cases in the `supertest_test.dart` are also used for automated testing. So if you want  
+to contribute or just make sure that the package still works, simply run:
+
+```shell
+dart test
+```

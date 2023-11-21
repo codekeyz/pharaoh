@@ -1,6 +1,5 @@
 import 'package:pharaoh/pharaoh.dart';
 import 'package:supertest/supertest.dart';
-import 'package:test/test.dart';
 
 void main() {
   group("supertest", () {
