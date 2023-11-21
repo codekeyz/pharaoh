@@ -71,8 +71,6 @@ $ dart test
 
 ## People
 
-The original author of Pharaoh is [Chima Precious](https://github.com/codekeyz)
-
 [List of all contributors](https://github.com/codekeyz/pharaoh/graphs/contributors)
 
 ## License

@@ -1,8 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
-
 import 'src/http_expectation.dart';
+
+export 'package:test/test.dart';
 
 typedef TestApp = Function(HttpRequest req);
 
