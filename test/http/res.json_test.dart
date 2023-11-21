@@ -13,10 +13,12 @@ void main() {
             .json({"hello": "world"});
       });
 
-      final result = await (await request<Pharaoh>(app)).get('/');
-      expect(result.headers['content-type'], 'application/vnd.example+json');
-      expect(result.statusCode, 200);
-      expect(result.body, '{"hello":"world"}');
+      await (await request<Pharaoh>(app))
+          .get('/')
+          .status(200)
+          .header('content-type', 'application/vnd.example+json')
+          .body('{"hello":"world"}')
+          .test();
     });
 
     group('when given primitives', () {
@@ -25,11 +27,12 @@ void main() {
           next(res.json(null));
         });
 
-        final result = await (await request<Pharaoh>(app)).get('/');
-        expect(result.statusCode, 200);
-        expect(result.body, 'null');
-        expect(
-            result.headers['content-type'], 'application/json; charset=utf-8');
+        await (await request<Pharaoh>(app))
+            .get('/')
+            .status(200)
+            .body('null')
+            .header('content-type', 'application/json; charset=utf-8')
+            .test();
       });
 
       test('should respond with json for <int>', () async {
@@ -37,11 +40,12 @@ void main() {
           next(res.json(300));
         });
 
-        final result = await (await request(app)).get('/');
-        expect(result.statusCode, 200);
-        expect(result.body, '300');
-        expect(
-            result.headers['content-type'], 'application/json; charset=utf-8');
+        await (await request(app))
+            .get('/')
+            .status(200)
+            .body('300')
+            .header('content-type', 'application/json; charset=utf-8')
+            .test();
       });
 
       test('should respond with json for <double>', () async {
@@ -49,11 +53,12 @@ void main() {
           next(res.json(300.34));
         });
 
-        final result = await (await request(app)).get('/');
-        expect(result.statusCode, 200);
-        expect(result.body, '300.34');
-        expect(
-            result.headers['content-type'], 'application/json; charset=utf-8');
+        await (await request(app))
+            .get('/')
+            .status(200)
+            .body('300.34')
+            .header('content-type', 'application/json; charset=utf-8')
+            .test();
       });
 
       test('should respond with json for <String>', () async {
@@ -61,11 +66,12 @@ void main() {
           next(res.json("str"));
         });
 
-        final result = await (await request(app)).get('/');
-        expect(result.statusCode, 200);
-        expect(result.body, '"str"');
-        expect(
-            result.headers['content-type'], 'application/json; charset=utf-8');
+        await (await request(app))
+            .get('/')
+            .status(200)
+            .body('"str"')
+            .header('content-type', 'application/json; charset=utf-8')
+            .test();
       });
 
       test('should respond with json for <bool>', () async {
@@ -73,11 +79,12 @@ void main() {
           next(res.json(true));
         });
 
-        final result = await (await request(app)).get('/');
-        expect(result.statusCode, 200);
-        expect(result.body, 'true');
-        expect(
-            result.headers['content-type'], 'application/json; charset=utf-8');
+        await (await request(app))
+            .get('/')
+            .status(200)
+            .body('true')
+            .header('content-type', 'application/json; charset=utf-8')
+            .test();
       });
     });
 
@@ -87,11 +94,12 @@ void main() {
           next(res.json(["foo", "bar", "baz"]));
         });
 
-        final result = await (await request(app)).get('/');
-        expect(result.statusCode, 200);
-        expect(result.body, '["foo","bar","baz"]');
-        expect(
-            result.headers['content-type'], 'application/json; charset=utf-8');
+        await (await request(app))
+            .get('/')
+            .status(200)
+            .body('["foo","bar","baz"]')
+            .header('content-type', 'application/json; charset=utf-8')
+            .test();
       });
 
       test('<Map> should respond with json', () async {
@@ -99,11 +107,12 @@ void main() {
           next(res.json({"name": "Foo bar", "age": 23.45}));
         });
 
-        final result = await (await request(app)).get('/');
-        expect(result.statusCode, 200);
-        expect(result.body, '{"name":"Foo bar","age":23.45}');
-        expect(
-            result.headers['content-type'], 'application/json; charset=utf-8');
+        await (await request(app))
+            .get('/')
+            .status(200)
+            .body('{"name":"Foo bar","age":23.45}')
+            .header('content-type', 'application/json; charset=utf-8')
+            .test();
       });
 
       test('<Set> should respond with json', () async {
@@ -111,11 +120,12 @@ void main() {
           next(res.json({"Chima", "Foo", "Bar"}));
         });
 
-        final result = await (await request(app)).get('/');
-        expect(result.statusCode, 200);
-        expect(result.body, '["Chima","Foo","Bar"]');
-        expect(
-            result.headers['content-type'], 'application/json; charset=utf-8');
+        await (await request(app))
+            .get('/')
+            .status(200)
+            .body('["Chima","Foo","Bar"]')
+            .header('content-type', 'application/json; charset=utf-8')
+            .test();
       });
     });
   });
