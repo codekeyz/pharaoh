@@ -1,3 +1,14 @@
+# 0.0.4
+
+- Make `supertest` tests composable by @codekeyz in https://github.com/codekeyz/pharaoh/pull/40
+- downgrade minimum dart version to 3.0.0 by @iamEtornam in https://github.com/codekeyz/pharaoh/pull/42
+
+## New Contributors
+
+- @iamEtornam made their first contribution in https://github.com/codekeyz/pharaoh/pull/42
+
+**Full Changelog**: https://github.com/codekeyz/pharaoh/compare/0.0.3...0.0.4
+
 # 0.0.3
 
 - Fix middleware match by @codekeyz in https://github.com/codekeyz/pharaoh/pull/24
