@@ -1,6 +1,7 @@
 name: supertest
 description: SuperAgent driven library for testing Dart HTTP servers.
 version: 1.0.0
+repository: https://github.com/codekeyz/pharaoh/tree/main/packages/supertest
 
 environment:
   sdk: ^3.0.0
