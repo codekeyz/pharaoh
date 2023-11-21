@@ -1,6 +1,6 @@
 # spookie 🎌
 
-I wrote this to work just like https://www.npmjs.com/package/spookie
+I wrote this to work just like https://www.npmjs.com/package/supertest
 
 ## Installing:
 
