@@ -12,6 +12,7 @@
 - Focus on high performance
 - Super-high test coverage _(need more hands, peep the issues and contribute)_
 - HTTP helpers (just like ExpressJS)
+- Interoperability with Shelf Middlewares [See here](SHELF_INTEROP.md)
 
 ## Installing:
 
@@ -19,7 +20,7 @@ In your pubspec.yaml
 
 ```yaml
 dependencies:
-  pharaoh: ^0.0.2 # requires Dart => ^3.2.0
+  pharaoh: ^0.0.3 # requires Dart => ^3.2.0
 ```
 
 ## Basic Usage:

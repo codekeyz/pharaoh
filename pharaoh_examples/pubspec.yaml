@@ -8,8 +8,9 @@ environment:
 
 dependencies:
   pharaoh:
-  shelf_cors_headers: ^0.1.5
   shelf_static: ^1.1.2
+  shelf_helmet: ^2.1.1
+  shelf_cors_headers: ^0.1.5
   pharaoh_static:
     path: ../packages/pharaoh_static
 

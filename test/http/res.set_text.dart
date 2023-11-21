@@ -10,9 +10,11 @@ void main() {
         next(res);
       });
 
-      final result = await (await request<Pharaoh>(app)).get('/');
-      expect(result.headers['content-type'], 'text/x-foo; charset=utf-8');
-      expect(result.statusCode, 200);
+      await (await request<Pharaoh>(app))
+          .get('/')
+          .contentType('text/x-foo; charset=utf-8')
+          .status(200)
+          .test();
     });
   });
 }

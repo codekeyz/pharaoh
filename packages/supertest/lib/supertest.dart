@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 
+import 'src/http_expectation.dart';
+
 typedef TestApp = Function(HttpRequest req);
 
 abstract interface class Tester {
@@ -11,31 +13,31 @@ abstract interface class Tester {
 
   Tester auth(String user, String pass);
 
-  Future<http.Response> post(
+  HttpResponseExpection post(
     String path, {
     Map<String, String>? headers,
     Object? body,
   });
 
-  Future<http.Response> put(
+  HttpResponseExpection put(
     String path, {
     Map<String, String>? headers,
     Object? body,
   });
 
-  Future<http.Response> patch(
+  HttpResponseExpection patch(
     String path, {
     Map<String, String>? headers,
     Object? body,
   });
 
-  Future<http.Response> delete(
+  HttpResponseExpection delete(
     String path, {
     Map<String, String>? headers,
     Object? body,
   });
 
-  Future<http.Response> get(
+  HttpResponseExpection get(
     String path, {
     Map<String, String>? headers,
   });
@@ -44,7 +46,9 @@ abstract interface class Tester {
 class _$TesterImpl extends Tester {
   Uri get serverUri => getServerUri(_server);
 
-  _$TesterImpl(HttpServer server) : super._(server);
+  _$TesterImpl(HttpServer server) : super._(server) {
+    _headers.clear();
+  }
 
   Uri getUri(String path) => Uri.parse('$serverUri$path');
 
@@ -60,61 +64,56 @@ class _$TesterImpl extends Tester {
   }
 
   @override
-  Future<http.Response> post(
+  HttpResponseExpection post(
     String path, {
     Map<String, String>? headers,
     Object? body,
   }) =>
-      http.post(
-        getUri(path),
-        headers: mergeHeaders(headers ?? {}),
-        body: body,
+      expectHttp(
+        http.post(getUri(path),
+            headers: mergeHeaders(headers ?? {}), body: body),
       );
 
   @override
-  Future<http.Response> get(
+  HttpResponseExpection get(
     String path, {
     Map<String, String>? headers,
   }) =>
-      http.get(
-        getUri(path),
-        headers: mergeHeaders(headers ?? {}),
+      expectHttp(
+        http.get(getUri(path), headers: mergeHeaders(headers ?? {})),
       );
 
   @override
-  Future<http.Response> delete(
-    String path, {
-    Map<String, String>? headers,
-    Object? body,
-  }) =>
-      http.delete(
-        getUri(path),
-        headers: mergeHeaders(headers ?? {}),
-        body: body,
-      );
-
-  @override
-  Future<http.Response> patch(
+  HttpResponseExpection delete(
     String path, {
     Map<String, String>? headers,
     Object? body,
   }) =>
-      http.patch(
-        getUri(path),
-        headers: mergeHeaders(headers ?? {}),
-        body: body,
+      expectHttp(
+        http.delete(getUri(path),
+            headers: mergeHeaders(headers ?? {}), body: body),
       );
 
   @override
-  Future<http.Response> put(
+  HttpResponseExpection patch(
     String path, {
     Map<String, String>? headers,
     Object? body,
   }) =>
-      http.put(
-        getUri(path),
-        headers: mergeHeaders(headers ?? {}),
-        body: body,
+      expectHttp(
+        http.patch(getUri(path),
+            headers: mergeHeaders(headers ?? {}), body: body),
+      );
+
+  @override
+  HttpResponseExpection put(
+    String path, {
+    Map<String, String>? headers,
+    Object? body,
+  }) =>
+      expectHttp(
+        http.put(getUri(path),
+            headers: mergeHeaders(headers ?? {}), body: body),
       );
 
   @override

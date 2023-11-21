@@ -11,8 +11,7 @@ void main() {
           next(res);
         });
 
-        final result = await (await request<Pharaoh>(app)).get('/');
-        expect(result.statusCode, 201);
+        await (await request<Pharaoh>(app)).get('/').status(201).test();
       });
 
       test('when "code" is 400 to 400', () async {
@@ -21,8 +20,7 @@ void main() {
           next(res);
         });
 
-        final result = await (await request<Pharaoh>(app)).get('/');
-        expect(result.statusCode, 400);
+        await (await request<Pharaoh>(app)).get('/').status(400).test();
       });
 
       test('when "code" is 500 to 500', () async {
@@ -31,8 +29,7 @@ void main() {
           next(res);
         });
 
-        final result = await (await request<Pharaoh>(app)).get('/');
-        expect(result.statusCode, 500);
+        await (await request<Pharaoh>(app)).get('/').status(500).test();
       });
     });
 
@@ -44,7 +41,7 @@ void main() {
         });
 
         try {
-          await (await request<Pharaoh>(app)).get('/');
+          await (await request<Pharaoh>(app)).get('/').test();
         } catch (e) {
           expect((e as StateError).message,
               'Response has no Location header for redirect');

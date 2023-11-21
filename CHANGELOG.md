@@ -1,3 +1,13 @@
+# 0.0.3
+
+- Fix middleware match by @codekeyz in https://github.com/codekeyz/pharaoh/pull/24
+- Feature/improve shelf middleware adapter by @codekeyz in https://github.com/codekeyz/pharaoh/pull/27
+- Feature/pharaoh basic auth by @codekeyz in https://github.com/codekeyz/pharaoh/pull/34
+- Port shelf-static to pharaoh by @codekeyz in https://github.com/codekeyz/pharaoh/pull/29
+- Fix/only allow get and head by @codekeyz in https://github.com/codekeyz/pharaoh/pull/35
+
+**Full Changelog**: https://github.com/codekeyz/pharaoh/commits/0.0.3
+
 # 0.0.2
 
 - Made fixes to Middlewares in Route Group
