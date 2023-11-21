@@ -24,7 +24,6 @@ import 'package:pharaoh/pharaoh.dart';
 import 'package:supertest/supertest.dart';
 
 void main() async {
-  final app = Pharaoh();
 
    test('should not override previous Content-Types', () async {
       final app = Pharaoh().get('/', (req, res) {
@@ -40,6 +39,7 @@ void main() async {
           .body('{"hello":"world"}')
           .test();
     });
+
 }
 ```
 
