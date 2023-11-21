@@ -20,7 +20,7 @@ In your pubspec.yaml
 
 ```yaml
 dependencies:
-  pharaoh: ^0.0.3 # requires Dart => ^3.2.0
+  pharaoh: ^0.0.4 # requires Dart => ^3.0.0
 ```
 
 ## Basic Usage:
@@ -70,8 +70,6 @@ $ dart test
 ```
 
 ## People
-
-The original author of Pharaoh is [Chima Precious](https://github.com/codekeyz)
 
 [List of all contributors](https://github.com/codekeyz/pharaoh/graphs/contributors)
 

@@ -1,9 +1,8 @@
 import 'package:pharaoh/pharaoh.dart';
-import 'package:supertest/supertest.dart';
-import 'package:test/test.dart';
+import 'package:spookie/spookie.dart';
 
 void main() {
-  group("supertest", () {
+  group("spookie", () {
     test('should fire up the app on an ephemeral port', () async {
       final app = Pharaoh().get('/', (req, res) => res.send('Hello World'));
       await (await (request<Pharaoh>(app)))

@@ -16,7 +16,7 @@ typedef MatchCase = ({GetValueFromResponse value, dynamic matcher});
 
 class HttpResponseExpection
     extends ExpectationBase<HttpFutureResponse, http.Response> {
-  HttpResponseExpection(HttpFutureResponse value) : super(value);
+  HttpResponseExpection(super.value);
 
   final List<MatchCase> _matchcases = [];
 

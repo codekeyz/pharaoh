@@ -1,17 +1,18 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
-
 import 'src/http_expectation.dart';
+
+export 'package:test/test.dart';
 
 typedef TestApp = Function(HttpRequest req);
 
-abstract interface class Tester {
+abstract interface class Spookie {
   late final HttpServer _server;
 
-  Tester._(HttpServer server) : _server = server;
+  Spookie._(HttpServer server) : _server = server;
 
-  Tester auth(String user, String pass);
+  Spookie auth(String user, String pass);
 
   HttpResponseExpection post(
     String path, {
@@ -43,10 +44,10 @@ abstract interface class Tester {
   });
 }
 
-class _$TesterImpl extends Tester {
+class _$SpookieImpl extends Spookie {
   Uri get serverUri => getServerUri(_server);
 
-  _$TesterImpl(HttpServer server) : super._(server) {
+  _$SpookieImpl(super.server) : super._() {
     _headers.clear();
   }
 
@@ -117,17 +118,17 @@ class _$TesterImpl extends Tester {
       );
 
   @override
-  Tester auth(String user, String pass) {
+  Spookie auth(String user, String pass) {
     final basicAuth = base64Encode(utf8.encode('$user:$pass'));
     _headers[HttpHeaders.authorizationHeader] = 'Basic $basicAuth';
     return this;
   }
 }
 
-class TestAgent {
-  static _$TesterImpl? _instance;
+class SpookieAgent {
+  static _$SpookieImpl? _instance;
 
-  static Future<Tester> create(TestApp app) async {
+  static Future<Spookie> create(TestApp app) async {
     if (_instance != null) {
       await _instance!._server.close();
       _instance = null;
@@ -135,7 +136,7 @@ class TestAgent {
 
     final server = await HttpServer.bind('127.0.0.1', 0)
       ..listen(app);
-    _instance = _$TesterImpl(server);
+    _instance = _$SpookieImpl(server);
     return _instance!;
   }
 }
@@ -157,7 +158,7 @@ Uri getServerUri(HttpServer server) {
   return Uri(scheme: 'http', host: server.address.address, port: server.port);
 }
 
-Future<Tester> request<T>(T app) async {
-  final tester = await TestAgent.create((app as dynamic).handleRequest);
+Future<Spookie> request<T>(T app) async {
+  final tester = await SpookieAgent.create((app as dynamic).handleRequest);
   return tester;
 }

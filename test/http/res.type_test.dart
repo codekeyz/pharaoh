@@ -1,8 +1,7 @@
 import 'dart:io';
 
 import 'package:pharaoh/pharaoh.dart';
-import 'package:supertest/supertest.dart';
-import 'package:test/test.dart';
+import 'package:spookie/spookie.dart';
 
 void main() {
   group('res.type(ContentType)', () {
