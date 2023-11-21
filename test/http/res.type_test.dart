@@ -13,11 +13,12 @@ void main() {
             .send('var name = "tj";');
       });
 
-      final result = await (await request<Pharaoh>(app)).get('/');
-      expect(result.headers['content-type'],
-          'application/vnd.amazon.ebook; charset=utf-8');
-      expect(result.statusCode, 200);
-      expect(result.body, 'var name = "tj";');
+      await (await request<Pharaoh>(app))
+          .get('/')
+          .status(200)
+          .body('var name = "tj";')
+          .header('content-type', 'application/vnd.amazon.ebook; charset=utf-8')
+          .test();
     });
   });
 }
