@@ -8,7 +8,7 @@ In your pubspec.yaml
 
 ```yaml
 dev_dependencies:
-  spookie: ^1.0.0
+  spookie: ^1.0.1
 ```
 
 ## Basic Usage:
@@ -34,9 +34,9 @@ void main() async {
 
       await (await request<Pharaoh>(app))
           .get('/')
-          .status(200)
-          .contentType('application/vnd.example+json')
-          .body('{"hello":"world"}')
+          .expectStatus(200)
+          .expectContentType('application/vnd.example+json')
+          .expectBody('{"hello":"world"}')
           .test();
     });
 
