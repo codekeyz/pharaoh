@@ -16,9 +16,9 @@ void main() {
 
       await (await request<Pharaoh>(app))
           .get('/')
-          .status(200)
-          .body('<p>Hey</p>')
-          .contentType('text/html; charset=utf-8')
+          .expectStatus(200)
+          .expectBody('<p>Hey</p>')
+          .expectContentType('text/html; charset=utf-8')
           .test();
     });
 
@@ -31,9 +31,9 @@ void main() {
 
       await (await request<Pharaoh>(app))
           .get('/')
-          .contentType('text/html; charset=utf-8')
-          .status(200)
-          .body('<p>Hey</p>')
+          .expectContentType('text/html; charset=utf-8')
+          .expectStatus(200)
+          .expectBody('<p>Hey</p>')
           .test();
     });
 
@@ -46,9 +46,9 @@ void main() {
 
       await (await request<Pharaoh>(app))
           .get('/')
-          .contentType('text/plain; charset=utf-8')
-          .status(200)
-          .body('<p>Hey</p>')
+          .expectContentType('text/plain; charset=utf-8')
+          .expectStatus(200)
+          .expectBody('<p>Hey</p>')
           .test();
     });
 
@@ -63,9 +63,9 @@ void main() {
 
       await (await request<Pharaoh>(app))
           .get('/')
-          .status(200)
-          .contentType('text/plain; charset=utf-8')
-          .body('Hey')
+          .expectStatus(200)
+          .expectContentType('text/plain; charset=utf-8')
+          .expectBody('Hey')
           .test();
     });
 
@@ -81,9 +81,9 @@ void main() {
 
       await (await request<Pharaoh>(app))
           .get('/')
-          .status(200)
-          .contentType('text/plain; charset=iso-8859-1')
-          .body('Hello World')
+          .expectStatus(200)
+          .expectContentType('text/plain; charset=iso-8859-1')
+          .expectBody('Hello World')
           .test();
     });
 
@@ -97,9 +97,9 @@ void main() {
 
       await (await request<Pharaoh>(app))
           .get('/')
-          .status(200)
-          .body('Hello World')
-          .contentType('application/octet-stream')
+          .expectStatus(200)
+          .expectBody('Hello World')
+          .expectContentType('application/octet-stream')
           .test();
     });
   });

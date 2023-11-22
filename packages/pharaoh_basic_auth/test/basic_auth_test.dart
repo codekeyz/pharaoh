@@ -40,8 +40,8 @@ void main() {
         'should reject on missing header',
         () async => (await request<Pharaoh>(app))
             .get(endpoint)
-            .status(401)
-            .body('"Username & password is required!"')
+            .expectStatus(401)
+            .expectBody('"Username & password is required!"')
             .test(),
       );
 
@@ -50,7 +50,7 @@ void main() {
         () async => (await request<Pharaoh>(app))
             .auth('dude', 'stuff')
             .get(endpoint)
-            .status(401)
+            .expectStatus(401)
             .test(),
       );
 
@@ -59,7 +59,7 @@ void main() {
         () async => (await request<Pharaoh>(app))
             .auth('Admin', 'secret')
             .get(endpoint)
-            .status(401)
+            .expectStatus(401)
             .test(),
       );
 
@@ -68,8 +68,8 @@ void main() {
         () async => (await request<Pharaoh>(app))
             .auth('dude', 'stuff')
             .get(endpoint)
-            .status(401)
-            .header('WWW-Authenticate', isNull)
+            .expectStatus(401)
+            .expectHeader('WWW-Authenticate', isNull)
             .test(),
       );
 
@@ -78,7 +78,7 @@ void main() {
         () async => await (await request<Pharaoh>(app))
             .auth('Admin', 'secret1234')
             .get(endpoint)
-            .status(200)
+            .expectStatus(200)
             .test(),
       );
     });
@@ -110,7 +110,7 @@ void main() {
           app,
         ))
             .get(endpoint)
-            .status(401)
+            .expectStatus(401)
             .test(),
       );
 
@@ -119,8 +119,8 @@ void main() {
         () async => (await request<Pharaoh>(app))
             .auth('dude', 'stuff')
             .get(endpoint)
-            .status(401)
-            .body('"Ohmygod, credentials is required!"')
+            .expectStatus(401)
+            .expectBody('"Ohmygod, credentials is required!"')
             .test(),
       );
 
@@ -129,8 +129,8 @@ void main() {
         () async => (await request<Pharaoh>(app))
             .auth('Aloha', 'secretverymuch')
             .get(endpoint)
-            .status(200)
-            .body('You passed')
+            .expectStatus(200)
+            .expectBody('You passed')
             .test(),
       );
 
@@ -153,7 +153,7 @@ void main() {
           () async => (await request<Pharaoh>(app))
               .auth('bla', 'blub')
               .get(endpoint)
-              .status(401)
+              .expectStatus(401)
               .test(),
         );
 
@@ -162,8 +162,8 @@ void main() {
           () async => (await request<Pharaoh>(app))
               .auth('Testeroni', 'testsecret')
               .get(endpoint)
-              .status(200)
-              .body('You passed')
+              .expectStatus(200)
+              .expectBody('You passed')
               .test(),
         );
       });

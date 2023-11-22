@@ -14,9 +14,9 @@ void main() {
 
       await (await request<Pharaoh>(app))
           .get('/')
-          .status(200)
-          .body('var name = "tj";')
-          .contentType('application/vnd.amazon.ebook; charset=utf-8')
+          .expectStatus(200)
+          .expectBody('var name = "tj";')
+          .expectContentType('application/vnd.amazon.ebook; charset=utf-8')
           .test();
     });
   });

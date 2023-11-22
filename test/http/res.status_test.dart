@@ -10,7 +10,7 @@ void main() {
           next(res);
         });
 
-        await (await request<Pharaoh>(app)).get('/').status(201).test();
+        await (await request<Pharaoh>(app)).get('/').expectStatus(201).test();
       });
 
       test('when "code" is 400 to 400', () async {
@@ -19,7 +19,7 @@ void main() {
           next(res);
         });
 
-        await (await request<Pharaoh>(app)).get('/').status(400).test();
+        await (await request<Pharaoh>(app)).get('/').expectStatus(400).test();
       });
 
       test('when "code" is 500 to 500', () async {
@@ -28,7 +28,7 @@ void main() {
           next(res);
         });
 
-        await (await request<Pharaoh>(app)).get('/').status(500).test();
+        await (await request<Pharaoh>(app)).get('/').expectStatus(500).test();
       });
     });
 

@@ -20,14 +20,14 @@ class HttpResponseExpection
 
   final List<MatchCase> _matchcases = [];
 
-  HttpResponseExpection header(String header, dynamic matcher) {
+  HttpResponseExpection expectHeader(String header, dynamic matcher) {
     final MatchCase test =
         (value: (resp) => resp.headers[header], matcher: matcher);
     _matchcases.add(test);
     return this;
   }
 
-  HttpResponseExpection contentType(dynamic matcher) {
+  HttpResponseExpection expectContentType(dynamic matcher) {
     final MatchCase test = (
       value: (resp) => resp.headers[HttpHeaders.contentTypeHeader],
       matcher: matcher
@@ -36,20 +36,32 @@ class HttpResponseExpection
     return this;
   }
 
-  HttpResponseExpection headers(dynamic matcher) {
+  HttpResponseExpection expectHeaders(dynamic matcher) {
     final MatchCase test = (value: (resp) => resp.headers, matcher: matcher);
     _matchcases.add(test);
     return this;
   }
 
-  HttpResponseExpection status(dynamic matcher) {
+  HttpResponseExpection expectStatus(dynamic matcher) {
     final MatchCase test = (value: (resp) => resp.statusCode, matcher: matcher);
     _matchcases.add(test);
     return this;
   }
 
-  HttpResponseExpection body(dynamic matcher) {
+  HttpResponseExpection expectBody(dynamic matcher) {
     final MatchCase value = (value: (resp) => resp.body, matcher: matcher);
+    _matchcases.add(value);
+    return this;
+  }
+
+  HttpResponseExpection expectBodyCustom<T>(
+    T Function(String body) getValue,
+    dynamic matcher,
+  ) {
+    final MatchCase value = (
+      value: (resp) => getValue(resp.body),
+      matcher: matcher,
+    );
     _matchcases.add(value);
     return this;
   }
@@ -63,6 +75,7 @@ class HttpResponseExpection
   @override
   Future<void> test() async {
     final response = await actual;
+
     // ignore: no_leading_underscores_for_local_identifiers
     for (final _case in _matchcases) {
       expect(_case.value(response), _case.matcher);

@@ -7,15 +7,18 @@ void main() {
       final app = Pharaoh().get('/', (req, res) => res.send('Hello World'));
       await (await (request<Pharaoh>(app)))
           .get('/')
-          .status(200)
-          .body('Hello World')
+          .expectStatus(200)
+          .expectBody('Hello World')
           .test();
     });
 
     test('should work with an active server', () async {
       final app = Pharaoh().post('/hello', (req, res) => res.ok('Hello World'));
-      await (await (request<Pharaoh>(app))).get('/').status(404).test();
-      await (await (request<Pharaoh>(app))).post('/hello').status(200).test();
+      await (await (request<Pharaoh>(app))).get('/').expectStatus(404).test();
+      await (await (request<Pharaoh>(app)))
+          .post('/hello', {})
+          .expectStatus(200)
+          .test();
     });
 
     test('should work with remote server', () async {
@@ -26,8 +29,8 @@ void main() {
 
       await (await (request<Pharaoh>(app)))
           .put('/hello')
-          .status(200)
-          .body('Hey Daddy Yo!')
+          .expectStatus(200)
+          .expectBody('Hey Daddy Yo!')
           .test();
 
       await app.shutdown();
