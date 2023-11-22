@@ -15,9 +15,9 @@ void main() async {
   test('should not override previous Content-Types', () async {
     await (await request<Pharaoh>(app))
         .get('/')
-        .status(200)
-        .contentType('application/vnd.example+json')
-        .body('{"hello":"world"}')
+        .expectStatus(200)
+        .expectContentType('application/vnd.example+json')
+        .expectBody('{"hello":"world"}')
         .test();
   });
 }

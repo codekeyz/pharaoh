@@ -14,9 +14,9 @@ void main() {
 
       await (await request<Pharaoh>(app))
           .get('/')
-          .status(200)
-          .contentType('application/vnd.example+json')
-          .body('{"hello":"world"}')
+          .expectStatus(200)
+          .expectContentType('application/vnd.example+json')
+          .expectBody('{"hello":"world"}')
           .test();
     });
 
@@ -28,9 +28,9 @@ void main() {
 
         await (await request<Pharaoh>(app))
             .get('/')
-            .status(200)
-            .body('null')
-            .contentType('application/json; charset=utf-8')
+            .expectStatus(200)
+            .expectBody('null')
+            .expectContentType('application/json; charset=utf-8')
             .test();
       });
 
@@ -41,9 +41,9 @@ void main() {
 
         await (await request(app))
             .get('/')
-            .status(200)
-            .body('300')
-            .contentType('application/json; charset=utf-8')
+            .expectStatus(200)
+            .expectBody('300')
+            .expectContentType('application/json; charset=utf-8')
             .test();
       });
 
@@ -54,9 +54,9 @@ void main() {
 
         await (await request(app))
             .get('/')
-            .status(200)
-            .body('300.34')
-            .contentType('application/json; charset=utf-8')
+            .expectStatus(200)
+            .expectBody('300.34')
+            .expectContentType('application/json; charset=utf-8')
             .test();
       });
 
@@ -67,9 +67,9 @@ void main() {
 
         await (await request(app))
             .get('/')
-            .status(200)
-            .body('"str"')
-            .contentType('application/json; charset=utf-8')
+            .expectStatus(200)
+            .expectBody('"str"')
+            .expectContentType('application/json; charset=utf-8')
             .test();
       });
 
@@ -80,9 +80,9 @@ void main() {
 
         await (await request(app))
             .get('/')
-            .status(200)
-            .body('true')
-            .contentType('application/json; charset=utf-8')
+            .expectStatus(200)
+            .expectBody('true')
+            .expectContentType('application/json; charset=utf-8')
             .test();
       });
     });
@@ -95,9 +95,9 @@ void main() {
 
         await (await request(app))
             .get('/')
-            .status(200)
-            .body('["foo","bar","baz"]')
-            .contentType('application/json; charset=utf-8')
+            .expectStatus(200)
+            .expectBody('["foo","bar","baz"]')
+            .expectContentType('application/json; charset=utf-8')
             .test();
       });
 
@@ -108,9 +108,9 @@ void main() {
 
         await (await request(app))
             .get('/')
-            .status(200)
-            .body('{"name":"Foo bar","age":23.45}')
-            .contentType('application/json; charset=utf-8')
+            .expectStatus(200)
+            .expectBody('{"name":"Foo bar","age":23.45}')
+            .expectContentType('application/json; charset=utf-8')
             .test();
       });
 
@@ -121,9 +121,9 @@ void main() {
 
         await (await request(app))
             .get('/')
-            .status(200)
-            .body('["Chima","Foo","Bar"]')
-            .contentType('application/json; charset=utf-8')
+            .expectStatus(200)
+            .expectBody('["Chima","Foo","Bar"]')
+            .expectContentType('application/json; charset=utf-8')
             .test();
       });
     });
