@@ -14,10 +14,12 @@ abstract interface class Spookie {
 
   Spookie auth(String user, String pass);
 
+  Spookie token(String token);
+
   HttpResponseExpection post(
-    String path, {
+    String path,
+    Object? body, {
     Map<String, String>? headers,
-    Object? body,
   });
 
   HttpResponseExpection put(
@@ -66,9 +68,9 @@ class _$SpookieImpl extends Spookie {
 
   @override
   HttpResponseExpection post(
-    String path, {
+    String path,
+    Object? body, {
     Map<String, String>? headers,
-    Object? body,
   }) =>
       expectHttp(
         http.post(getUri(path),
@@ -121,6 +123,12 @@ class _$SpookieImpl extends Spookie {
   Spookie auth(String user, String pass) {
     final basicAuth = base64Encode(utf8.encode('$user:$pass'));
     _headers[HttpHeaders.authorizationHeader] = 'Basic $basicAuth';
+    return this;
+  }
+
+  @override
+  Spookie token(String token) {
+    _headers[HttpHeaders.authorizationHeader] = 'Bearer $token';
     return this;
   }
 }
