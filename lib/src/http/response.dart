@@ -276,19 +276,16 @@ class Response extends Message<shelf.Body?> implements $Response {
   /// TODO research on how to tell if an object is a buffer
   bool _isBuffer(Object object) => object is! String;
 
-  /// TODO(baba) try and resolve this
   @override
-  Response format(Map<String, Function(Response res)> resFormatMap) {
+  Response format(Map<String, Function(Response res)> options) {
     var reqAcceptType = _reqInfo.headers[HttpHeaders.acceptHeader];
-    // Resolving Negotiation conflict where 
-    // the Accept header is not sent by the client
-    reqAcceptType ??= "text/html";
-
     if (reqAcceptType is Iterable) reqAcceptType = reqAcceptType.join();
+    final handler = options[reqAcceptType] ?? options['_'];
 
-    final handler = resFormatMap[reqAcceptType];
-
-    if (handler == null) return json({ "code": 406, "message": "Not Acceptable"});
+    if (handler == null) {
+      return status(HttpStatus.notAcceptable)
+          .json(makeError(message: 'Not Acceptable').toJson);
+    }
 
     return handler.call(this);
   }

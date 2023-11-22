@@ -12,11 +12,9 @@ void main() async {
   app.get(
     "/get_me",
     (req, res) => res.format({
-      'text/plain':       (res) => res.ok("Hey, there!"),
-      'text/html':        (res) => res.send("<h1> Hey, there!</h1>"),
-      'application/json': (res) => res.json("{ message: 'Hey, there!'}"),
-      '':                 (res) => res.send("<h1> using default</b>"),
-      '_':                (res) => res.send("<h1> using _ default</b>"),
+      'text/plain': (res) => res.ok("Hey, there!"),
+      'text/html': (res) => res.send("<h1> Hey, there!</h1>"),
+      '_': (res) => res.json("{ message: 'Hey, there!'}"),
     }),
   );
 
@@ -24,8 +22,8 @@ void main() async {
     "/commit",
     (req, res) => res.format({
       'text/plain': (res) => res.ok('hey'),
-      'text/html':  (res) => res.send('<p>hey</p>'),
-      '_':          (res) => res.json("{ message: 'hey' }"),
+      'text/html': (res) => res.send('<p>hey</p>'),
+      '_': (res) => res.json("{ message: 'hey' }"),
     }),
   );
 
