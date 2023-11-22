@@ -271,7 +271,7 @@ class Response extends Message<shelf.Body?> implements $Response {
 
   @override
   Response end() {
-    final cookieString = _cookiesMap.values.map((e) => e.toString()).toString();
+    final cookieString = _cookiesMap.values.map((e) => e.toString()).join('; ');
     headers[HttpHeaders.setCookieHeader] = cookieString;
     return Response(
       _httpReq,
