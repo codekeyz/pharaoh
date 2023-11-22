@@ -39,6 +39,34 @@ void main() {
     );
 
     test(
+      'should reject on expired token',
+      () async {
+        final jwt = JWT(
+          {
+            'id': 34345,
+            'user': {"name": 'Foo', 'lastname': 'Bar'}
+          },
+          issuer: 'https://github.com/jonasroussel/dart_jsonwebtoken',
+        );
+        final token = jwt.sign(
+          secretKey,
+          algorithm: JWTAlgorithm.HS256,
+          expiresIn: Duration(seconds: 1),
+        );
+
+        await Future.delayed(const Duration(seconds: 1));
+
+        await (await request<Pharaoh>(app))
+            .token(token)
+            .get('/users/me')
+            .expectStatus(401)
+            .expectBodyCustom(
+                (body) => jsonDecode(body)['message'], 'jwt expired')
+            .test();
+      },
+    );
+
+    test(
       'should accept on valid authorization header',
       () async {
         final jwt = JWT(
