@@ -1,13 +1,5 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
-
-String encodeObject(dynamic object) {
-  if (object == null) return 'null';
-  if (object is Map) return jsonEncode(object);
-  if (object is String) return object;
-  return object.toString();
-}
 
 String contentTypeToString(ContentType type, {String charset = 'utf-8'}) {
   return '${type.value}; charset=${type.charset ?? charset}';
@@ -25,4 +17,13 @@ void catchTopLevelErrors(void Function() callback,
   } else {
     return callback();
   }
+}
+
+bool safeCompare(String a, String b) {
+  if (a.length != b.length) return false;
+  var result = 0;
+  for (var i = 0; i < a.length; i++) {
+    result |= a.codeUnitAt(i) ^ b.codeUnitAt(i);
+  }
+  return result == 0;
 }

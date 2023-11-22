@@ -13,6 +13,7 @@ dependencies:
   http_parser: ^4.0.2
   path_to_regexp: ^0.4.0
   mason_logger: ^0.2.10
+  crypto: ^3.0.3
   # We only need this to implement inter-operability for shelf
   shelf: ^1.4.1
 

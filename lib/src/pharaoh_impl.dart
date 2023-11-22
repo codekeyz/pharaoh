@@ -6,6 +6,7 @@ import 'package:mason_logger/mason_logger.dart';
 
 import '../pharaoh.dart';
 import 'middleware/body_parser.dart';
+import 'middleware/cookie_parser.dart';
 import 'shelf_interop/shelf.dart' as shelf;
 
 class $PharaohImpl implements Pharaoh {
@@ -16,7 +17,7 @@ class $PharaohImpl implements Pharaoh {
   $PharaohImpl()
       : _logger = Logger(),
         _router = PharaohRouter() {
-    _router.use(bodyParser);
+    _router.use(bodyParser).use(cookieParser);
   }
 
   @override
