@@ -8,28 +8,17 @@ import 'message.dart';
 // ignore: constant_identifier_names
 enum HTTPMethod { GET, HEAD, POST, PUT, DELETE, ALL, PATCH, OPTIONS, TRACE }
 
-HTTPMethod getHttpMethod(HttpRequest req) {
-  switch (req.method) {
-    case 'GET':
-      return HTTPMethod.GET;
-    case 'HEAD':
-      return HTTPMethod.HEAD;
-    case 'POST':
-      return HTTPMethod.POST;
-    case 'PUT':
-      return HTTPMethod.PUT;
-    case 'DELETE':
-      return HTTPMethod.DELETE;
-    case 'PATCH':
-      return HTTPMethod.PATCH;
-    case 'OPTIONS':
-      return HTTPMethod.OPTIONS;
-    case 'TRACE':
-      return HTTPMethod.TRACE;
-    default:
-      throw PharaohException('Method ${req.method} not yet supported');
-  }
-}
+getHttpMethod(HttpRequest req) => switch (req.method) {
+      'GET' => HTTPMethod.GET,
+      'HEAD' => HTTPMethod.HEAD,
+      'POST' => HTTPMethod.POST,
+      'PUT' => HTTPMethod.PUT,
+      'DELETE' => HTTPMethod.DELETE,
+      'PATCH' => HTTPMethod.PATCH,
+      'OPTIONS' => HTTPMethod.OPTIONS,
+      'TRACE' => HTTPMethod.TRACE,
+      _ => throw PharaohException('Method ${req.method} not yet supported')
+    };
 
 abstract interface class $Request<T> {
   Uri get uri;

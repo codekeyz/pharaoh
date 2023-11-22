@@ -7,7 +7,7 @@ String sign(String val, String secret) {
   final hmac = Hmac(sha256, utf8.encode(secret));
   final bytes = utf8.encode(val);
   final digest = hmac.convert(bytes);
-  return '$val.${base64Url.encode(digest.bytes)}';
+  return '$val.${base64.encode(digest.bytes).replaceAll(RegExp('=+\$'), '')}';
 }
 
 /// Unsign and decode the given [input] with [secret],

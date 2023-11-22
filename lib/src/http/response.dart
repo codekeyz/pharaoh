@@ -25,12 +25,11 @@ abstract interface class $Response {
     String name,
     String value, {
     String? domain,
-    String? path,
     String? secret,
     DateTime? expires,
     Duration? maxAge,
-    int? priority,
     SameSite? sameSite,
+    String path = '/',
     bool secure = false,
     bool signed = false,
     bool httpOnly = false,
@@ -72,7 +71,7 @@ class Response extends Message<shelf.Body?> implements $Response {
 
   final int statusCode;
 
-  final Map<String, Cookie> _cookiesMap = {};
+  final List<Cookie> _cookies = [];
 
   DateTime? _expiresCache;
 
@@ -221,13 +220,9 @@ class Response extends Message<shelf.Body?> implements $Response {
   }
 
   @override
-  Response notFound([String? message]) => Response(
-        _httpReq,
-        body: body,
-        encoding: encoding,
-        statusCode: 404,
-        headers: headers,
-      ).json(makeError(message: message ?? 'Not found').toJson);
+  Response notFound([String? message]) {
+    return status(404).json(makeError(message: message ?? 'Not found').toJson);
+  }
 
   @override
   Response unauthorized({Object? data}) {
@@ -236,16 +231,10 @@ class Response extends Message<shelf.Body?> implements $Response {
   }
 
   @override
-  Response internalServerError([String? message]) => Response(
-        _httpReq,
-        body: body,
-        encoding: encoding,
-        statusCode: statusCode,
-        headers: headers,
-        ended: ended,
-      )
-          .status(500)
-          .json(makeError(message: message ?? 'Internal Server Error').toJson);
+  Response internalServerError([String? message]) {
+    return status(500)
+        .json(makeError(message: message ?? 'Internal Server Error').toJson);
+  }
 
   @override
   Response ok([String? data]) => Response(
@@ -271,8 +260,6 @@ class Response extends Message<shelf.Body?> implements $Response {
 
   @override
   Response end() {
-    final cookieString = _cookiesMap.values.map((e) => e.toString()).join('; ');
-    headers[HttpHeaders.setCookieHeader] = cookieString;
     return Response(
       _httpReq,
       body: body,
@@ -324,12 +311,11 @@ class Response extends Message<shelf.Body?> implements $Response {
     String name,
     String value, {
     String? domain,
-    String? path,
     String? secret,
     DateTime? expires,
     Duration? maxAge,
     SameSite? sameSite,
-    int? priority,
+    String path = '/',
     bool secure = false,
     bool signed = false,
     bool httpOnly = false,
@@ -341,6 +327,7 @@ class Response extends Message<shelf.Body?> implements $Response {
       }
       value = 's:${cookieutil.sign(value, secret)}';
     }
+    value = Uri.encodeComponent(value);
 
     final cookie = Cookie(name, value)
       ..httpOnly = httpOnly
@@ -348,12 +335,13 @@ class Response extends Message<shelf.Body?> implements $Response {
       ..path = path
       ..secure = secure
       ..sameSite = sameSite;
-
     if (maxAge != null) {
       cookie.expires = DateTime.now().add(maxAge);
       cookie.maxAge = maxAge.inSeconds;
     }
-    _cookiesMap[cookie.name] = cookie;
+
+    _cookies.add(cookie);
+    headers[HttpHeaders.setCookieHeader] = _cookies;
     return this;
   }
 }
