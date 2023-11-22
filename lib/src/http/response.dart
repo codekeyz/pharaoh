@@ -23,7 +23,7 @@ abstract interface class $Response {
   /// By default the value of `httpOnly` will be set to `true`.
   Response cookie(
     String name,
-    String value, {
+    Object? value, {
     String? domain,
     String? secret,
     DateTime? expires,
@@ -309,7 +309,7 @@ class Response extends Message<shelf.Body?> implements $Response {
   @override
   Response cookie(
     String name,
-    String value, {
+    Object? value, {
     String? domain,
     String? secret,
     DateTime? expires,
@@ -320,6 +320,7 @@ class Response extends Message<shelf.Body?> implements $Response {
     bool signed = false,
     bool httpOnly = false,
   }) {
+    if (value is! String) value = 'j:${jsonEncode(value)}';
     if (signed) {
       if (secret == null) {
         throw PharaohException.value(
@@ -327,9 +328,8 @@ class Response extends Message<shelf.Body?> implements $Response {
       }
       value = 's:${cookieutil.sign(value, secret)}';
     }
-    value = Uri.encodeComponent(value);
 
-    final cookie = Cookie(name, value)
+    final cookie = Cookie(name, Uri.encodeComponent(value))
       ..httpOnly = httpOnly
       ..domain = domain
       ..path = path

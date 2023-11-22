@@ -67,9 +67,9 @@ void main() {
 
     test('should set :signed', () async {
       final app = Pharaoh().get('/', (req, res) {
-        final data = jsonEncode({"name": 'tobi'});
         return res
-            .cookie('user', 'j:$data', signed: true, secret: 'foo bar baz')
+            .cookie('user', {"name": 'tobi'},
+                signed: true, secret: 'foo bar baz')
             .end();
       });
 
@@ -83,8 +83,7 @@ void main() {
 
     test('should reject when :signed without :secret', () async {
       final app = Pharaoh().get('/', (req, res) {
-        final data = jsonEncode({"name": 'tobi'});
-        return res.cookie('user', 'j:$data', signed: true).end();
+        return res.cookie('user', {"name": 'tobi'}, signed: true).end();
       });
 
       await (await request<Pharaoh>(app))
