@@ -54,6 +54,8 @@ abstract interface class $Request<T> {
 
   Map<String, dynamic> get headers;
 
+  List<Cookie> get cookies;
+
   T? get body;
 
   Object? operator [](String name);
@@ -124,6 +126,9 @@ class Request extends Message<dynamic> implements $Request<dynamic> {
 
   @override
   String get protocolVersion => _req.protocolVersion;
+
+  @override
+  List<Cookie> get cookies => _req.cookies;
 
   @override
   Object? operator [](String name) => _context[name];
