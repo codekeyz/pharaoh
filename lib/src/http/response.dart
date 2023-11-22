@@ -24,6 +24,8 @@ abstract interface class $Response {
 
   Response notModified({Map<String, dynamic>? headers});
 
+  Response format(Map<String, Function(Response res)> data);
+
   Response notFound([String? message]);
 
   Response unauthorized({Object? data});
@@ -273,4 +275,18 @@ class Response extends Message<shelf.Body?> implements $Response {
 
   /// TODO research on how to tell if an object is a buffer
   bool _isBuffer(Object object) => object is! String;
+
+  @override
+  Response format(Map<String, Function(Response res)> options) {
+    var reqAcceptType = _reqInfo.headers[HttpHeaders.acceptHeader];
+    if (reqAcceptType is Iterable) reqAcceptType = reqAcceptType.join();
+    final handler = options[reqAcceptType] ?? options['_'];
+
+    if (handler == null) {
+      return status(HttpStatus.notAcceptable)
+          .json(makeError(message: 'Not Acceptable').toJson);
+    }
+
+    return handler.call(this);
+  }
 }
