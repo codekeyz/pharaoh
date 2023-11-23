@@ -7,8 +7,7 @@ environment:
   sdk: ^3.0.0
 
 dependencies:
-  pharaoh: ^0.0.3
+  pharaoh: ^0.0.4
 
 dev_dependencies:
-  lints: ^3.0.0
   spookie: ^1.0.1

@@ -12,7 +12,7 @@
 - Focus on high performance
 - Super-high test coverage _(need more hands, peep the issues and contribute)_
 - HTTP helpers (just like ExpressJS)
-- Interoperability with Shelf Middlewares [See here](SHELF_INTEROP.md)
+- Interoperability with Shelf Middlewares [See here](./packages/pharaoh/SHELF_INTEROP.md)
 
 ## Installing:
 

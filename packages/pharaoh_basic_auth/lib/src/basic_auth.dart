@@ -10,19 +10,6 @@ typedef UnAuthorizedResponse = String Function($Request req);
 
 typedef GetRealm = String Function(Request req);
 
-bool safeCompare(String userInput, String secret) {
-  final userInputLength = userInput.length;
-  final secretLength = secret.length;
-  if (userInputLength != secretLength) return false;
-
-  var result = 0;
-  for (var i = 0; i < userInputLength; i++) {
-    result |= userInput.codeUnitAt(i) ^ secret.codeUnitAt(i);
-  }
-
-  return result == 0;
-}
-
 HandlerFunc basicAuth({
   final Authorizer? authorizer,
   final UnAuthorizedResponse? unauthorizedResponse,

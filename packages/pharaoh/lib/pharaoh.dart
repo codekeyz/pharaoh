@@ -18,6 +18,7 @@ export 'src/shelf_interop/adapter.dart';
 export 'src/shelf_interop/shelf.dart' show Body;
 export 'src/router/route.dart' show Route;
 export 'src/utils/exceptions.dart';
+export 'src/utils/utils.dart';
 
 abstract class Pharaoh implements RoutePathDefinitionContract<Pharaoh> {
   factory Pharaoh() => $PharaohImpl();

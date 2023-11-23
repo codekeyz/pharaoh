@@ -1,7 +1,0 @@
-pharaoh_examples/
-spookie/
-packages/
-
-cliff.toml
-dart_test.yml
-**/pubspec_overrides.yaml

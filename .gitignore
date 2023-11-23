@@ -1,9 +1,4 @@
-# https://dart.dev/guides/libraries/private-files
-# Created by `dart pub`
-.dart_tool/
-
-# Avoid committing pubspec.lock for library packages; see
-# https://dart.dev/guides/libraries/private-files#pubspeclock.
-pubspec.lock
-.idea/
 **/pubspec_overrides.yaml
+.idea
+.dart_tool
+melos_pharaoh.iml
