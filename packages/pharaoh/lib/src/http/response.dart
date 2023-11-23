@@ -2,12 +2,11 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:http_parser/http_parser.dart';
 
-import '../utils/utils.dart';
 import '../utils/exceptions.dart';
 import '../shelf_interop/shelf.dart' as shelf;
+import 'cookie.dart';
 import 'message.dart';
 import 'request.dart';
-import 'session.dart';
 
 final applicationOctetStreamType = ContentType('application', 'octet-stream');
 
@@ -301,24 +300,7 @@ class Response extends Message<shelf.Body?> implements $Response {
     Object? value, [
     CookieOpts opts = const CookieOpts(),
   ]) {
-    if (value is! String) value = 'j:${jsonEncode(value)}';
-    if (opts.signed) {
-      final secret = opts.secret;
-      if (secret == null) {
-        throw PharaohException.value(
-            'cookieParser("secret") required for signed cookies');
-      }
-      value = 's:${signValue(value, secret)}';
-    }
-
-    final cookie = Cookie(name, Uri.encodeComponent(value))
-      ..httpOnly = opts.httpOnly
-      ..domain = opts.domain
-      ..path = opts.path
-      ..secure = opts.secure
-      ..sameSite = opts.sameSite
-      ..setMaxAge(opts.maxAge);
-
+    final cookie = bakeCookie(name, value, opts);
     _cookies.add(cookie);
     headers[HttpHeaders.setCookieHeader] = _cookies;
     return this;

@@ -93,8 +93,8 @@ void main() {
       await (await request<Pharaoh>(app))
           .get('/')
           .expectStatus(500)
-          .expectBody(contains(
-              'cookieParser(\\"secret\\") required for signed cookies'))
+          .expectBody(
+              contains('CookieOpts(\\"secret\\") required for signed cookies'))
           .test();
     });
   });
