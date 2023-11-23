@@ -17,12 +17,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-
-      # Note: This workflow uses the latest stable version of the Dart SDK.
-      # You can specify other versions if desired, see documentation here:
-      # https://github.com/dart-lang/setup-dart/blob/main/README.md
-      # - uses: dart-lang/setup-dart@v1
-      - uses: bluefireteam/melos-action@dd3c344d731938d2ab2567a261f54a19a68b5f6a
+      - uses: dart-lang/setup-dart@v1
+      - uses: bluefireteam/melos-action@v3
         with:
           run-bootstrap: false
           melos-version: '3.0.1'
