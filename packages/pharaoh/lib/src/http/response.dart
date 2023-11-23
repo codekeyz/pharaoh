@@ -124,7 +124,7 @@ class Response extends Message<shelf.Body?> implements $Response {
       Response(request);
 
   @override
-  Response set(String headerKey, String headerValue) => Response(
+  Response header(String headerKey, String headerValue) => Response(
         _httpReq,
         headers: headers..[headerKey] = headerValue,
         body: body,
