@@ -1,12 +1,4 @@
-import 'dart:io';
-
-import 'package:collection/collection.dart';
-import 'package:http_parser/http_parser.dart';
-import 'package:mason_logger/mason_logger.dart';
-
-import '../pharaoh.dart';
-import 'middleware/body_parser.dart';
-import 'shelf_interop/shelf.dart' as shelf;
+part of 'core.dart';
 
 class $PharaohImpl implements Pharaoh {
   late final PharaohRouter _router;
