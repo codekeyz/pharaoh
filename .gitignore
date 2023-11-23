@@ -1,3 +1,4 @@
 **/pubspec_overrides.yaml
 .idea
 .dart_tool
+melos_pharaoh.iml
