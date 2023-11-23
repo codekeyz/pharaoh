@@ -15,6 +15,14 @@ abstract interface class RoutePathDefinitionContract<T> {
 
   T delete(String path, RequestHandlerFunc handler);
 
+  T head(String path, RequestHandlerFunc handler);
+
+  T patch(String path, RequestHandlerFunc handler);
+
+  T options(String path, RequestHandlerFunc handler);
+
+  T trace(String path, RequestHandlerFunc handler);
+
   T use(HandlerFunc reqResNext, [Route? route]);
 }
 
@@ -82,6 +90,30 @@ mixin RouterMixin<T extends RouteHandler> on RouteHandler
   @override
   T delete(String path, RequestHandlerFunc handler) {
     _group.add(RequestHandler(handler, Route(path, [HTTPMethod.DELETE])));
+    return this as T;
+  }
+
+  @override
+  T head(String path, RequestHandlerFunc handler) {
+    _group.add(RequestHandler(handler, Route(path, [HTTPMethod.HEAD])));
+    return this as T;
+  }
+
+  @override
+  T patch(String path, RequestHandlerFunc handler) {
+    _group.add(RequestHandler(handler, Route(path, [HTTPMethod.PATCH])));
+    return this as T;
+  }
+
+  @override
+  T options(String path, RequestHandlerFunc handler) {
+    _group.add(RequestHandler(handler, Route(path, [HTTPMethod.OPTIONS])));
+    return this as T;
+  }
+
+  @override
+  T trace(String path, RequestHandlerFunc handler) {
+    _group.add(RequestHandler(handler, Route(path, [HTTPMethod.TRACE])));
     return this as T;
   }
 
