@@ -1,0 +1,21 @@
+name: pharaoh
+description: Fast, unopinionated, minimalist web framework for Dart. Heavily inspired by ExpressJS
+version: 0.0.4
+repository: https://github.com/codekeyz/pharaoh
+
+environment:
+  sdk: ^3.0.0
+
+dependencies:
+  meta: ^1.11.0
+  mime: ^1.0.4
+  collection: ^1.18.0
+  http_parser: ^4.0.2
+  path_to_regexp: ^0.4.0
+  mason_logger: ^0.2.10
+  crypto: ^3.0.3
+  # We only need this to implement inter-operability for shelf
+  shelf: ^1.4.1
+
+dev_dependencies:
+  spookie: ^1.0.1

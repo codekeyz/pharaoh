@@ -11,5 +11,4 @@ dependencies:
   dart_jsonwebtoken: ^2.12.1
 
 dev_dependencies:
-  lints: ^3.0.0
   spookie: ^1.0.1

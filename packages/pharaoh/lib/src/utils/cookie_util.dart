@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
-import 'package:pharaoh/src/utils/utils.dart';
+import './utils.dart';
 
 /// Sign the given [val] with [secret].
 String sign(String val, String secret) {

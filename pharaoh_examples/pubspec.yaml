@@ -12,7 +12,6 @@ dependencies:
   shelf_helmet: ^2.1.1
   shelf_cors_headers: ^0.1.5
   pharaoh_static:
-    path: ../packages/pharaoh_static
 
 dev_dependencies:
   lints: ^3.0.0
