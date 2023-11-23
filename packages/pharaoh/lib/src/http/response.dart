@@ -2,11 +2,12 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:http_parser/http_parser.dart';
 
-import '../utils/cookie_util.dart' as cookieutil;
+import '../utils/utils.dart';
 import '../utils/exceptions.dart';
 import '../shelf_interop/shelf.dart' as shelf;
 import 'message.dart';
 import 'request.dart';
+import 'session.dart';
 
 final applicationOctetStreamType = ContentType('application', 'octet-stream');
 
@@ -17,23 +18,11 @@ abstract interface class $Response {
   ///
   /// [name] and [value] must be composed of valid characters according to RFC
   /// 6265.
-  ///
-  /// [expires] The time at which the cookie expires.
-  ///
-  /// By default the value of `httpOnly` will be set to `true`.
   Response cookie(
     String name,
-    Object? value, {
-    String? domain,
-    String? secret,
-    DateTime? expires,
-    Duration? maxAge,
-    SameSite? sameSite,
-    String path = '/',
-    bool secure = false,
-    bool signed = false,
-    bool httpOnly = false,
-  });
+    Object? value, [
+    CookieOpts opts = const CookieOpts(),
+  ]);
 
   Response type(ContentType type);
 
@@ -309,36 +298,26 @@ class Response extends Message<shelf.Body?> implements $Response {
   @override
   Response cookie(
     String name,
-    Object? value, {
-    String? domain,
-    String? secret,
-    DateTime? expires,
-    Duration? maxAge,
-    SameSite? sameSite,
-    String path = '/',
-    bool secure = false,
-    bool signed = false,
-    bool httpOnly = false,
-  }) {
+    Object? value, [
+    CookieOpts opts = const CookieOpts(),
+  ]) {
     if (value is! String) value = 'j:${jsonEncode(value)}';
-    if (signed) {
+    if (opts.signed) {
+      final secret = opts.secret;
       if (secret == null) {
         throw PharaohException.value(
             'cookieParser("secret") required for signed cookies');
       }
-      value = 's:${cookieutil.sign(value, secret)}';
+      value = 's:${signValue(value, secret)}';
     }
 
     final cookie = Cookie(name, Uri.encodeComponent(value))
-      ..httpOnly = httpOnly
-      ..domain = domain
-      ..path = path
-      ..secure = secure
-      ..sameSite = sameSite;
-    if (maxAge != null) {
-      cookie.expires = DateTime.now().add(maxAge);
-      cookie.maxAge = maxAge.inSeconds;
-    }
+      ..httpOnly = opts.httpOnly
+      ..domain = opts.domain
+      ..path = opts.path
+      ..secure = opts.secure
+      ..sameSite = opts.sameSite
+      ..setMaxAge(opts.maxAge);
 
     _cookies.add(cookie);
     headers[HttpHeaders.setCookieHeader] = _cookies;

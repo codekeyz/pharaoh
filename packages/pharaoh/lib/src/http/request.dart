@@ -4,11 +4,12 @@ import 'package:http_parser/http_parser.dart';
 
 import '../utils/exceptions.dart';
 import 'message.dart';
+import 'session.dart';
 
 // ignore: constant_identifier_names
 enum HTTPMethod { GET, HEAD, POST, PUT, DELETE, ALL, PATCH, OPTIONS, TRACE }
 
-getHttpMethod(HttpRequest req) => switch (req.method) {
+HTTPMethod getHttpMethod(HttpRequest req) => switch (req.method) {
       'GET' => HTTPMethod.GET,
       'HEAD' => HTTPMethod.HEAD,
       'POST' => HTTPMethod.POST,
@@ -45,7 +46,7 @@ abstract interface class $Request<T> {
 
   List<Cookie> get cookies;
 
-  HttpSession? get session;
+  Session? get session;
 
   T? get body;
 
@@ -58,6 +59,8 @@ class Request extends Message<dynamic> implements $Request<dynamic> {
   final HttpRequest _req;
   final Map<String, dynamic> _params = {};
   final Map<String, dynamic> _context = {};
+
+  Session? _session;
 
   Request._(this._req) : super(_req, headers: {}) {
     req.headers.forEach((name, values) => headers[name] = values);
@@ -122,7 +125,11 @@ class Request extends Message<dynamic> implements $Request<dynamic> {
   List<Cookie> get cookies => _req.cookies;
 
   @override
-  HttpSession? get session => _req.session;
+  Session? get session => _session;
+
+  set session(Session? session) {
+    _session = session;
+  }
 
   @override
   Object? operator [](String name) => _context[name];

@@ -15,6 +15,7 @@ dependencies:
   mason_logger: ^0.2.10
   crypto: ^3.0.3
   uuid: ^4.2.1
+  
   # We only need this to implement inter-operability for shelf
   shelf: ^1.4.1
 
