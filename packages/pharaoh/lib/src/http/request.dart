@@ -45,6 +45,8 @@ abstract interface class $Request<T> {
 
   List<Cookie> get cookies;
 
+  HttpSession? get session;
+
   T? get body;
 
   Object? operator [](String name);
@@ -118,6 +120,9 @@ class Request extends Message<dynamic> implements $Request<dynamic> {
 
   @override
   List<Cookie> get cookies => _req.cookies;
+
+  @override
+  HttpSession? get session => _req.session;
 
   @override
   Object? operator [](String name) => _context[name];
