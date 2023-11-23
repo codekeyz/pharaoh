@@ -1,3 +1,3 @@
 # pharaoh_examples
 
-[See Examples](../example/README.md)
+[See Examples](../packages/pharaoh/example/README.md)
