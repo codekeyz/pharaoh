@@ -19,11 +19,13 @@ HandlerFunc session(SessionConfig config) {
     var sessionId = req.cookies.firstWhereOrNull((e) => e.name == name)?.value;
     if (sessionId != null) {
       final session = await store.get(sessionId);
-      if (session != null && session.valid) {
-        await store.set(sessionId, session.resetMaxAge());
-        return next();
+      if (session != null) {
+        if (session.valid) {
+          await store.set(sessionId, session.resetMaxAge());
+          return next();
+        }
+        await store.destroy(sessionId);
       }
-      await store.destroy(sessionId);
     }
 
     sessionId = await config.generateId?.call(req) ?? uuid.v4();

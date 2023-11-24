@@ -5,8 +5,6 @@ import 'dart:io';
 import 'cookie.dart';
 import 'request.dart';
 
-enum SessionUnset { keep, destroy }
-
 class Session {
   static const String name = 'connect.sid';
 
@@ -55,7 +53,6 @@ class SessionConfig {
   final String? name;
   final FutureOr<String> Function(Request request)? generateId;
   final String secret;
-  final SessionUnset unset;
   final SessionStore? store;
   final CookieOpts cookieOpts;
 
@@ -64,7 +61,6 @@ class SessionConfig {
     this.generateId,
     this.name,
     this.store,
-    this.unset = SessionUnset.destroy,
     this.cookieOpts = const CookieOpts(),
   });
 }
