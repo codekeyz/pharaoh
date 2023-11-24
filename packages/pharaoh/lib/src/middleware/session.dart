@@ -1,59 +1,43 @@
 import 'dart:async';
 
+import 'package:collection/collection.dart';
+import 'package:pharaoh/src/http/request.dart';
+import 'package:uuid/uuid.dart';
+
+import '../http/cookie.dart';
 import '../http/session.dart';
-import '../http/request.dart';
 import '../router/handler.dart';
 
-enum SessionUnset { keep, destroy }
-
-abstract interface class SessionStore {
-  FutureOr<List<dynamic>> get sessions;
-
-  FutureOr<void> clear();
-
-  FutureOr<void> destroy(String sessionId);
-
-  FutureOr<void> set(String sessionId, Object? value);
-
-  FutureOr<dynamic> get(String sessionId);
-
-  FutureOr<void> touch(String sessionId, Object? session);
-}
-
-class SessionConfig {
-  final FutureOr<String> Function(Request request)? generateId;
-  final bool resaveSession;
-  final bool saveUninitializedSession;
-  final String secret;
-  final SessionUnset unset;
-  final SessionStore? store;
-  final CookieOpts cookieOpts;
-
-  const SessionConfig({
-    required this.secret,
-    this.generateId,
-    this.store,
-    this.resaveSession = true,
-    this.saveUninitializedSession = true,
-    this.unset = SessionUnset.destroy,
-    this.cookieOpts = const CookieOpts(),
-  });
-}
-
 HandlerFunc session(SessionConfig config) {
-  final cookieOpts = config.cookieOpts;
-  final sessionStore = config.store ?? InMemoryStore();
+  final opts = config.cookieOpts..validate();
+  final SessionStore store = config.store ?? InMemoryStore();
+  final uuid = Uuid();
 
   return (req, res, next) async {
-    final session = req.session;
-    if (session != null) return next();
+    if (!req.path.startsWith(opts.path)) return next();
+    if (req.session?.valid ?? false) return next();
 
-    final cookiePath = cookieOpts.path;
-    if (cookiePath != req.path) return next();
+    final name = config.name ?? Session.name;
+    var sessionId = req.cookies.firstWhereOrNull((e) => e.name == name)?.value;
+    if (sessionId != null) {
+      final session = await store.get(sessionId);
+      if (session != null && session.valid) {
+        await store.set(sessionId, session.resetMaxAge());
+        return next();
+      }
+      await store.destroy(sessionId);
+    }
 
-    final sessionId = await config.generateId!.call(req);
+    sessionId = await config.generateId?.call(req) ?? uuid.v4();
+    final cookie = bakeCookie(name, sessionId, opts);
+    final session = Session(sessionId, cookie, store: store);
+    await store.set(sessionId, session);
 
-    // final sessionId = config.generateId()
-    // if (req.path != cookieOpts.path) return next();
+    /// put sessionId in context and add cookie to response
+    res = res.cookie(name, sessionId);
+    req[RequestContext.session] = session;
+    req[RequestContext.sessionId] = sessionId;
+
+    next((req: req, res: res));
   };
 }
