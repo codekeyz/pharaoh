@@ -1,11 +1,11 @@
 part of 'core.dart';
 
-class $PharaohImpl implements Pharaoh {
+class _$PharaohImpl implements Pharaoh {
   late final PharaohRouter _router;
   late final HttpServer _server;
   late final Logger _logger;
 
-  $PharaohImpl()
+  _$PharaohImpl()
       : _logger = Logger(),
         _router = PharaohRouter() {
     _router.use(bodyParser);

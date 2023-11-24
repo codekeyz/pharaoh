@@ -46,6 +46,8 @@ abstract interface class $Request<T> {
 
   List<Cookie> get cookies;
 
+  String? get sessionId;
+
   Session? get session;
 
   T? get body;
@@ -53,14 +55,18 @@ abstract interface class $Request<T> {
   Object? operator [](String name);
 }
 
-class Request extends Message<dynamic> implements $Request<dynamic> {
-  static const String authKey = 'auth';
+class RequestContext {
+  static const String phar = 'phar';
+  static const String auth = '$phar.auth';
+  static const String cookies = '$phar.cookies';
+  static const String session = '$phar.session.cookie';
+  static const String sessionId = '$phar.session.id';
+}
 
+class Request extends Message<dynamic> implements $Request<dynamic> {
   final HttpRequest _req;
   final Map<String, dynamic> _params = {};
   final Map<String, dynamic> _context = {};
-
-  Session? _session;
 
   Request._(this._req) : super(_req, headers: {}) {
     req.headers.forEach((name, values) => headers[name] = values);
@@ -122,14 +128,13 @@ class Request extends Message<dynamic> implements $Request<dynamic> {
   String get protocolVersion => _req.protocolVersion;
 
   @override
-  List<Cookie> get cookies => _req.cookies;
+  List<Cookie> get cookies => _context[RequestContext.cookies] ?? [];
 
   @override
-  Session? get session => _session;
+  Session? get session => _context[RequestContext.session];
 
-  set session(Session? session) {
-    _session = session;
-  }
+  @override
+  String? get sessionId => _context[RequestContext.sessionId];
 
   @override
   Object? operator [](String name) => _context[name];
@@ -139,7 +144,7 @@ class Request extends Message<dynamic> implements $Request<dynamic> {
   }
 
   @override
-  dynamic get auth => _context[Request.authKey];
+  dynamic get auth => _context[RequestContext.auth];
 
-  set auth(dynamic value) => _context[Request.authKey] = value;
+  set auth(dynamic value) => _context[RequestContext.auth] = value;
 }

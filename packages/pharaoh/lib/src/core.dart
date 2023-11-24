@@ -15,7 +15,7 @@ import './shelf_interop/shelf.dart' as shelf;
 part 'core_impl.dart';
 
 abstract class Pharaoh implements RoutePathDefinitionContract<Pharaoh> {
-  factory Pharaoh() => $PharaohImpl();
+  factory Pharaoh() => _$PharaohImpl();
 
   PharaohRouter router();
 
