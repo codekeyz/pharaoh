@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:collection/collection.dart';
 import 'package:pharaoh/src/http/request.dart';
 import 'package:uuid/uuid.dart';
