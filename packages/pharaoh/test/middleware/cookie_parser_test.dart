@@ -81,5 +81,39 @@ void main() {
             .test();
       });
     });
+
+    group('when no cookies are sent', () {
+      test('should default req.cookies to []', () async {
+        final app = Pharaoh().use(cookieParser()).get(
+          '/',
+          (req, res) {
+            final cookies = req.cookies.map((e) => e.toString()).toList();
+            return res.json(cookies);
+          },
+        );
+
+        await (await request(app))
+            .get('/')
+            .expectStatus(200)
+            .expectBody('[]')
+            .test();
+      });
+
+      test('should default req.signedCookies to []', () async {
+        final app = Pharaoh().use(cookieParser()).get(
+          '/',
+          (req, res) {
+            final cookies = req.signedCookies.map((e) => e.toString()).toList();
+            return res.json(cookies);
+          },
+        );
+
+        await (await request(app))
+            .get('/')
+            .expectStatus(200)
+            .expectBody('[]')
+            .test();
+      });
+    });
   });
 }
