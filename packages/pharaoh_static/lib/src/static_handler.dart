@@ -62,7 +62,7 @@ HandlerFunc createStaticHandler(
       if (fallthrough) return next();
       return next(res
           .status(HttpStatus.methodNotAllowed)
-          .set(HttpHeaders.acceptHeader, 'GET, HEAD')
+          .header(HttpHeaders.acceptHeader, 'GET, HEAD')
           .end());
     }
 
@@ -214,7 +214,7 @@ Future<Response> _handleFile(
   final body =
       request.method == HTTPMethod.HEAD ? Body(null) : Body(file.openRead());
   response.body = body;
-  return response.set(HttpHeaders.contentLengthHeader, '${stat.size}').end();
+  return response.header(HttpHeaders.contentLengthHeader, '${stat.size}').end();
 }
 
 final _bytesMatcher = RegExp(r'^bytes=(\d*)-(\d*)$');
@@ -266,7 +266,7 @@ Response? _fileRangeResponse(
   }
   if (start >= actualLength) {
     Response res = response;
-    headers.forEach((key, value) => res = response.set(key, value));
+    headers.forEach((key, value) => res = response.header(key, value));
     return res.status(HttpStatus.requestedRangeNotSatisfiable).end();
   }
 
@@ -281,7 +281,7 @@ Response? _fileRangeResponse(
   response.body = body;
 
   Response res = response;
-  headers.forEach((key, value) => res = response.set(key, value));
+  headers.forEach((key, value) => res = response.header(key, value));
 
   return res.status(HttpStatus.partialContent).end();
 }
