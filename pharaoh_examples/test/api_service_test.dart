@@ -6,7 +6,7 @@ import 'package:test/test.dart';
 
 void main() async {
   group('api_service_example', () {
-    setUpAll(() => Future.sync(() => apisvc.main()));
+    setUpAll(() => Future.sync(() => apisvc.main({'port': 0})));
 
     tearDownAll(() => apisvc.app.shutdown());
 

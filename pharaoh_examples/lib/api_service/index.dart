@@ -27,7 +27,7 @@ var userRepos = {
 
 final app = Pharaoh();
 
-void main() async {
+void main([args]) async {
   /// if we wanted to supply more than JSON, we could
   /// use something similar to the content-negotiation
   /// example.
@@ -75,5 +75,5 @@ void main() async {
     return res.notFound();
   });
 
-  await app.listen(port: 3000);
+  await app.listen(port: args?['port'] ?? 3000);
 }
