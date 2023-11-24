@@ -1,68 +1,51 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
-
-import 'cookie.dart';
-import 'request.dart';
 
 class Session {
-  static const String name = 'connect.sid';
-
-  late Cookie _cookie;
+  static const String name = 'pharaoh.sid';
 
   final String id;
-  final SessionStore _store;
+  final DateTime? expiry;
   final int? originalMaxAge;
 
+  final SessionStore _store;
+
+  Map<String, dynamic>? _dataBag;
+
   Session(
-    this.id,
-    Cookie cookie, {
+    this.id, {
+    Duration? maxAge,
     required SessionStore store,
   })  : _store = store,
-        _cookie = cookie,
-        originalMaxAge = cookie.maxAge;
+        originalMaxAge = maxAge?.inSeconds,
+        expiry = maxAge == null ? null : DateTime.now().add(maxAge);
 
-  Cookie get cookie => _cookie;
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'expiry': expiry?.toIso8601String(),
+        'originalMaxAge': originalMaxAge,
+        'databag': _dataBag,
+      };
 
-  set cookie(Cookie cookie) => _cookie = cookie;
+  void operator []=(String name, dynamic value) {
+    _dataBag ??= {};
+    _dataBag?[name] = value;
+  }
+
+  dynamic operator [](String key) => _dataBag?[key];
 
   @override
-  String toString() => jsonEncode({'cookie': cookie});
-
-  Session resetMaxAge() {
-    final seconds = originalMaxAge;
-    if (seconds == null)
-      _cookie.setMaxAge(null);
-    else
-      _cookie.setMaxAge(Duration(seconds: seconds));
-    return this;
-  }
+  String toString() => jsonEncode(toJson());
 
   FutureOr<void> save() => _store.set(id, this);
 
   FutureOr<void> destroy() => _store.destroy(id);
 
   bool get valid {
-    final expiry = cookie.expires;
-    if (expiry == null) return true;
-    return expiry.isAfter(DateTime.now());
+    final exp = expiry;
+    if (exp == null) return true;
+    return exp.isAfter(DateTime.now());
   }
-}
-
-class SessionConfig {
-  final String? name;
-  final FutureOr<String> Function(Request request)? generateId;
-  final String secret;
-  final SessionStore? store;
-  final CookieOpts cookieOpts;
-
-  const SessionConfig({
-    required this.secret,
-    this.generateId,
-    this.name,
-    this.store,
-    this.cookieOpts = const CookieOpts(),
-  });
 }
 
 abstract interface class SessionStore {
