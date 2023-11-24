@@ -39,16 +39,20 @@ class CookieOpts {
 }
 
 extension CookieExtension on Cookie {
-  void setMaxAge(Duration? value) {
-    if (value == null) {
+  void setMaxAge(Duration? duration) {
+    if (duration == null) {
       expires = null;
       maxAge = null;
       return;
     }
 
-    expires = DateTime.now().add(value);
-    maxAge = value.inSeconds;
+    expires = DateTime.now().add(duration);
+    maxAge = duration.inSeconds;
   }
+
+  String get decodedValue => Uri.decodeComponent(value);
+
+  bool get signed => decodedValue.startsWith('s:');
 }
 
 Cookie bakeCookie(String name, Object? value, CookieOpts opts) {

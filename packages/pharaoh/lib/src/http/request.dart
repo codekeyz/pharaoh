@@ -46,6 +46,8 @@ abstract interface class $Request<T> {
 
   List<Cookie> get cookies;
 
+  List<Cookie> get signedCookies;
+
   String? get sessionId;
 
   Session? get session;
@@ -58,7 +60,10 @@ abstract interface class $Request<T> {
 class RequestContext {
   static const String phar = 'phar';
   static const String auth = '$phar.auth';
+
+  /// cookies & session
   static const String cookies = '$phar.cookies';
+  static const String signedCookies = '$phar.signedcookies';
   static const String session = '$phar.session.cookie';
   static const String sessionId = '$phar.session.id';
 }
@@ -129,6 +134,10 @@ class Request extends Message<dynamic> implements $Request<dynamic> {
 
   @override
   List<Cookie> get cookies => _context[RequestContext.cookies] ?? [];
+
+  @override
+  List<Cookie> get signedCookies =>
+      _context[RequestContext.signedCookies] ?? [];
 
   @override
   Session? get session => _context[RequestContext.session];

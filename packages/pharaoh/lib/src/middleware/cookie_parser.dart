@@ -1,24 +1,36 @@
+import 'dart:io';
+
+import 'package:pharaoh/src/utils/utils.dart';
+
 import '../http/cookie.dart';
 import '../http/request.dart';
 import '../router/handler.dart';
-import '../utils/utils.dart';
 
 HandlerFunc cookieParser({CookieOpts opts = const CookieOpts()}) {
   opts.validate();
 
   return (req, res, next) async {
-    final rawCookies = req.req.cookies;
-    var parsedCookies = req.cookies;
-    if (rawCookies.isEmpty || parsedCookies.isNotEmpty) return next();
+    final rawcookies = req.req.cookies;
+    if (rawcookies.isEmpty) return next();
+
+    final unSignedCookies = rawcookies.where((e) => !e.signed).toList();
+    var signedCookies = rawcookies.where((e) => e.signed).toList();
 
     final secret = opts.secret;
-    if (secret != null) {
-      parsedCookies = rawCookies.map((e) {
-        final val = unsignValue(e.value, secret);
-        return val == null ? e : (e..value = val);
-      }).toList();
+    if (secret != null && signedCookies.isNotEmpty) {
+      final verifiedCookies = <Cookie>[];
+
+      for (final cookie in signedCookies) {
+        final value = cookie.decodedValue;
+        final realValue = unsignValue(value.substring(2), secret);
+        if (realValue != null) verifiedCookies.add(cookie..value = realValue);
+      }
+      signedCookies = verifiedCookies;
     }
 
-    next(req..[RequestContext.cookies] = parsedCookies);
+    req[RequestContext.cookies] = unSignedCookies;
+    req[RequestContext.signedCookies] = signedCookies;
+
+    next(req);
   };
 }
