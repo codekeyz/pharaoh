@@ -24,7 +24,7 @@ class CookieOpts {
     this.maxAge,
     this.sameSite,
     this.secret,
-    this.httpOnly = true,
+    this.httpOnly = false,
     this.signed = false,
     this.secure = false,
     this.path = '/',

@@ -1,4 +1,3 @@
-import 'package:pharaoh/src/http/cookie.dart';
 import 'package:pharaoh/src/http/session.dart';
 import 'package:spookie/spookie.dart';
 
@@ -11,8 +10,7 @@ void main() {
 
       setUpAll(() {
         store = InMemoryStore();
-        session = Session(sessionId, bakeCookie('name', 'chima', CookieOpts()),
-            store: store);
+        session = Session(sessionId, store: store);
       });
 
       test('should have empty sessions when initialized', () async {
