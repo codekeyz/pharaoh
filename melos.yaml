@@ -26,7 +26,7 @@ scripts:
 
   tests:
     run: |
-      melos exec -c 1  -- "dart test ."
+      melos exec -c 1  -- "dart test ." --fail-fast
     description: Run all static analysis checks.
 
   analyze:
