@@ -11,7 +11,7 @@ import 'request.dart';
 final applicationOctetStreamType = ContentType('application', 'octet-stream');
 
 abstract interface class $Response {
-  Response set(String headerKey, String headerValue);
+  Response header(String headerKey, String headerValue);
 
   /// Creates a new cookie setting the name and value.
   ///
@@ -124,7 +124,7 @@ class Response extends Message<shelf.Body?> implements $Response {
       Response(request);
 
   @override
-  Response set(String headerKey, String headerValue) => Response(
+  Response header(String headerKey, String headerValue) => Response(
         _httpReq,
         headers: headers..[headerKey] = headerValue,
         body: body,
