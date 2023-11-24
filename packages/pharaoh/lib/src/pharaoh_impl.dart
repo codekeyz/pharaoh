@@ -73,6 +73,30 @@ class $PharaohImpl implements Pharaoh {
   }
 
   @override
+  Pharaoh head(String path, RequestHandlerFunc handler) {
+    _router.head(path, handler);
+    return this;
+  }
+
+  @override
+  Pharaoh patch(String path, RequestHandlerFunc handler) {
+    _router.patch(path, handler);
+    return this;
+  }
+
+  @override
+  Pharaoh options(String path, RequestHandlerFunc handler) {
+    _router.options(path, handler);
+    return this;
+  }
+
+  @override
+  Pharaoh trace(String path, RequestHandlerFunc handler) {
+    _router.trace(path, handler);
+    return this;
+  }
+
+  @override
   Pharaoh use(HandlerFunc reqResNext, [Route? route]) {
     _router.use(reqResNext, route);
     return this;

@@ -56,7 +56,7 @@ void main() {
       final app = Pharaoh();
 
       app.use((req, res, next) {
-        res = res.set('content-type', 'text/plain; charset=iso-8859-1');
+        res = res.header('content-type', 'text/plain; charset=iso-8859-1');
 
         next(res.send('Hey'));
       });
@@ -73,7 +73,7 @@ void main() {
       final app = Pharaoh();
 
       app.use((req, res, next) {
-        res = res.set('content-type', 'text/plain; charset=iso-8859-1');
+        res = res.header('content-type', 'text/plain; charset=iso-8859-1');
         final buffer = Uint8List.fromList(utf8.encode("Hello World"));
 
         next(res.send(buffer));
