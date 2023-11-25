@@ -29,7 +29,7 @@ class Session {
 
   Map<String, dynamic> toJson() => {
         'id': id,
-        'databag': _dataBag,
+        'data': _dataBag,
         'cookie': cookie?.toString(),
         'expiry': expiry?.toIso8601String(),
         'originalMaxAge': cookie?.maxAge,
