@@ -58,17 +58,16 @@ HandlerFunc session({
         req.signedCookies.firstWhereOrNull((e) => e.name == name)?.value;
 
     if (req_sid != null) {
-      final s_ = await sessionStore.get(req_sid);
-      if (s_ != null) {
-        if (s_.valid) {
+      final session = await sessionStore.get(req_sid);
+      if (session != null) {
+        if (session.valid) {
           if (rolling) {
             final rolled = bakeCookie(name, req_sid, opts);
-            s_.cookie = rolled;
-            await sessionStore.set(req_sid, s_);
+            session.cookie = rolled;
+            await sessionStore.set(req_sid, session);
           }
-          return nextWithSession(s_, attachCookie: rolling);
+          return nextWithSession(session, attachCookie: rolling);
         }
-
         await sessionStore.destroy(req_sid);
       }
     }
