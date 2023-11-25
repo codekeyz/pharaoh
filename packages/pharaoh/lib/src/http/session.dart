@@ -1,21 +1,19 @@
-import 'dart:async';
-import 'dart:convert';
-import 'dart:io';
+part of '../middleware/session_mw.dart';
 
 class Session {
   static const String name = 'pharaoh.sid';
 
   final String id;
-  final SessionStore _store;
-
+  SessionStore? _store;
   Cookie? cookie;
+  Map<String, dynamic> _dataBag = {};
 
-  Map<String, dynamic>? _dataBag;
+  Session(this.id);
 
-  Session(
-    this.id, {
-    required SessionStore store,
-  }) : _store = store;
+  Session _withStore(SessionStore store) {
+    _store = store;
+    return this;
+  }
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -26,18 +24,17 @@ class Session {
       };
 
   void operator []=(String name, dynamic value) {
-    _dataBag ??= {};
-    _dataBag?[name] = value;
+    _dataBag[name] = value;
   }
 
-  dynamic operator [](String key) => _dataBag?[key];
+  dynamic operator [](String key) => _dataBag[key];
 
   @override
   String toString() => jsonEncode(toJson());
 
-  FutureOr<void> save() => _store.set(id, this);
+  FutureOr<void> save() => _store!.set(id, this);
 
-  FutureOr<void> destroy() => _store.destroy(id);
+  FutureOr<void> destroy() => _store!.destroy(id);
 
   FutureOr<void> resetMaxAge() async {
     final cookie_ = cookie;

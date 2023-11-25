@@ -1,12 +1,15 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
 
 import 'package:collection/collection.dart';
 import 'package:pharaoh/src/http/request.dart';
 import 'package:uuid/uuid.dart';
 
 import '../http/cookie.dart';
-import '../http/session.dart';
 import '../router/handler.dart';
+
+part '../http/session.dart';
 
 typedef GenSessionIdFunc = FutureOr<String> Function(Request request);
 
@@ -52,7 +55,7 @@ HandlerFunc session({
   return (req, res, next) async {
     void nextWithSession(Session session, {bool attachCookie = false}) async {
       if (attachCookie) res = res.withCookie(session.cookie!);
-      req[RequestContext.session] = session;
+      req[RequestContext.session] = session._withStore(sessionStore);
       req[RequestContext.sessionId] = session.id;
       return next((req: req, res: res));
     }
@@ -79,7 +82,7 @@ HandlerFunc session({
     }
 
     final sessionId = await genId?.call(req) ?? uuid.v4();
-    final session = Session(sessionId, store: sessionStore);
+    final session = Session(sessionId);
     final cookie = bakeCookie(name, sessionId, opts);
     session.cookie = cookie;
 

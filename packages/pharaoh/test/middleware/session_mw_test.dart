@@ -41,7 +41,7 @@ void main() {
     test('should do nothing if req.session exists', () async {
       final app = Pharaoh()
           .use((req, res, next) {
-            req[RequestContext.session] = Session('id', store: InMemoryStore());
+            req[RequestContext.session] = Session('id');
             next((req));
           })
           .use(session(secret: ''))

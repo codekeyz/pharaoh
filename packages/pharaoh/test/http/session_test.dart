@@ -1,4 +1,4 @@
-import 'package:pharaoh/src/http/session.dart';
+import 'package:pharaoh/pharaoh.dart';
 import 'package:spookie/spookie.dart';
 
 void main() {
@@ -10,7 +10,7 @@ void main() {
 
       setUpAll(() {
         store = InMemoryStore();
-        session = Session(sessionId, store: store);
+        session = Session(sessionId);
       });
 
       test('should have empty sessions when initialized', () async {

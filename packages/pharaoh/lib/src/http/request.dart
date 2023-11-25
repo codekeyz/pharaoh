@@ -2,9 +2,9 @@ import 'dart:io';
 
 import 'package:http_parser/http_parser.dart';
 
+import '../middleware/session_mw.dart';
 import '../utils/exceptions.dart';
 import 'message.dart';
-import 'session.dart';
 
 // ignore: constant_identifier_names
 enum HTTPMethod { GET, HEAD, POST, PUT, DELETE, ALL, PATCH, OPTIONS, TRACE }
