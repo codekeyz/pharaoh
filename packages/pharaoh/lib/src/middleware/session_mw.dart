@@ -28,10 +28,11 @@ typedef GenSessionIdFunc = FutureOr<String> Function(Request request);
 ///
 /// - [resave] Forces the session to be saved back to the session store,
 /// even if the session was never modified during the request.
+/// Default value is `false`
 ///
 /// - [genId] Function to call to generate a new session ID. Provide a
 /// function that returns a string that will be used as a session ID.
-/// The default value is [uuid]-[v4].
+/// Session ID is generated from [uuid]-[v4] by default.
 ///
 /// - [store] The session store instance, defaults to a new MemoryStore
 /// instance.
