@@ -43,6 +43,17 @@ void main() {
         final sessions = await store.sessions;
         expect(sessions, isEmpty);
       });
+
+      test('should have .modified :true if session data modified', () async {
+        final session = Session('some-new-session');
+        expect(session.modified, false);
+
+        session['name'] = 'Chima';
+        session['tag'] = '@codekeyz';
+        session['dogs'] = 2;
+
+        expect(session.modified, true);
+      });
     });
   });
 }
