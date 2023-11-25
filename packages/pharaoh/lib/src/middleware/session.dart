@@ -10,18 +10,34 @@ import '../router/handler.dart';
 
 typedef GenSessionIdFunc = FutureOr<String> Function(Request request);
 
+/// - [name] The name of the session ID cookie to set in the response
+/// (and read from in the request).
+/// The default value is `pharaoh.sid`.
+///
+/// - [saveUninitialized] Forces a session that is "uninitialized" to
+/// be saved to the store. A session is uninitialized when it is new
+/// but not modified. Choosing false is useful for implementing login sessions,
+///
+/// - [rolling] The expiration is reset to the original maxAge,
+/// resetting the expiration countdown and forces
+/// the session identifier cookie to be set on every response.
+///
+/// - [genId] Function to call to generate a new session ID. Provide a
+/// function that returns a string that will be used as a session ID.
+/// The default value is [uuid]-[v4].
+///
+/// - [store] The session store instance, defaults to a new MemoryStore
+/// instance.
+///
+/// - [cookie] Settings object for the session ID cookie. The default
+/// value is `{ path: '/', httpOnly: true, secure: false, maxAge: null }`.
 HandlerFunc session({
   String name = Session.name,
   bool saveUninitialized = false,
-  bool resave = true,
-
-  /// The expiration is reset to the original maxAge,
-  /// resetting the expiration countdown and forces
-  /// the session identifier cookie to be set on every response.
   bool rolling = false,
   GenSessionIdFunc? genId,
   SessionStore? store,
-  required CookieOpts cookie,
+  CookieOpts cookie = const CookieOpts(httpOnly: true, secure: false),
 }) {
   final opts = cookie..validate();
   final sessionStore = store ??= InMemoryStore();
@@ -43,17 +59,18 @@ HandlerFunc session({
 
     if (req_sid != null) {
       final s_ = await sessionStore.get(req_sid);
-      if (s_ != null && s_.valid) {
-        if (rolling) {
-          final rolled = bakeCookie(name, req_sid, opts);
-          s_.cookie = rolled;
-          await sessionStore.set(req_sid, s_);
+      if (s_ != null) {
+        if (s_.valid) {
+          if (rolling) {
+            final rolled = bakeCookie(name, req_sid, opts);
+            s_.cookie = rolled;
+            await sessionStore.set(req_sid, s_);
+          }
+          return nextWithSession(s_, attachCookie: rolling);
         }
 
-        return nextWithSession(s_, attachCookie: rolling);
+        await sessionStore.destroy(req_sid);
       }
-
-      await sessionStore.destroy(req_sid);
     }
 
     final sessionId = await genId?.call(req) ?? uuid.v4();
