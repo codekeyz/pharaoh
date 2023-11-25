@@ -23,6 +23,8 @@ abstract interface class $Response {
     CookieOpts opts = const CookieOpts(),
   ]);
 
+  Response withCookie(Cookie cookie);
+
   Response type(ContentType type);
 
   Response status(int code);
@@ -301,6 +303,13 @@ class Response extends Message<shelf.Body?> implements $Response {
     CookieOpts opts = const CookieOpts(),
   ]) {
     final cookie = bakeCookie(name, value, opts);
+    _cookies.add(cookie);
+    headers[HttpHeaders.setCookieHeader] = _cookies;
+    return this;
+  }
+
+  @override
+  Response withCookie(Cookie cookie) {
     _cookies.add(cookie);
     headers[HttpHeaders.setCookieHeader] = _cookies;
     return this;

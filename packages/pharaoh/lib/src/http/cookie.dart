@@ -30,6 +30,30 @@ class CookieOpts {
     this.path = '/',
   });
 
+  CookieOpts copyWith({
+    String? domain,
+    String? secret,
+    DateTime? expires,
+    Duration? maxAge,
+    SameSite? sameSite,
+    String? path,
+    bool? secure,
+    bool? signed,
+    bool? httpOnly,
+  }) {
+    return CookieOpts(
+      domain: domain ?? this.domain,
+      secret: secret ?? this.secret,
+      expires: expires ?? this.expires,
+      maxAge: maxAge ?? this.maxAge,
+      sameSite: sameSite ?? this.sameSite,
+      path: path ?? this.path,
+      secure: secure ?? this.secure,
+      signed: signed ?? this.signed,
+      httpOnly: httpOnly ?? this.httpOnly,
+    );
+  }
+
   void validate() {
     if (signed && secret == null) {
       throw PharaohException.value(
