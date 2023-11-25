@@ -31,15 +31,21 @@ typedef GenSessionIdFunc = FutureOr<String> Function(Request request);
 ///
 /// - [cookie] Settings object for the session ID cookie. The default
 /// value is `{ path: '/', httpOnly: true, secure: false, maxAge: null }`.
+///
+/// - [secret] This is the secret used to sign the session ID cookie.
+/// You can also provide it in [cookie.secret] options. But [secret] will
+/// will be used if both are set.
 HandlerFunc session({
   String name = Session.name,
+  String? secret,
   bool saveUninitialized = false,
   bool rolling = false,
   GenSessionIdFunc? genId,
   SessionStore? store,
   CookieOpts cookie = const CookieOpts(httpOnly: true, secure: false),
 }) {
-  final opts = cookie..validate();
+  if (secret != null) cookie = cookie.copyWith(secret: secret);
+  final opts = cookie..validate(requireSecret: true);
   final sessionStore = store ??= InMemoryStore();
   final uuid = Uuid();
 
