@@ -21,8 +21,7 @@ HandlerFunc cookieParser({CookieOpts opts = const CookieOpts()}) {
       final verifiedCookies = <Cookie>[];
 
       for (final cookie in signedCookies) {
-        final value = cookie.decodedValue;
-        final realValue = unsignValue(value.substring(2), secret);
+        final realValue = unsignValue(cookie.actualStr, secret);
         if (realValue != null) verifiedCookies.add(cookie..value = realValue);
       }
       signedCookies = verifiedCookies;

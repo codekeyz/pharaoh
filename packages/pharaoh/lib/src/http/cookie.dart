@@ -76,6 +76,17 @@ extension CookieExtension on Cookie {
 
   String get decodedValue => Uri.decodeComponent(value);
 
+  String get actualStr {
+    // s:foo-bar-baz --> foo-bar-bar
+    if (signed) return decodedValue.substring(2);
+    return decodedValue;
+  }
+
+  dynamic get actualObj {
+    if (!actualStr.startsWith('j:')) return actualStr;
+    return jsonDecode(actualStr);
+  }
+
   bool get signed => decodedValue.startsWith('s:');
 }
 
