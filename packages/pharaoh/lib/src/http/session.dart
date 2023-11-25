@@ -7,6 +7,8 @@ class Session {
   late final Map<String, dynamic> _dataBag;
   late final String hash;
 
+  bool resave = false;
+
   SessionStore? _store;
   Cookie? cookie;
 
@@ -17,9 +19,12 @@ class Session {
     hash = hashData(_dataBag);
   }
 
-  Session _withStore(SessionStore store) {
+  void _withStore(SessionStore store) {
     _store = store;
-    return this;
+  }
+
+  void _withConfig({bool resave = false}) {
+    this.resave = resave;
   }
 
   Map<String, dynamic> toJson() => {

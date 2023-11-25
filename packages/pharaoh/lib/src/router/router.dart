@@ -55,14 +55,22 @@ mixin RouterMixin<T extends RouteHandler> on RouteHandler
 
     ReqRes result = reqRes;
     bool canNext = false;
+
     while (handlerFncs.isNotEmpty) {
+      canNext = false;
       final handler = handlerFncs.removeAt(0);
       final data = await handler.handle(reqRes);
       result = data.reqRes;
       canNext = data.canNext;
 
       final breakOut = result.res.ended || !canNext;
-      if (breakOut) return (canNext: true, reqRes: result);
+      if (breakOut) break;
+    }
+
+    // persist session if it's configure to be saved
+    final session = result.req.session;
+    if (session != null && session.resave) {
+      await session.save();
     }
 
     return (canNext: canNext, reqRes: result);

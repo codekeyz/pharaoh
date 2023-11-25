@@ -26,6 +26,9 @@ typedef GenSessionIdFunc = FutureOr<String> Function(Request request);
 /// resetting the expiration countdown and forces
 /// the session identifier cookie to be set on every response.
 ///
+/// - [resave] Forces the session to be saved back to the session store,
+/// even if the session was never modified during the request.
+///
 /// - [genId] Function to call to generate a new session ID. Provide a
 /// function that returns a string that will be used as a session ID.
 /// The default value is [uuid]-[v4].
@@ -44,6 +47,7 @@ HandlerFunc session({
   String? secret,
   bool saveUninitialized = false,
   bool rolling = false,
+  bool resave = false,
   GenSessionIdFunc? genId,
   SessionStore? store,
   CookieOpts cookie = const CookieOpts(httpOnly: true, secure: false),
@@ -54,31 +58,38 @@ HandlerFunc session({
   final uuid = Uuid();
 
   return (req, res, next) async {
-    void nextWithSession(Session session, {bool attachCookie = false}) async {
+    void nextWithSession(
+      Session session, {
+      bool attachCookie = false,
+      bool? save,
+    }) async {
       if (attachCookie) res = res.withCookie(session.cookie!);
-      req[RequestContext.session] = session._withStore(sessionStore);
+
       req[RequestContext.sessionId] = session.id;
+      req[RequestContext.session] = session
+        .._withStore(sessionStore)
+        .._withConfig(resave: save ?? resave);
+
       return next((req: req, res: res));
     }
 
     if (!req.path.startsWith(opts.path)) return next();
     if (req.session?.valid ?? false) return next();
 
-    final req_sid =
+    final reqSid =
         req.signedCookies.firstWhereOrNull((e) => e.name == name)?.value;
-
-    if (req_sid != null) {
-      final session = await sessionStore.get(req_sid);
+    if (reqSid != null) {
+      final session = await sessionStore.get(reqSid);
       if (session != null) {
         if (session.valid) {
           if (rolling) {
-            final rolled = bakeCookie(name, req_sid, opts);
+            final rolled = bakeCookie(name, reqSid, opts);
             session.cookie = rolled;
-            await sessionStore.set(req_sid, session);
+            await sessionStore.set(reqSid, session);
           }
           return nextWithSession(session, attachCookie: rolling);
         }
-        await sessionStore.destroy(req_sid);
+        await sessionStore.destroy(reqSid);
       }
     }
 
@@ -87,10 +98,10 @@ HandlerFunc session({
     final cookie = bakeCookie(name, sessionId, opts);
     session.cookie = cookie;
 
-    if (saveUninitialized) {
-      await sessionStore.set(sessionId, session);
-    }
-
-    return nextWithSession(session, attachCookie: true);
+    return nextWithSession(
+      session,
+      attachCookie: true,
+      save: saveUninitialized,
+    );
   };
 }
