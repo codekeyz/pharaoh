@@ -54,8 +54,8 @@ class CookieOpts {
     );
   }
 
-  void validate({bool requireSecret = false}) {
-    if ((signed || requireSecret) && secret == null) {
+  void validate() {
+    if (signed && secret == null) {
       throw PharaohException.value(
           'CookieOpts("secret") required for signed cookies');
     }

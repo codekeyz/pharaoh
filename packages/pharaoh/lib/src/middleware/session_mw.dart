@@ -45,7 +45,7 @@ HandlerFunc session({
   CookieOpts cookie = const CookieOpts(httpOnly: true, secure: false),
 }) {
   if (secret != null) cookie = cookie.copyWith(secret: secret);
-  final opts = cookie..validate(requireSecret: true);
+  final opts = cookie.copyWith(signed: true)..validate();
   final sessionStore = store ??= InMemoryStore();
   final uuid = Uuid();
 
