@@ -69,7 +69,7 @@ mixin RouterMixin<T extends RouteHandler> on RouteHandler
 
     // persist session if it's configure to be saved
     final session = result.req.session;
-    if (session != null && session.resave) {
+    if (session != null && (session.modified || session.resave)) {
       await session.save();
     }
 
