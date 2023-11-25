@@ -4,11 +4,18 @@ class Session {
   static const String name = 'pharaoh.sid';
 
   final String id;
+  late final Map<String, dynamic> _dataBag;
+  late final String hash;
+
   SessionStore? _store;
   Cookie? cookie;
-  Map<String, dynamic> _dataBag = {};
 
-  Session(this.id);
+  Session(
+    this.id, {
+    Map<String, dynamic> data = const {},
+  }) : _dataBag = {...data} {
+    hash = hashData(_dataBag);
+  }
 
   Session _withStore(SessionStore store) {
     _store = store;
@@ -50,6 +57,8 @@ class Session {
     if (exp == null) return true;
     return exp.isAfter(DateTime.now());
   }
+
+  bool get modified => hash != hashData(_dataBag);
 
   DateTime? get expiry => cookie?.expires;
 }

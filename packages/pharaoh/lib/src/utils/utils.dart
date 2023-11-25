@@ -46,3 +46,8 @@ String? unsignValue(String input, String secret) {
   final valid = safeCompare(expectedInput, input);
   return valid ? tentativeValue : null;
 }
+
+String hashData(dynamic sess) {
+  if (sess is! String) sess = jsonEncode(sess);
+  return sha1.convert(utf8.encode(sess)).toString();
+}
