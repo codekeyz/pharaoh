@@ -77,9 +77,25 @@ mixin RouterMixin<T extends RouteHandler> on RouteHandler
 
     /// deal with sessions
     final session = req.session;
-    if (session != null && (session.modified || session.resave)) {
-      await session.save();
-      res = res.withCookie(session.cookie!);
+    if (session != null) {
+      if (session.saveUninitialized) {
+        await session.save();
+        res = res.withCookie(session.cookie!);
+      } else if (!session.saveUninitialized) {
+        if (session.modified) {
+          await session.save();
+          res = res.withCookie(session.cookie!);
+        }
+      } else if (session.resave) {
+        print('Resave');
+      }
+
+      // if (session.resave || session.saveUninitialized) {
+      //   if (session.sendcookie) {
+      //     res = res.withCookie(session.cookie!);
+      //   }
+      //   await session.save();
+      // }
     }
 
     return (req: req, res: res);
