@@ -51,14 +51,13 @@ mixin RouterMixin<T extends RouteHandler> on RouteHandler
       );
     }
 
-    final handlerFncs = List<RouteHandler>.from(handlers);
+    final handlerStream = Stream.fromIterable(handlers);
 
     ReqRes result = reqRes;
     bool canNext = false;
 
-    while (handlerFncs.isNotEmpty) {
+    await for (final handler in handlerStream) {
       canNext = false;
-      final handler = handlerFncs.removeAt(0);
       final data = await handler.handle(reqRes);
       result = data.reqRes;
       canNext = data.canNext;
