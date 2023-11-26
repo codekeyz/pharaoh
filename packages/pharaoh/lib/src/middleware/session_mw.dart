@@ -80,14 +80,10 @@ HandlerFunc session({
     final reqSid =
         req.signedCookies.firstWhereOrNull((e) => e.name == name)?.value;
     if (reqSid != null) {
-      final session = await sessionStore.get(reqSid);
+      var session = await sessionStore.get(reqSid);
       if (session != null) {
         if (session.valid) {
-          if (rolling) {
-            final rolled = bakeCookie(name, reqSid, opts);
-            session.cookie = rolled;
-            await sessionStore.set(reqSid, session);
-          }
+          if (rolling) session = session..resetMaxAge();
           return nextWithSession(session, attachCookie: rolling);
         }
         await sessionStore.destroy(reqSid);

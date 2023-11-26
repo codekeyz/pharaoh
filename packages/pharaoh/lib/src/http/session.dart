@@ -27,6 +27,13 @@ class Session {
     this.resave = resave;
   }
 
+  void resetMaxAge() {
+    final cookie_ = cookie;
+    if (cookie_ == null || cookie_.maxAge == null) return;
+    final expires = DateTime.now().add(Duration(seconds: cookie_.maxAge!));
+    cookie = cookie_..expires = expires;
+  }
+
   Map<String, dynamic> toJson() => {
         'id': id,
         'data': _dataBag,
@@ -47,15 +54,6 @@ class Session {
   FutureOr<void> save() => _store!.set(id, this);
 
   FutureOr<void> destroy() => _store!.destroy(id);
-
-  FutureOr<void> resetMaxAge() async {
-    final cookie_ = cookie;
-    if (cookie_ == null || cookie_.maxAge == null) return;
-
-    final expires = DateTime.now().add(Duration(seconds: cookie_.maxAge!));
-    cookie = cookie_..expires = expires;
-    return save();
-  }
 
   bool get valid {
     final exp = expiry;
