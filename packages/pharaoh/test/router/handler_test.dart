@@ -112,11 +112,9 @@ void main() {
 
       listResultList.clear();
 
-      final shortLivedChain = testChain3.chain(
-        (req, res, next) {
-          next(res.end());
-        },
-      ).chain(testChain2);
+      final shortLivedChain = testChain3
+          .chain((req, res, next) => next(res.end()))
+          .chain(testChain2);
 
       await (await request(getApp(shortLivedChain))).get('/test').test();
       expect(listResultList, [3, 1, 3, 2, 1]);
