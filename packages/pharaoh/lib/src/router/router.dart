@@ -67,12 +67,22 @@ mixin RouterMixin<T extends RouteHandler> on RouteHandler
       if (breakOut) break;
     }
 
-    final session = result.req.session;
-    if (session != null && (session.modified || session.resave)) {
-      await session.save();
-    }
+    result = await _postHandlerJob(result);
 
     return (canNext: canNext, reqRes: result);
+  }
+
+  Future<ReqRes> _postHandlerJob(ReqRes reqRes) async {
+    var req = reqRes.req, res = reqRes.res;
+
+    /// deal with sessions
+    final session = req.session;
+    if (session != null && (session.modified || session.resave)) {
+      await session.save();
+      res = res.withCookie(session.cookie!);
+    }
+
+    return (req: req, res: res);
   }
 
   @override

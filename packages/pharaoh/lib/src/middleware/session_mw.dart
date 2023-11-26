@@ -46,7 +46,7 @@ typedef GenSessionIdFunc = FutureOr<String> Function(Request request);
 HandlerFunc session({
   String name = Session.name,
   String? secret,
-  bool saveUninitialized = false,
+  bool saveUninitialized = true,
   bool rolling = false,
   bool resave = false,
   GenSessionIdFunc? genId,
@@ -62,14 +62,14 @@ HandlerFunc session({
     void nextWithSession(
       Session session, {
       bool attachCookie = false,
-      bool? save,
+      bool? saveSession,
     }) async {
       if (attachCookie) res = res.withCookie(session.cookie!);
 
       req[RequestContext.sessionId] = session.id;
       req[RequestContext.session] = session
         .._withStore(sessionStore)
-        .._withConfig(resave: save ?? resave);
+        .._withConfig(resave: saveSession ?? resave);
 
       return next((req: req, res: res));
     }
@@ -99,10 +99,7 @@ HandlerFunc session({
     final cookie = bakeCookie(name, sessionId, opts);
     session.cookie = cookie;
 
-    return nextWithSession(
-      session,
-      attachCookie: true,
-      save: saveUninitialized,
-    );
+    return nextWithSession(session,
+        attachCookie: saveUninitialized, saveSession: saveUninitialized);
   };
 }
