@@ -74,6 +74,8 @@ HandlerFunc session({
       var result = await sessionStore.get(reqSid);
       if (result != null && result.valid) {
         if (rolling) {
+          print('Rolling');
+
           result = result..resetMaxAge();
         }
         return nextWithSession(result);
@@ -87,7 +89,7 @@ HandlerFunc session({
     final cookie = bakeCookie(name, sessionId, opts);
     session
       ..cookie = cookie
-      .._withConfig(saveUninitialized: saveUninitialized);
+      .._withConfig(saveUninitialized: saveUninitialized, rolling: rolling);
 
     return nextWithSession(session);
   };

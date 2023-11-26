@@ -81,12 +81,10 @@ mixin RouterMixin<T extends RouteHandler> on RouteHandler
     if (session != null) {
       if (session.saveUninitialized == true) {
         await session.save();
-        if (cookie != null) res = res.withCookie(cookie);
-      } else if (session.saveUninitialized == false) {
-        if (session.modified) {
-          await session.save();
-          if (cookie != null) res = res.withCookie(cookie);
-        }
+        res = res.withCookie(cookie!);
+      } else if (session.saveUninitialized == false && session.modified) {
+        await session.save();
+        res = res.withCookie(cookie!);
       } else if (session.resave == true) {
         print('Resave');
       }

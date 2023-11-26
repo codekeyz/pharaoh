@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:pharaoh/pharaoh.dart';
@@ -275,142 +274,94 @@ void main() {
       });
     });
 
-    // group('rolling option', () {
-    //   test('should default to false', () async {
-    //     final opts = CookieOpts(secret: 'foo bar fuz');
-    //     final app = Pharaoh()
-    //         .use(cookieParser(opts: opts))
-    //         .use(session(cookie: opts, rolling: false))
-    //         .get('/', (req, res) {
-    //       req.session?['name'] = 'Chima';
-    //       return res.end();
-    //     });
+    group('rolling option', () {
+      test(
+        'should not force cookie on uninitialized session if saveUninitialized option is set to false',
+        () async {
+          final store = InMemoryStore();
 
-    //     final result = await (await request(app)).get('/').actual;
-    //     final headers = result.headers;
-    //     final cookieStr = headers[HttpHeaders.setCookieHeader]!;
-    //     expect(cookieStr, contains(Session.name));
+          final opts = CookieOpts(secret: 'foo bar fuz');
 
-    //     await (await request(app))
-    //         .get('/', headers: {HttpHeaders.cookieHeader: cookieStr})
-    //         .expectStatus(200)
-    //         .expectHeaders(isNot(contains(HttpHeaders.setCookieHeader)))
-    //         .test();
-    //   });
+          final app = Pharaoh()
+              .use(cookieParser(opts: opts))
+              .use(session(
+                cookie: opts,
+                store: store,
+                rolling: true,
+                saveUninitialized: false,
+              ))
+              .get('/', (req, res) => res.end());
 
-    //   // test('should force cookie on unmodified session', () async {
-    //   //   final store = InMemoryStore();
+          await (await request(app))
+              .get('/')
+              .expectStatus(200)
+              .expectHeaders(isNot(contains(HttpHeaders.setCookieHeader)))
+              .test();
 
-    //   //   final opts = CookieOpts(
-    //   //     secret: 'foo bar fuz',
-    //   //     maxAge: const Duration(seconds: 20),
-    //   //   );
+          expect(store.sessions, isEmpty);
+        },
+      );
 
-    //   //   final app = Pharaoh()
-    //   //       .use(cookieParser(opts: opts))
-    //   //       .use(session(cookie: opts, store: store, rolling: true))
-    //   //       .get('/', (req, res) => res.end());
+      test(
+        'should force cookie and save uninitialized session if saveUninitialized option is set to true',
+        () async {
+          final store = InMemoryStore();
 
-    //   //   final result = await (await request(app)).get('/').actual;
-    //   //   final headers = result.headers;
-    //   //   final cookieStr = headers[HttpHeaders.setCookieHeader]!;
-    //   //   expect(cookieStr, contains(Session.name));
+          final opts = CookieOpts(secret: 'foo bar fuz');
 
-    //   //   await (await request(app))
-    //   //       .get('/', headers: {HttpHeaders.cookieHeader: cookieStr})
-    //   //       .expectStatus(200)
-    //   //       .expectHeaders(contains(HttpHeaders.setCookieHeader))
-    //   //       .test();
-    //   // });
+          final app = Pharaoh()
+              .use(cookieParser(opts: opts))
+              .use(session(
+                cookie: opts,
+                store: store,
+                rolling: true,
+                saveUninitialized: true,
+              ))
+              .get('/', (req, res) => res.end());
 
-    //   // test(
-    //   //   'should not force cookie on uninitialized session if saveUninitialized option is set to false',
-    //   //   () async {
-    //   //     final store = InMemoryStore();
+          await (await request(app))
+              .get('/')
+              .expectStatus(200)
+              .expectHeaders(contains(HttpHeaders.setCookieHeader))
+              .test();
 
-    //   //     final opts = CookieOpts(secret: 'foo bar fuz');
+          expect(store.sessions, hasLength(1));
+        },
+      );
 
-    //   //     final app = Pharaoh()
-    //   //         .use(cookieParser(opts: opts))
-    //   //         .use(session(
-    //   //           cookie: opts,
-    //   //           store: store,
-    //   //           rolling: true,
-    //   //           saveUninitialized: false,
-    //   //         ))
-    //   //         .get('/', (req, res) => res.end());
+      test(
+        'should force cookie and save modified session even if saveUninitialized option is set to false',
+        () async {
+          final store = InMemoryStore();
 
-    //   //     await (await request(app))
-    //   //         .get('/')
-    //   //         .expectStatus(200)
-    //   //         .expectHeaders(isNot(contains(HttpHeaders.setCookieHeader)))
-    //   //         .test();
+          final opts = CookieOpts(secret: 'foo bar fuz');
 
-    //   //     expect(store.sessions, isEmpty);
-    //   //   },
-    //   // );
+          final app = Pharaoh()
+              .use(cookieParser(opts: opts))
+              .use(session(
+                cookie: opts,
+                store: store,
+                rolling: true,
+                saveUninitialized: false,
+              ))
+              .get(
+            '/',
+            (req, res) {
+              req.session?['name'] = 'codekeyz';
+              return res.end();
+            },
+          );
 
-    //   // test(
-    //   //   'should force cookie and save uninitialized session if saveUninitialized option is set to true',
-    //   //   () async {
-    //   //     final store = InMemoryStore();
+          await (await request(app))
+              .get('/')
+              .expectStatus(200)
+              .expectHeaders(contains(HttpHeaders.setCookieHeader))
+              .test();
 
-    //   //     final opts = CookieOpts(secret: 'foo bar fuz');
-
-    //   //     final app = Pharaoh()
-    //   //         .use(cookieParser(opts: opts))
-    //   //         .use(session(
-    //   //           cookie: opts,
-    //   //           store: store,
-    //   //           rolling: true,
-    //   //           saveUninitialized: true,
-    //   //         ))
-    //   //         .get('/', (req, res) => res.end());
-
-    //   //     await (await request(app))
-    //   //         .get('/')
-    //   //         .expectStatus(200)
-    //   //         .expectHeaders(contains(HttpHeaders.setCookieHeader))
-    //   //         .test();
-
-    //   //     expect(store.sessions, hasLength(1));
-    //   //   },
-    //   // );
-
-    //   // test(
-    //   //   'should force cookie and save modified session even if saveUninitialized option is set to false',
-    //   //   () async {
-    //   //     final store = InMemoryStore();
-
-    //   //     final opts = CookieOpts(secret: 'foo bar fuz');
-
-    //   //     final app = Pharaoh()
-    //   //         .use(cookieParser(opts: opts))
-    //   //         .use(session(
-    //   //           cookie: opts,
-    //   //           store: store,
-    //   //           rolling: true,
-    //   //           saveUninitialized: false,
-    //   //         ))
-    //   //         .get(
-    //   //       '/',
-    //   //       (req, res) {
-    //   //         req.session?['name'] = 'codekeyz';
-
-    //   //         return res.end();
-    //   //       },
-    //   //     );
-
-    //   //     await (await request(app))
-    //   //         .get('/')
-    //   //         .expectStatus(200)
-    //   //         .expectHeaders(contains(HttpHeaders.setCookieHeader))
-    //   //         .test();
-
-    //   //     expect(store.sessions, hasLength(1));
-    //   //   },
-    //   // );
-    // });
+          expect(store.sessions, hasLength(1));
+        },
+      );
+    });
 
     // group('resave option', () {});
   });
