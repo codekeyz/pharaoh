@@ -48,7 +48,7 @@ HandlerFunc session({
   String? secret,
   bool saveUninitialized = true,
   bool rolling = false,
-  bool resave = true,
+  bool resave = false,
   GenSessionIdFunc? genId,
   SessionStore? store,
   CookieOpts cookie = const CookieOpts(httpOnly: true, secure: false),
@@ -73,11 +73,7 @@ HandlerFunc session({
     if (reqSid != null) {
       var result = await sessionStore.get(reqSid);
       if (result != null && result.valid) {
-        if (rolling) {
-          print('Rolling');
-
-          result = result..resetMaxAge();
-        }
+        if (rolling) result = result..resetMaxAge();
         return nextWithSession(result);
       }
 
@@ -89,7 +85,7 @@ HandlerFunc session({
     final cookie = bakeCookie(name, sessionId, opts);
     session
       ..cookie = cookie
-      .._withConfig(saveUninitialized: saveUninitialized, rolling: rolling);
+      .._withConfig(saveUninitialized: saveUninitialized, resave: resave);
 
     return nextWithSession(session);
   };

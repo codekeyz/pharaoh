@@ -25,7 +25,7 @@ void main() {
       final app =
           Pharaoh().put('/hello', (req, res) => res.ok('Hey Daddy Yo!'));
 
-      await app.listen();
+      await app.listen(port: 0);
 
       await (await (request<Pharaoh>(app)))
           .put('/hello')

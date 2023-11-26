@@ -7,13 +7,11 @@ class Session {
   late final Map<String, dynamic> _dataBag;
   late final String hash;
 
-  bool? _rolling;
-  bool? _resave;
-  bool? _saveUninitialized;
+  bool _resave = false;
+  bool _saveUninitialized = false;
 
-  bool? get rolling => _rolling;
-  bool? get resave => _resave;
-  bool? get saveUninitialized => _saveUninitialized;
+  bool get resave => _resave;
+  bool get saveUninitialized => _saveUninitialized;
 
   SessionStore? _store;
   Cookie? cookie;
@@ -29,10 +27,9 @@ class Session {
     _store = store;
   }
 
-  void _withConfig({bool? resave, bool? saveUninitialized, bool? rolling}) {
-    this._resave = resave;
-    this._saveUninitialized = saveUninitialized;
-    this._rolling = rolling;
+  void _withConfig({bool? resave, bool? saveUninitialized}) {
+    this._resave = resave ?? false;
+    this._saveUninitialized = saveUninitialized ?? false;
   }
 
   void resetMaxAge() {
