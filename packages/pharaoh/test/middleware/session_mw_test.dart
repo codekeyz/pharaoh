@@ -171,42 +171,33 @@ void main() {
           .test();
     });
 
-    // test('should load session from cookie sid', () async {
-    //   const opts = CookieOpts(secret: 'foo bar baz');
-    //   final store = InMemoryStore();
+    test('should load session from cookie sid', () async {
+      const opts = CookieOpts(secret: 'foo bar baz');
+      final store = InMemoryStore();
 
-    //   var count = 0;
-    //   final app = Pharaoh()
-    //       .use(cookieParser(opts: opts))
-    //       .use(session(cookie: opts, store: store))
-    //       .get('/', (req, res) {
-    //     var value = req.session?['count'] ??= count;
+      final app = Pharaoh()
+          .use(cookieParser(opts: opts))
+          .use(session(cookie: opts, store: store))
+          .get('/', (req, res) {
+        req.session?['message'] = 'Hello World';
+        return res.ok('Message: ${req.session?['message']}');
+      });
 
-    //     req.session?['count'] = ++value;
+      final result = await (await request(app)).get('/').actual;
+      expect(store.sessions, hasLength(1));
 
-    //     return res.ok('session ${req.session?['count']}');
-    //   });
+      final headers = result.headers;
+      expect(headers, contains(HttpHeaders.setCookieHeader));
 
-    //   final result = await (await request(app)).get('/').actual;
-    //   expect(store.sessions, hasLength(1));
+      final cookieStr = headers[HttpHeaders.setCookieHeader]!;
+      await (await request(app))
+          .get('/', headers: {HttpHeaders.cookieHeader: cookieStr})
+          .expectStatus(200)
+          .expectBody('Message: Hello World')
+          .test();
 
-    //   final headers = result.headers;
-    //   expect(headers, contains(HttpHeaders.setCookieHeader));
-
-    //   final cookieStr = headers[HttpHeaders.setCookieHeader]!;
-
-    //   final res = await (await request(app))
-    //       .get('/', headers: {HttpHeaders.cookieHeader: cookieStr}).actual;
-
-    //   print(res.body);
-
-    //   //     .expectBody('session 2')
-    //   //     .expectStatus(200)
-    //   //     .expectHeaders(isNot(contains(HttpHeaders.setCookieHeader)))
-    //   //     .test();
-
-    //   // expect(store.sessions, hasLength(1));
-    // });
+      expect(store.sessions, hasLength(1));
+    });
 
     group('saveUninitialized option', () {
       test('should default to true', () async {
