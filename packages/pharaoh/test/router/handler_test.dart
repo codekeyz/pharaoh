@@ -80,7 +80,7 @@ void main() {
 
       final HandlerFunc mdw3 = (req, res, next) {
         listResultList.add(3);
-        next(res.end());
+        next();
       };
 
       Pharaoh getApp(HandlerFunc chain) {
@@ -109,6 +109,15 @@ void main() {
       final complexChain = testChain3.chain(testChain1).chain(testChain2);
       await (await request(getApp(complexChain))).get('/test').test();
       expect(listResultList, [3, 1, 3, 2, 1, 1, 2, 3, 2, 1, 3]);
+
+      listResultList.clear();
+
+      final shortLivedChain = testChain3
+          .chain((req, res, next) => next(res.end()))
+          .chain(testChain2);
+
+      await (await request(getApp(shortLivedChain))).get('/test').test();
+      expect(listResultList, [3, 1, 3, 2, 1]);
     });
   });
 }

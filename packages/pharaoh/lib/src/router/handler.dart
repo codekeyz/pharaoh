@@ -88,7 +88,7 @@ abstract class RouteHandler {
           result = result.merge(nr_);
           canGotoNext = true;
 
-          if (chain == null) {
+          if (chain == null || result.res.ended) {
             _streamCtrl.close();
           } else {
             _streamCtrl.add(chain);
