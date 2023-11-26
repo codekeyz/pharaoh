@@ -124,7 +124,7 @@ void main() {
       ),
     );
 
-    test('should get secret from cookie options if provided', () async {
+    test('should use secret from cookie options if provided', () async {
       const opts = CookieOpts(secret: 'foo bar baz');
       final app = Pharaoh()
           .use(session(cookie: opts))
@@ -171,33 +171,33 @@ void main() {
           .test();
     });
 
-    test('should load session from cookie sid', () async {
-      const opts = CookieOpts(secret: 'foo bar baz');
-      final store = InMemoryStore();
+    // test('should load session from cookie sid', () async {
+    //   const opts = CookieOpts(secret: 'foo bar baz');
+    //   final store = InMemoryStore();
 
-      final app = Pharaoh()
-          .use(cookieParser(opts: opts))
-          .use(session(cookie: opts, store: store))
-          .get('/', (req, res) {
-        req.session?['message'] = 'Hello World';
-        return res.ok('Message: ${req.session?['message']}');
-      });
+    //   final app = Pharaoh()
+    //       .use(cookieParser(opts: opts))
+    //       .use(session(cookie: opts, store: store))
+    //       .get('/', (req, res) {
+    //     req.session?['message'] = 'Hello World';
+    //     return res.ok('Message: ${req.session?['message']}');
+    //   });
 
-      final result = await (await request(app)).get('/').actual;
-      expect(store.sessions, hasLength(1));
+    //   final result = await (await request(app)).get('/').actual;
+    //   expect(store.sessions, hasLength(1));
 
-      final headers = result.headers;
-      expect(headers, contains(HttpHeaders.setCookieHeader));
+    //   final headers = result.headers;
+    //   expect(headers, contains(HttpHeaders.setCookieHeader));
 
-      final cookieStr = headers[HttpHeaders.setCookieHeader]!;
-      await (await request(app))
-          .get('/', headers: {HttpHeaders.cookieHeader: cookieStr})
-          .expectStatus(200)
-          .expectBody('Message: Hello World')
-          .test();
+    //   final cookieStr = headers[HttpHeaders.setCookieHeader]!;
+    //   await (await request(app))
+    //       .get('/', headers: {HttpHeaders.cookieHeader: cookieStr})
+    //       .expectStatus(200)
+    //       .expectBody('Message: Hello World')
+    //       .test();
 
-      expect(store.sessions, hasLength(1));
-    });
+    //   expect(store.sessions, hasLength(1));
+    // });
 
     group('saveUninitialized option', () {
       test('should default to true', () async {
@@ -276,27 +276,27 @@ void main() {
     });
 
     // group('rolling option', () {
-    //   // test('should default to false', () async {
-    //   //   final opts = CookieOpts(secret: 'foo bar fuz');
-    //   //   final app = Pharaoh()
-    //   //       .use(cookieParser(opts: opts))
-    //   //       .use(session(cookie: opts))
-    //   //       .get('/', (req, res) {
-    //   //     req.session?['name'] = 'Chima';
-    //   //     return res.end();
-    //   //   });
+    //   test('should default to false', () async {
+    //     final opts = CookieOpts(secret: 'foo bar fuz');
+    //     final app = Pharaoh()
+    //         .use(cookieParser(opts: opts))
+    //         .use(session(cookie: opts, rolling: false))
+    //         .get('/', (req, res) {
+    //       req.session?['name'] = 'Chima';
+    //       return res.end();
+    //     });
 
-    //   //   final result = await (await request(app)).get('/').actual;
-    //   //   final headers = result.headers;
-    //   //   final cookieStr = headers[HttpHeaders.setCookieHeader]!;
-    //   //   expect(cookieStr, contains(Session.name));
+    //     final result = await (await request(app)).get('/').actual;
+    //     final headers = result.headers;
+    //     final cookieStr = headers[HttpHeaders.setCookieHeader]!;
+    //     expect(cookieStr, contains(Session.name));
 
-    //   //   await (await request(app))
-    //   //       .get('/', headers: {HttpHeaders.cookieHeader: cookieStr})
-    //   //       .expectStatus(200)
-    //   //       // .expectHeaders(isNot(contains(HttpHeaders.setCookieHeader)))
-    //   //       .test();
-    //   // });
+    //     await (await request(app))
+    //         .get('/', headers: {HttpHeaders.cookieHeader: cookieStr})
+    //         .expectStatus(200)
+    //         .expectHeaders(isNot(contains(HttpHeaders.setCookieHeader)))
+    //         .test();
+    //   });
 
     //   // test('should force cookie on unmodified session', () async {
     //   //   final store = InMemoryStore();

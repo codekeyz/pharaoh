@@ -7,7 +7,13 @@ class Session {
   late final Map<String, dynamic> _dataBag;
   late final String hash;
 
-  bool resave = false;
+  bool? _rolling;
+  bool? _resave;
+  bool? _saveUninitialized;
+
+  bool? get rolling => _rolling;
+  bool? get resave => _resave;
+  bool? get saveUninitialized => _saveUninitialized;
 
   SessionStore? _store;
   Cookie? cookie;
@@ -23,8 +29,10 @@ class Session {
     _store = store;
   }
 
-  void _withConfig({bool resave = false}) {
-    this.resave = resave;
+  void _withConfig({bool? resave, bool? saveUninitialized, bool? rolling}) {
+    this._resave = resave;
+    this._saveUninitialized = saveUninitialized;
+    this._rolling = rolling;
   }
 
   void resetMaxAge() {
@@ -38,8 +46,6 @@ class Session {
         'id': id,
         'data': _dataBag,
         'cookie': cookie?.toString(),
-        'expiry': expiry?.toIso8601String(),
-        'originalMaxAge': cookie?.maxAge,
       };
 
   void operator []=(String name, dynamic value) {

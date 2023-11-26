@@ -48,7 +48,7 @@ HandlerFunc session({
   String? secret,
   bool saveUninitialized = true,
   bool rolling = false,
-  bool resave = false,
+  bool resave = true,
   GenSessionIdFunc? genId,
   SessionStore? store,
   CookieOpts cookie = const CookieOpts(httpOnly: true, secure: false),
@@ -59,18 +59,9 @@ HandlerFunc session({
   final uuid = Uuid();
 
   return (req, res, next) async {
-    void nextWithSession(
-      Session session, {
-      bool attachCookie = false,
-      bool? saveSession,
-    }) async {
-      if (attachCookie) res = res.withCookie(session.cookie!);
-
+    void nextWithSession(Session session) async {
       req[RequestContext.sessionId] = session.id;
-      req[RequestContext.session] = session
-        .._withStore(sessionStore)
-        .._withConfig(resave: saveSession ?? resave);
-
+      req[RequestContext.session] = session.._withStore(sessionStore);
       return next((req: req, res: res));
     }
 
@@ -80,22 +71,24 @@ HandlerFunc session({
     final reqSid =
         req.signedCookies.firstWhereOrNull((e) => e.name == name)?.value;
     if (reqSid != null) {
-      var session = await sessionStore.get(reqSid);
-      if (session != null) {
-        if (session.valid) {
-          if (rolling) session = session..resetMaxAge();
-          return nextWithSession(session, attachCookie: rolling);
+      var result = await sessionStore.get(reqSid);
+      if (result != null && result.valid) {
+        if (rolling) {
+          result = result..resetMaxAge();
         }
-        await sessionStore.destroy(reqSid);
+        return nextWithSession(result);
       }
+
+      await sessionStore.destroy(reqSid);
     }
 
     final sessionId = await genId?.call(req) ?? uuid.v4();
     final session = Session(sessionId);
     final cookie = bakeCookie(name, sessionId, opts);
-    session.cookie = cookie;
+    session
+      ..cookie = cookie
+      .._withConfig(saveUninitialized: saveUninitialized);
 
-    return nextWithSession(session,
-        attachCookie: saveUninitialized, saveSession: saveUninitialized);
+    return nextWithSession(session);
   };
 }
