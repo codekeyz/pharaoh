@@ -2,13 +2,14 @@ import 'dart:io';
 
 import 'package:http_parser/http_parser.dart';
 
+import '../middleware/session_mw.dart';
 import '../utils/exceptions.dart';
 import 'message.dart';
 
 // ignore: constant_identifier_names
 enum HTTPMethod { GET, HEAD, POST, PUT, DELETE, ALL, PATCH, OPTIONS, TRACE }
 
-getHttpMethod(HttpRequest req) => switch (req.method) {
+HTTPMethod getHttpMethod(HttpRequest req) => switch (req.method) {
       'GET' => HTTPMethod.GET,
       'HEAD' => HTTPMethod.HEAD,
       'POST' => HTTPMethod.POST,
@@ -45,14 +46,29 @@ abstract interface class $Request<T> {
 
   List<Cookie> get cookies;
 
+  List<Cookie> get signedCookies;
+
+  String? get sessionId;
+
+  Session? get session;
+
   T? get body;
 
   Object? operator [](String name);
 }
 
-class Request extends Message<dynamic> implements $Request<dynamic> {
-  static const String authKey = 'auth';
+class RequestContext {
+  static const String phar = 'phar';
+  static const String auth = '$phar.auth';
 
+  /// cookies & session
+  static const String cookies = '$phar.cookies';
+  static const String signedCookies = '$phar.signedcookies';
+  static const String session = '$phar.session.cookie';
+  static const String sessionId = '$phar.session.id';
+}
+
+class Request extends Message<dynamic> implements $Request<dynamic> {
   final HttpRequest _req;
   final Map<String, dynamic> _params = {};
   final Map<String, dynamic> _context = {};
@@ -117,7 +133,17 @@ class Request extends Message<dynamic> implements $Request<dynamic> {
   String get protocolVersion => _req.protocolVersion;
 
   @override
-  List<Cookie> get cookies => _req.cookies;
+  List<Cookie> get cookies => _context[RequestContext.cookies] ?? [];
+
+  @override
+  List<Cookie> get signedCookies =>
+      _context[RequestContext.signedCookies] ?? [];
+
+  @override
+  Session? get session => _context[RequestContext.session];
+
+  @override
+  String? get sessionId => _context[RequestContext.sessionId];
 
   @override
   Object? operator [](String name) => _context[name];
@@ -127,7 +153,7 @@ class Request extends Message<dynamic> implements $Request<dynamic> {
   }
 
   @override
-  dynamic get auth => _context[Request.authKey];
+  dynamic get auth => _context[RequestContext.auth];
 
-  set auth(dynamic value) => _context[Request.authKey] = value;
+  set auth(dynamic value) => _context[RequestContext.auth] = value;
 }

@@ -2,3 +2,6 @@
 .idea
 .dart_tool
 melos_pharaoh.iml
+**/pubspec.lock
+
+**/melos_**

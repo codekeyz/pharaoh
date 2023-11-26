@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:convert';
+import 'package:crypto/crypto.dart';
 
 String contentTypeToString(ContentType type, {String charset = 'utf-8'}) {
   return '${type.value}; charset=${type.charset ?? charset}';
@@ -26,4 +28,26 @@ bool safeCompare(String a, String b) {
     result |= a.codeUnitAt(i) ^ b.codeUnitAt(i);
   }
   return result == 0;
+}
+
+/// Sign the given [value] with [secret].
+String signValue(String value, String secret) {
+  final hmac = Hmac(sha256, utf8.encode(secret));
+  final bytes = utf8.encode(value);
+  final digest = hmac.convert(bytes);
+  return '$value.${base64.encode(digest.bytes).replaceAll(RegExp('=+\$'), '')}';
+}
+
+/// Unsign and decode the given [input] with [secret],
+/// returning `null` if the signature is invalid.
+String? unsignValue(String input, String secret) {
+  var tentativeValue = input.substring(0, input.lastIndexOf('.'));
+  var expectedInput = signValue(tentativeValue, secret);
+  final valid = safeCompare(expectedInput, input);
+  return valid ? tentativeValue : null;
+}
+
+String hashData(dynamic sess) {
+  if (sess is! String) sess = jsonEncode(sess);
+  return sha1.convert(utf8.encode(sess)).toString();
 }

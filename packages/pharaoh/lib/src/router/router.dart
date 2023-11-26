@@ -55,17 +55,35 @@ mixin RouterMixin<T extends RouteHandler> on RouteHandler
 
     ReqRes result = reqRes;
     bool canNext = false;
+
     while (handlerFncs.isNotEmpty) {
+      canNext = false;
       final handler = handlerFncs.removeAt(0);
       final data = await handler.handle(reqRes);
       result = data.reqRes;
       canNext = data.canNext;
 
       final breakOut = result.res.ended || !canNext;
-      if (breakOut) return (canNext: true, reqRes: result);
+      if (breakOut) break;
     }
 
+    result = await _postHandlerJob(result);
+
     return (canNext: canNext, reqRes: result);
+  }
+
+  Future<ReqRes> _postHandlerJob(ReqRes reqRes) async {
+    var req = reqRes.req, res = reqRes.res;
+
+    /// deal with sessions
+    final session = req.session;
+    if (session != null &&
+        (session.saveUninitialized || session.resave || session.modified)) {
+      await session.save();
+      res = res.withCookie(session.cookie!);
+    }
+
+    return (req: req, res: res);
   }
 
   @override
