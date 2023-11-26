@@ -85,7 +85,7 @@ class Request extends Message<dynamic> implements $Request<dynamic> {
 
   void putInContext(String key, Object object) => _context[key] = object;
 
-  void updateParams(String key, String value) => _params[key] = value;
+  void setParams(String key, String value) => _params[key] = value;
 
   /// If this is non-`null` and the requested resource hasn't been modified
   /// since this date and time, the server should return a 304 Not Modified

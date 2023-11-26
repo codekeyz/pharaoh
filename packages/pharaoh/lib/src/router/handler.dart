@@ -7,16 +7,43 @@ import 'route.dart';
 
 typedef ReqRes = ({Request req, Response res});
 
-typedef NextFunction = dynamic Function([dynamic result]);
+extension ReqResExtension on ReqRes {
+  ReqRes merge(dynamic val) => switch (val.runtimeType) {
+        Request => (req: val, res: this.res),
+        Response => (req: this.req, res: val),
+        ReqRes => val,
+        Null => this,
+        _ => throw PharaohException.value(
+            'Next Function result can only be Request, Response or ReqRes', val)
+      };
+}
 
-/// This type of handler allows you to use the actual
-/// request instance [Request].
-///
-/// This way you can reprocess contents in the
-/// request before it reaches other handlers in your application.
+typedef NextFunction<Next> = dynamic Function([dynamic result, Next? chain]);
+
+/// This type of handler allows you to use the full
+/// [Request] and [Response] object
 ///
 /// See here: [Middleware]
 typedef HandlerFunc = Function(Request req, Response res, NextFunction next);
+
+extension HandlerChainExtension on HandlerFunc {
+  /// Chains the current middleware with a new one.
+  HandlerFunc chain(HandlerFunc newChain) => (req, res, done) => this(
+        req,
+        res,
+        ([nr, chain]) {
+          // Use the existing chain if available, otherwise use the new chain
+          HandlerFunc nextFunc = chain ?? newChain;
+
+          // If there's an existing chain, recursively chain the new handler
+          if (chain != null) {
+            nextFunc = nextFunc.chain(newChain);
+          }
+
+          done(nr, nextFunc);
+        },
+      );
+}
 
 typedef HandlerResult = ({bool canNext, ReqRes reqRes});
 
@@ -37,31 +64,47 @@ abstract class RouteHandler {
 
   RouteHandler prefix(String prefix);
 
-  Future<HandlerResult> handle(final ReqRes reqRes) async {
+  StreamController<HandlerFunc> _streamCtrl = StreamController<HandlerFunc>();
+
+  Future<HandlerResult> execute(final ReqRes reqRes) async {
+    await _resetStream();
+
     final request = reqRes.req;
     if (_routeParams.isNotEmpty) {
       for (final param in params.entries) {
-        request.updateParams(param.key, param.value);
+        request.setParams(param.key, param.value);
       }
     }
 
     ReqRes result = reqRes;
     bool canGotoNext = false;
 
-    await handler(request, reqRes.res, ([nr_]) {
-      result = switch (nr_.runtimeType) {
-        Request => (req: nr_, res: reqRes.res),
-        Response => (req: reqRes.req, res: nr_),
-        ReqRes => nr_,
-        Null => reqRes,
-        _ => throw PharaohException.value(
-            'Next Function result can only be Request, Response or ReqRes')
-      };
+    await for (final executor in _streamCtrl.stream) {
+      canGotoNext = false;
+      await executor.call(
+        result.req,
+        result.res,
+        ([nr_, chain]) {
+          result = result.merge(nr_);
+          canGotoNext = true;
 
-      canGotoNext = true;
-    });
+          if (chain == null) {
+            _streamCtrl.close();
+          } else {
+            _streamCtrl.add(chain);
+          }
+        },
+      );
+    }
 
     return (canNext: canGotoNext, reqRes: result);
+  }
+
+  Future<void> _resetStream() async {
+    if (_streamCtrl.hasListener && !_streamCtrl.isClosed) {
+      await _streamCtrl.close();
+    }
+    _streamCtrl = StreamController<HandlerFunc>()..add(handler);
   }
 }
 

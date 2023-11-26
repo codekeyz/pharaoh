@@ -42,7 +42,7 @@ mixin RouterMixin<T extends RouteHandler> on RouteHandler
   }
 
   @override
-  Future<HandlerResult> handle(ReqRes reqRes) async {
+  Future<HandlerResult> execute(ReqRes reqRes) async {
     final handlers = _group.findHandlers(reqRes.req);
     if (handlers.isEmpty) {
       return (
@@ -58,9 +58,9 @@ mixin RouterMixin<T extends RouteHandler> on RouteHandler
 
     await for (final handler in handlerStream) {
       canNext = false;
-      final data = await handler.handle(reqRes);
-      result = data.reqRes;
-      canNext = data.canNext;
+      final hdlerResult = await handler.execute(reqRes);
+      result = hdlerResult.reqRes;
+      canNext = hdlerResult.canNext;
 
       final breakOut = result.res.ended || !canNext;
       if (breakOut) break;
