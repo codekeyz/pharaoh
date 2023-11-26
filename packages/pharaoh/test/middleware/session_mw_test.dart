@@ -39,137 +39,137 @@ class _$TestStore implements SessionStore {
 
 void main() {
   group('session_middleware', () {
-    // group('genId option', () {
-    //   test('should provide default generator', () async {
-    //     final app = Pharaoh()
-    //         .use(session(secret: 'foo bar fuz'))
-    //         .get('/', (req, res) => res.end());
+    group('genId option', () {
+      test('should provide default generator', () async {
+        final app = Pharaoh()
+            .use(session(secret: 'foo bar fuz'))
+            .get('/', (req, res) => res.end());
 
-    //     await (await request(app))
-    //         .get('/')
-    //         .expectStatus(200)
-    //         .expectHeader(HttpHeaders.setCookieHeader, contains(Session.name))
-    //         .test();
-    //   });
+        await (await request(app))
+            .get('/')
+            .expectStatus(200)
+            .expectHeader(HttpHeaders.setCookieHeader, contains(Session.name))
+            .test();
+      });
 
-    //   test('should allow custom function', () async {
-    //     final app = Pharaoh()
-    //         .use(session(secret: 'foo bar fuz', genId: (req) => 'mangoes'))
-    //         .get('/', (req, res) => res.end());
+      test('should allow custom function', () async {
+        final app = Pharaoh()
+            .use(session(secret: 'foo bar fuz', genId: (req) => 'mangoes'))
+            .get('/', (req, res) => res.end());
 
-    //     await (await request(app))
-    //         .get('/')
-    //         .expectStatus(200)
-    //         .expectHeader(HttpHeaders.setCookieHeader,
-    //             'pharaoh.sid=s%3Amangoes.%2FzlbPOSKac8qYzE9mPC0sqTS1L8WgBKVoGk2awh2GZg; Path=/; HttpOnly')
-    //         .test();
-    //   });
-    // });
+        await (await request(app))
+            .get('/')
+            .expectStatus(200)
+            .expectHeader(HttpHeaders.setCookieHeader,
+                'pharaoh.sid=s%3Amangoes.%2FzlbPOSKac8qYzE9mPC0sqTS1L8WgBKVoGk2awh2GZg; Path=/; HttpOnly')
+            .test();
+      });
+    });
 
-    // group('name option', () {
-    //   test('should default to pharaoh.sid', () async {
-    //     final app = Pharaoh()
-    //         .use(session(secret: 'foo bar fuz'))
-    //         .get('/', (req, res) => res.end());
+    group('name option', () {
+      test('should default to pharaoh.sid', () async {
+        final app = Pharaoh()
+            .use(session(secret: 'foo bar fuz'))
+            .get('/', (req, res) => res.end());
 
-    //     await (await request(app))
-    //         .get('/')
-    //         .expectStatus(200)
-    //         .expectHeader(HttpHeaders.setCookieHeader, contains(Session.name))
-    //         .test();
-    //   });
+        await (await request(app))
+            .get('/')
+            .expectStatus(200)
+            .expectHeader(HttpHeaders.setCookieHeader, contains(Session.name))
+            .test();
+      });
 
-    //   test('should set the cookie name', () async {
-    //     final app = Pharaoh()
-    //         .use(session(secret: 'foo bar fuz', name: 'session_id'))
-    //         .get('/', (req, res) => res.end());
+      test('should set the cookie name', () async {
+        final app = Pharaoh()
+            .use(session(secret: 'foo bar fuz', name: 'session_id'))
+            .get('/', (req, res) => res.end());
 
-    //     await (await request(app))
-    //         .get('/')
-    //         .expectStatus(200)
-    //         .expectHeader(HttpHeaders.setCookieHeader, contains('session_id='))
-    //         .test();
-    //   });
-    // });
+        await (await request(app))
+            .get('/')
+            .expectStatus(200)
+            .expectHeader(HttpHeaders.setCookieHeader, contains('session_id='))
+            .test();
+      });
+    });
 
-    // test('should do nothing if req.session exists', () async {
-    //   final app = Pharaoh()
-    //       .use((req, res, next) {
-    //         final session = Session('id')
-    //           ..cookie = bakeCookie('phar', 'adf', CookieOpts());
-    //         req[RequestContext.session] = session;
+    test('should do nothing if req.session exists', () async {
+      final app = Pharaoh()
+          .use((req, res, next) {
+            final session = Session('id')
+              ..cookie = bakeCookie('phar', 'adf', CookieOpts());
+            req[RequestContext.session] = session;
 
-    //         next((req));
-    //       })
-    //       .use(session(secret: ''))
-    //       .get('/', (req, res) => res.end());
+            next((req));
+          })
+          .use(session(secret: ''))
+          .get('/', (req, res) => res.end());
 
-    //   await (await request(app))
-    //       .get('/')
-    //       .expectBody('')
-    //       .expectStatus(200)
-    //       .expectHeaders(isNot(contains(HttpHeaders.setCookieHeader)))
-    //       .test();
-    // });
+      await (await request(app))
+          .get('/')
+          .expectBody('')
+          .expectStatus(200)
+          .expectHeaders(isNot(contains(HttpHeaders.setCookieHeader)))
+          .test();
+    });
 
-    // test(
-    //   'should error without secret',
-    //   () => expect(
-    //     () => Pharaoh().use(session()),
-    //     throwsA(isA<PharaohException>().having(
-    //       (e) => e.message,
-    //       'message',
-    //       'CookieOpts("secret") required for signed cookies',
-    //     )),
-    //   ),
-    // );
+    test(
+      'should error without secret',
+      () => expect(
+        () => Pharaoh().use(session()),
+        throwsA(isA<PharaohException>().having(
+          (e) => e.message,
+          'message',
+          'CookieOpts("secret") required for signed cookies',
+        )),
+      ),
+    );
 
-    // test('should get secret from cookie options if provided', () async {
-    //   const opts = CookieOpts(secret: 'foo bar baz');
-    //   final app = Pharaoh()
-    //       .use(session(cookie: opts))
-    //       .get('/', (req, res) => res.end());
+    test('should get secret from cookie options if provided', () async {
+      const opts = CookieOpts(secret: 'foo bar baz');
+      final app = Pharaoh()
+          .use(session(cookie: opts))
+          .get('/', (req, res) => res.end());
 
-    //   await (await request(app))
-    //       .get('/')
-    //       .expectStatus(200)
-    //       .expectHeader(HttpHeaders.setCookieHeader, contains('pharaoh.sid='))
-    //       .test();
-    // });
+      await (await request(app))
+          .get('/')
+          .expectStatus(200)
+          .expectHeader(HttpHeaders.setCookieHeader, contains('pharaoh.sid='))
+          .test();
+    });
 
-    // test('should create a new session', () async {
-    //   final app = Pharaoh()
-    //       .use(session(secret: 'foo bar baz'))
-    //       .get('/', (req, res) => res.json(req.session));
+    test('should create a new session', () async {
+      final app = Pharaoh()
+          .use(session(secret: 'foo bar baz'))
+          .get('/', (req, res) => res.json(req.session));
 
-    //   await (await request(app))
-    //       .get('/')
-    //       .expectStatus(200)
-    //       .expectHeader(HttpHeaders.setCookieHeader, contains('pharaoh.sid='))
-    //       .expectBody(contains("\"cookie\":\"pharaoh.sid="))
-    //       .test();
-    // });
+      await (await request(app))
+          .get('/')
+          .expectStatus(200)
+          .expectHeader(HttpHeaders.setCookieHeader, contains('pharaoh.sid='))
+          .expectBody(contains("\"cookie\":\"pharaoh.sid="))
+          .test();
+    });
 
-    // test('should pass session fetch error', () async {
-    //   const opts = CookieOpts(secret: 'foo bar baz');
-    //   final store = _$TestStore(
-    //       getFunc: (_) => throw Exception('Session store not available'));
+    test('should pass session fetch error', () async {
+      const opts = CookieOpts(secret: 'foo bar baz');
+      final store = _$TestStore(
+          getFunc: (_) => throw Exception('Session store not available'));
 
-    //   final app = Pharaoh()
-    //       .use(cookieParser(opts: opts))
-    //       .use(session(cookie: opts, store: store))
-    //       .get('/', (req, res) => res.end());
+      final app = Pharaoh()
+          .use(cookieParser(opts: opts))
+          .use(session(cookie: opts, store: store))
+          .get('/', (req, res) => res.end());
 
-    //   await (await request(app))
-    //       .get('/', headers: {
-    //         HttpHeaders.cookieHeader:
-    //             'pharaoh.sid=s%3A4badf56b-ab39-4d77-8992-934c995772da.vqiT1VnWppTRhR2pr4F4vb9Oxrbn67E0n0txjKD0qJ4; Path=/'
-    //       })
-    //       .expectStatus(500)
-    //       .expectBody(
-    //           '{"path":"/","method":"GET","message":"Exception: Session store not available"}')
-    //       .test();
-    // });
+      await (await request(app))
+          .get('/', headers: {
+            HttpHeaders.cookieHeader:
+                'pharaoh.sid=s%3A4badf56b-ab39-4d77-8992-934c995772da.vqiT1VnWppTRhR2pr4F4vb9Oxrbn67E0n0txjKD0qJ4; Path=/'
+          })
+          .expectStatus(500)
+          .expectBody(
+              '{"path":"/","method":"GET","message":"Exception: Session store not available"}')
+          .test();
+    });
 
     // test('should load session from cookie sid', () async {
     //   const opts = CookieOpts(secret: 'foo bar baz');
