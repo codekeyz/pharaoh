@@ -164,7 +164,7 @@ class _$PharaohImpl implements Pharaoh {
     ReqRes reqRes,
   ) async {
     try {
-      return await routerX.handle(reqRes);
+      return await routerX.execute(reqRes);
     } catch (e) {
       final res = reqRes.res.internalServerError(e.toString());
       return (
