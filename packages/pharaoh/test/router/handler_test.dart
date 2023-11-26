@@ -1,6 +1,4 @@
 import 'package:pharaoh/pharaoh.dart';
-import 'package:pharaoh/src/core.dart';
-import 'package:pharaoh/src/http/request.dart';
 import 'package:spookie/spookie.dart';
 
 void main() {
