@@ -171,33 +171,33 @@ void main() {
           .test();
     });
 
-    // test('should load session from cookie sid', () async {
-    //   const opts = CookieOpts(secret: 'foo bar baz');
-    //   final store = InMemoryStore();
+    test('should load session from cookie sid', () async {
+      const opts = CookieOpts(secret: 'foo bar baz');
+      final store = InMemoryStore();
 
-    //   final app = Pharaoh()
-    //       .use(cookieParser(opts: opts))
-    //       .use(session(cookie: opts, store: store))
-    //       .get('/', (req, res) {
-    //     req.session?['message'] = 'Hello World';
-    //     return res.ok('Message: ${req.session?['message']}');
-    //   });
+      final app = Pharaoh()
+          .use(cookieParser(opts: opts))
+          .use(session(cookie: opts, store: store))
+          .get('/', (req, res) {
+        req.session?['message'] = 'Hello World';
+        return res.ok('Message: ${req.session?['message']}');
+      });
 
-    //   final result = await (await request(app)).get('/').actual;
-    //   expect(store.sessions, hasLength(1));
+      final result = await (await request(app)).get('/').actual;
+      expect(store.sessions, hasLength(1));
 
-    //   final headers = result.headers;
-    //   expect(headers, contains(HttpHeaders.setCookieHeader));
+      final headers = result.headers;
+      expect(headers, contains(HttpHeaders.setCookieHeader));
 
-    //   final cookieStr = headers[HttpHeaders.setCookieHeader]!;
-    //   await (await request(app))
-    //       .get('/', headers: {HttpHeaders.cookieHeader: cookieStr})
-    //       .expectStatus(200)
-    //       .expectBody('Message: Hello World')
-    //       .test();
+      final cookieStr = headers[HttpHeaders.setCookieHeader]!;
+      await (await request(app))
+          .get('/', headers: {HttpHeaders.cookieHeader: cookieStr})
+          .expectStatus(200)
+          .expectBody('Message: Hello World')
+          .test();
 
-    //   expect(store.sessions, hasLength(1));
-    // });
+      expect(store.sessions, hasLength(1));
+    });
 
     group('saveUninitialized option', () {
       test('should default to true', () async {
