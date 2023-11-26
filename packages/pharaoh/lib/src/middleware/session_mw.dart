@@ -20,7 +20,8 @@ typedef GenSessionIdFunc = FutureOr<String> Function(Request request);
 ///
 /// - [saveUninitialized] Forces a session that is "uninitialized" to
 /// be saved to the store. A session is uninitialized when it is new
-/// but not modified. Choosing false is useful for implementing login sessions,
+/// but not modified.
+/// Default value is `false`
 ///
 /// - [rolling] The expiration is reset to the original maxAge,
 /// resetting the expiration countdown and forces
@@ -46,7 +47,7 @@ typedef GenSessionIdFunc = FutureOr<String> Function(Request request);
 HandlerFunc session({
   String name = Session.name,
   String? secret,
-  bool saveUninitialized = true,
+  bool saveUninitialized = false,
   bool rolling = false,
   bool resave = false,
   GenSessionIdFunc? genId,
