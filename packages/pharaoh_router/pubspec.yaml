@@ -1,0 +1,17 @@
+name: pharaoh_router
+description: A starting point for Dart libraries or applications.
+version: 1.0.0
+# repository: https://github.com/my_org/my_repo
+
+environment:
+  sdk: ^3.0.0
+
+
+dependencies:
+  collection: ^1.18.0
+  pharaoh:
+
+
+dev_dependencies:
+  lints: ^2.1.0
+  test: ^1.24.0
