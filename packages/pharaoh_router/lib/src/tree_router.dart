@@ -2,8 +2,21 @@ import 'package:pharaoh/pharaoh.dart';
 import 'tree_node.dart';
 import 'tree_utils.dart';
 
-class RadixTree {
+class RadixRouterConfig {
+  final bool caseSensitive;
+
+  const RadixRouterConfig({
+    this.caseSensitive = false,
+  });
+}
+
+class RadixRouter {
+  final RadixRouterConfig config;
   final Map<HTTPMethod, Node> _nodeMap = {};
+
+  RadixRouter({
+    this.config = const RadixRouterConfig(),
+  });
 
   Node getMethodNode(HTTPMethod method) {
     var node = _nodeMap[method];
@@ -12,22 +25,30 @@ class RadixTree {
   }
 
   void insert(HTTPMethod method, String path) {
+    if (!config.caseSensitive) path = path.toLowerCase();
+
     Node root = getMethodNode(method);
 
     for (int i = 0; i < path.length; i++) {
-      var char = path[i];
+      String char = path[i];
+
+      final hasParam = isParametric(path.substring(i));
+      if (hasParam) {
+        final paramName = getPathParameter(path.substring(i + 1));
+        char += paramName;
+        i += paramName.length;
+      }
+
       var child = root.children[char];
       if (child == null) {
-        final p_ = path.substring(i);
-        if (isParametric(p_)) {
-          final paramName = getPathParameter(p_.substring(1));
-          child = ParametricNode(paramName);
-          char += paramName;
-          i += paramName.length;
+        if (hasParam) {
+          final name = getPathParameter(char.substring(1));
+          child = ParametricNode(name);
         } else {
           child = Node();
         }
       }
+
       root = root.children[char] = child;
     }
     root.terminal = true;
@@ -48,6 +69,7 @@ class RadixTree {
   }
 
   Node? search(HTTPMethod method, String path) {
+    if (!config.caseSensitive) path = path.toLowerCase();
     Node rootNode = getMethodNode(method);
 
     Map<String, String> _pathParams = {};
@@ -59,7 +81,6 @@ class RadixTree {
       final hasChild = rootNode.hasChild(char);
       if (hasChild) {
         rootNode = rootNode.getChild(char);
-        print('We have a node for $char');
       } else {
         final anyParametrics =
             rootNode.children.values.whereType<ParametricNode>();
@@ -69,12 +90,16 @@ class RadixTree {
           final val = getPathParameter(path, at: i);
           final valLength = val.length;
           final nextCharIndex = valLength + i;
-          if (!paramNode.hasChild(path[nextCharIndex])) continue;
+          final endOfPath = nextCharIndex >= path.length;
+
+          if (!endOfPath) {
+            final nextChar = path[nextCharIndex];
+            if (!paramNode.hasChild(nextChar)) continue;
+          }
+
           _pathParams[paramNode.name] = val;
           rootNode = paramNode;
-
           i = nextCharIndex - 1;
-          print('For $char to $val, we found parametric');
           break;
         }
       }
@@ -85,30 +110,26 @@ class RadixTree {
   }
 }
 
-//  final paramNodes =
-//       if (paramNodes.isNotEmpty) {
-//         final paramNode = paramNodes.first;
-//         final param = getPathParameter(path.substring(i));
-//         _pathParams[paramNode.param] = param;
-//         route = path.substring(param.length + i);
-//         i = 0;
-//         rootNode = paramNode;
-//       }
-
-void main() {
-  final radixTree = RadixTree();
+void main() async {
+  final radixTree = RadixRouter();
 
   radixTree.insert(HTTPMethod.GET, '/foo/bar');
   radixTree.insert(HTTPMethod.GET, '/chima/bar');
   radixTree.insert(HTTPMethod.GET, '/foo/bar/home');
-  // radixTree.insert(HTTPMethod.GET, '/a/:b/c');
   radixTree.insert(HTTPMethod.GET, '/a/:user/c');
+  radixTree.insert(HTTPMethod.GET, '/foo/:param1-:param2');
+  radixTree.insert(HTTPMethod.GET, '/foo/:user1/:location');
 
   radixTree.printTree();
 
-  // final node = radixTree.search(HTTPMethod.GET, '/foo/bar/home');
-  // print(node);
+  final node = radixTree.search(HTTPMethod.GET, '/foo/bar/home');
+  print(node);
 
-  final node2 = radixTree.search(HTTPMethod.GET, '/a/chima/c');
+  // case insensitive with multiple mixed-case params within same slash couple
+  final node2 = radixTree.search(HTTPMethod.GET, '/FOO/My-bAR');
   print(node2);
+
+  // case insensitive with multiple mixed-case params
+  final node3 = radixTree.search(HTTPMethod.GET, '/FOO/My/bAR');
+  print(node3);
 }
