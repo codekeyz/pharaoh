@@ -71,13 +71,11 @@ class RequestContext {
 class Request extends Message<dynamic> implements $Request<dynamic> {
   final HttpRequest _req;
   final Map<String, dynamic> _params = {};
-  final Map<String, dynamic> _query = {};
   final Map<String, dynamic> _context = {};
 
   Request._(this._req) : super(_req, headers: {}) {
     req.headers.forEach((name, values) => headers[name] = values);
     headers.remove(HttpHeaders.transferEncodingHeader);
-    _query.addAll(_req.uri.queryParameters);
   }
 
   factory Request.from(HttpRequest request) => Request._(request);
@@ -122,7 +120,7 @@ class Request extends Message<dynamic> implements $Request<dynamic> {
   Map<String, dynamic> get params => _params;
 
   @override
-  Map<String, dynamic> get query => _query;
+  Map<String, dynamic> get query => _req.uri.queryParameters;
 
   @override
   String? get hostname => _req.headers.host;
