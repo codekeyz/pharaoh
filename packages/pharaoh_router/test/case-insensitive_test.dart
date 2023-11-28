@@ -67,6 +67,27 @@ void main() {
     );
   });
 
+  test(
+      'case insensitive with multiple mixed-case params within same slash couple',
+      () {
+    final router = RadixRouter()
+      ..insert(HTTPMethod.GET, '/foo/:param1-:param2');
+
+    expect(
+      router.lookup(HTTPMethod.GET, '/FOO/My-bAR')?.value,
+      {'param1': 'My', 'param2': 'bAR'},
+    );
+  });
+
+  test('case insensitive with multiple mixed-case params', () {
+    final router = RadixRouter()
+      ..insert(HTTPMethod.GET, '/foo/:param1/:param2');
+    expect(
+      router.lookup(HTTPMethod.GET, '/FOO/My/bAR')?.value,
+      {'param1': 'My', 'param2': 'bAR'},
+    );
+  });
+
   ///
   ///
   ///
