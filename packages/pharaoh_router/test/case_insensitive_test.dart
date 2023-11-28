@@ -4,30 +4,43 @@ import 'package:test/test.dart';
 
 void main() {
   test('case insensitive static routes of level 1', () {
-    final router = RadixRouter()..on(HTTPMethod.GET, '/woo');
+    final config = const RadixRouterConfig(caseSensitive: false);
+    final router = RadixRouter(config: config)..on(HTTPMethod.GET, '/woo');
+
     final result = router.lookup(HTTPMethod.GET, '/woo');
     expect(result, isNotNull);
   });
 
   test('case insensitive static routes of level 2', () {
-    final router = RadixRouter()..on(HTTPMethod.GET, '/foo/woo');
+    final config = const RadixRouterConfig(caseSensitive: false);
+    final router = RadixRouter(config: config)..on(HTTPMethod.GET, '/foo/woo');
+
     final result = router.lookup(HTTPMethod.GET, '/foo/woo');
     expect(result, isNotNull);
   });
 
   test('case insensitive static routes of level 3', () {
-    final router = RadixRouter()..on(HTTPMethod.GET, '/foo/bar/woo');
+    final config = const RadixRouterConfig(caseSensitive: false);
+    final router = RadixRouter(config: config)
+      ..on(HTTPMethod.GET, '/foo/bar/woo');
+
     final result = router.lookup(HTTPMethod.GET, '/Foo/bAR/WoO');
     expect(result, isNotNull);
   });
 
   test('parametric case insensitive', () {
-    final router = RadixRouter()..on(HTTPMethod.GET, '/foo/:param');
+    final config = const RadixRouterConfig(caseSensitive: false);
+    final router = RadixRouter(config: config)
+      ..on(HTTPMethod.GET, '/foo/:param');
+
     expect(router.lookup(HTTPMethod.GET, '/Foo/bAR')?.value, {'param': 'bAR'});
   });
 
   test('parametric case insensitive with a static part', () {
-    final router = RadixRouter()..on(HTTPMethod.GET, '/foo/my-:param');
+    final config = const RadixRouterConfig(caseSensitive: false);
+    final router = RadixRouter(config: config)
+      ..on(HTTPMethod.GET, '/foo/my-:param');
+
     expect(
       router.lookup(HTTPMethod.GET, '/Foo/MY-bAR')?.value,
       {'param': 'bAR'},
@@ -35,7 +48,10 @@ void main() {
   });
 
   test('parametric case insensitive with capital letter', () {
-    final router = RadixRouter()..on(HTTPMethod.GET, '/foo/:Param');
+    final config = const RadixRouterConfig(caseSensitive: false);
+    final router = RadixRouter(config: config)
+      ..on(HTTPMethod.GET, '/foo/:Param');
+
     expect(
       router.lookup(HTTPMethod.GET, '/Foo/bAR')?.value,
       {'Param': 'bAR'},
@@ -43,7 +59,10 @@ void main() {
   });
 
   test('case insensitive with capital letter in static path with param', () {
-    final router = RadixRouter()..on(HTTPMethod.GET, '/Foo/bar/:param');
+    final config = const RadixRouterConfig(caseSensitive: false);
+    final router = RadixRouter(config: config)
+      ..on(HTTPMethod.GET, '/Foo/bar/:param');
+
     expect(
       router.lookup(HTTPMethod.GET, '/foo/bar/baZ')?.value,
       {'param': 'baZ'},
@@ -53,7 +72,8 @@ void main() {
   test(
       'case insensitive with multiple paths containing capital letter in static path with param',
       () {
-    final router = RadixRouter()
+    final config = const RadixRouterConfig(caseSensitive: false);
+    final router = RadixRouter(config: config)
       ..on(HTTPMethod.GET, '/Foo/bar/:param')
       ..on(HTTPMethod.GET, '/Foo/baz/:param');
 
@@ -70,7 +90,9 @@ void main() {
   test(
       'case insensitive with multiple mixed-case params within same slash couple',
       () {
-    final router = RadixRouter()..on(HTTPMethod.GET, '/foo/:param1-:param2');
+    final config = const RadixRouterConfig(caseSensitive: false);
+    final router = RadixRouter(config: config)
+      ..on(HTTPMethod.GET, '/foo/:param1-:param2');
 
     expect(
       router.lookup(HTTPMethod.GET, '/FOO/My-bAR')?.value,
@@ -79,7 +101,10 @@ void main() {
   });
 
   test('case insensitive with multiple mixed-case params', () {
-    final router = RadixRouter()..on(HTTPMethod.GET, '/foo/:param1/:param2');
+    final config = const RadixRouterConfig(caseSensitive: false);
+    final router = RadixRouter(config: config)
+      ..on(HTTPMethod.GET, '/foo/:param1/:param2');
+
     expect(
       router.lookup(HTTPMethod.GET, '/FOO/My/bAR')?.value,
       {'param1': 'My', 'param2': 'bAR'},
@@ -87,7 +112,8 @@ void main() {
   });
 
   test('parametric case insensitive with multiple routes', () {
-    final router = RadixRouter()
+    final config = const RadixRouterConfig(caseSensitive: false);
+    final router = RadixRouter(config: config)
       ..on(HTTPMethod.POST, '/foo/:param/Static/:userId/Save')
       ..on(HTTPMethod.POST, '/foo/:param/Static/:userId/Update')
       ..on(HTTPMethod.POST, '/foo/:param/Static/:userId/CANCEL');

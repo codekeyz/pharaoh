@@ -4,13 +4,17 @@ import 'package:test/test.dart';
 
 void main() {
   test('parametric route, request.url contains dash', () {
-    final router = RadixRouter()..on(HTTPMethod.GET, '/a/:param/b');
+    final config = const RadixRouterConfig(caseSensitive: false);
+    final router = RadixRouter(config: config)
+      ..on(HTTPMethod.GET, '/a/:param/b');
+
     final result = router.lookup(HTTPMethod.GET, '/a/foo-bar/b');
     expect(result!.value, {'param': 'foo-bar'});
   });
 
   test('parametric route with fixed suffix', () {
-    final router = RadixRouter()
+    final config = const RadixRouterConfig(caseSensitive: false);
+    final router = RadixRouter(config: config)
       ..on(HTTPMethod.GET, '/a/:param-static')
       ..on(HTTPMethod.GET, '/b/:param.static');
 

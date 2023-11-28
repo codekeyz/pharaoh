@@ -4,9 +4,13 @@ import 'tree_utils.dart';
 
 class RadixRouterConfig {
   final bool caseSensitive;
+  final bool ignoreTrailingSlash;
+  final bool ignoreDuplicateSlashes;
 
   const RadixRouterConfig({
-    this.caseSensitive = false,
+    this.caseSensitive = true,
+    this.ignoreTrailingSlash = true,
+    this.ignoreDuplicateSlashes = true,
   });
 }
 
@@ -71,16 +75,26 @@ class RadixRouter {
     );
   }
 
+  String cleanPath(String path) {
+    if (config.ignoreDuplicateSlashes) {
+      path = path.replaceAll(RegExp(r'/+'), '/');
+    }
+    if (config.ignoreTrailingSlash) {
+      path = path.replaceAll(RegExp(r'/+$'), '');
+    }
+    return path;
+  }
+
   Node? lookup(HTTPMethod method, String path, {bool debug = false}) {
     Node rootNode = getMethodNode(method);
+    String route = cleanPath(path);
 
     if (debug) {
-      print('------------- Finding node for $path -------------');
+      print('------------- Finding node for $route -------------');
     }
 
     Map<String, String> resolvedParams = {};
 
-    String route = path;
     for (int i = 0; i < route.length; i++) {
       String char = route[i];
       if (!config.caseSensitive) char = char.toLowerCase();
