@@ -37,9 +37,9 @@ class RadixRouter {
       final currentpart = path.substring(i);
 
       /// checking early on to know if the we're iterating
-      /// on the start of a parametric route. If it's true, we need to construct
-      /// the actual key. which will be :alphanumeric-until-symbol and then
-      /// we increment the current Index with the length of the resolved key.
+      /// on the start of a parametric or regexeric route.
+      ///
+      /// If it's true, we need to construct the actual key.
       final hasParam = isParametric(currentpart);
       final hasRegex = isRegexeric(currentpart);
 
