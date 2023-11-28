@@ -24,7 +24,7 @@ class RadixRouter {
     return _nodeMap[method] = Node();
   }
 
-  void insert(HTTPMethod method, String path) {
+  void on(HTTPMethod method, String path) {
     Node root = getMethodNode(method);
 
     for (int i = 0; i < path.length; i++) {
