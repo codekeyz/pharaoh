@@ -1,7 +1,9 @@
-class Node {
+class Node<T> {
   Map<String, Node> children = {};
 
   bool terminal = false;
+
+  T? value;
 
   bool hasChild(String char) => children.containsKey(char);
 
@@ -21,7 +23,7 @@ class Node {
   }
 }
 
-class ParametricNode extends Node {
+class ParametricNode extends Node<Map<String, dynamic>> {
   final String name;
   ParametricNode(this.name);
 }

@@ -43,3 +43,30 @@ String getPathParameter(String pattern, {int at = 0}) {
   }
   return sb.toString();
 }
+
+String getValueinPath(String pattern, {int at = 0}) {
+  final length = pattern.length;
+  if (at > (length - 1)) {
+    throw RangeError('Index is out of bounds of $pattern');
+  }
+  final sb = StringBuffer();
+  for (int i = at; i < length; i++) {
+    final char = pattern[i];
+    if (char == '/') break;
+  }
+  return sb.toString();
+}
+
+final symbolRegex = RegExp(r'[@/_-]');
+
+typedef IndexedSymbol = ({String symbol, int index});
+
+List<IndexedSymbol> extractIndexedSymbols(String pattern) {
+  final List<IndexedSymbol> result = [];
+  for (int i = 0; i < pattern.length; i++) {
+    final char = pattern[i];
+    if (!symbolRegex.hasMatch(char)) continue;
+    result.add((index: i, symbol: char));
+  }
+  return result;
+}
