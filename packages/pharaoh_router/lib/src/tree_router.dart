@@ -102,22 +102,31 @@ class RadixRouter {
           final currentPath = path.substring(i);
           String val = getPathParameter(currentPath);
 
-          /*
-          If there are any symbols in the current path segment,
-          we need to be sure the current node doesn't have it as a child.
-          
-          If we do find that the current node has it as a child, then,
-          our resolved parameter will be everything until that special character.
-
-          TODO(codekeyz): We can optimize this by just doing the find here and
-            exiting on the first find instead of trying to get all the symbols in the
-            string with their indexes
-          */
+          /// If there are any symbols in the current path segment,
+          /// we need to be sure the current node doesn't have it as a child.
+          ///
+          /// we do find that the current node has it as a child, then,
+          /// resolved parameter will be everything until that special character.
           final indexedSymbols = extractIndexedSymbols(currentPath);
           if (indexedSymbols.isNotEmpty) {
             for (final sym in indexedSymbols) {
-              final hasChild = paramNode.hasChild(sym.symbol);
-              if (hasChild) {
+              final symIndex = sym.index;
+              final afterSymbol = symIndex + 1;
+              final nextCharactorAfterSymbol =
+                  currentPath.substring(afterSymbol)[0];
+
+              final hasValidNodeAfterAssumedParametricValue =
+                  paramNode.hasChild(sym.char) &&
+                      paramNode
+                          .getChild(sym.char)
+                          .hasChild(nextCharactorAfterSymbol);
+
+              if (debug) {
+                print(
+                    'Char after ${sym.char}: ---> $nextCharactorAfterSymbol ${hasValidNodeAfterAssumedParametricValue ? 'found a node ✅' : 'found no node'}');
+              }
+
+              if (hasValidNodeAfterAssumedParametricValue) {
                 val = currentPath.substring(0, sym.index);
                 break;
               }

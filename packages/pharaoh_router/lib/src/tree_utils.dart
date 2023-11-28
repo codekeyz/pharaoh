@@ -57,16 +57,16 @@ String getValueinPath(String pattern, {int at = 0}) {
   return sb.toString();
 }
 
-final symbolRegex = RegExp(r'[@/_-]');
+final symbolRegex = RegExp(r'[@/_.-]');
 
-typedef IndexedSymbol = ({String symbol, int index});
+typedef IndexedSymbol = ({String char, int index});
 
 List<IndexedSymbol> extractIndexedSymbols(String pattern) {
   final List<IndexedSymbol> result = [];
   for (int i = 0; i < pattern.length; i++) {
     final char = pattern[i];
     if (!symbolRegex.hasMatch(char)) continue;
-    result.add((index: i, symbol: char));
+    result.add((index: i, char: char));
   }
   return result;
 }

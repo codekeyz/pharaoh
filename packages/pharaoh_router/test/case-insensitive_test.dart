@@ -14,10 +14,14 @@ void main() {
       ..insert(HTTPMethod.GET, '/a/:param-static')
       ..insert(HTTPMethod.GET, '/b/:param.static');
 
-    var result = router.search(HTTPMethod.GET, '/b/param.static');
-    expect(result!.value, {'param': 'param'});
+    expect(router.search(HTTPMethod.GET, '/a/param-static')?.value,
+        {'param': 'param'});
+    expect(router.search(HTTPMethod.GET, '/b/param.static')?.value,
+        {'param': 'param'});
 
-    result = router.search(HTTPMethod.GET, '/a/param-static');
-    expect(result!.value, {'param': 'param'});
+    expect(router.search(HTTPMethod.GET, '/a/param-param-static')?.value,
+        {'param': 'param-param'});
+    expect(router.search(HTTPMethod.GET, '/b/param.param.static')?.value,
+        {'param': 'param.param'});
   });
 }
