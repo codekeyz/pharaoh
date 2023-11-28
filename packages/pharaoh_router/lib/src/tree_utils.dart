@@ -16,6 +16,11 @@ bool isDoubleColon(String pattern, {int at = 0}) {
       pattern.codeUnitAt(at + 1) == 58;
 }
 
+bool isRegexeric(String pattern, {int at = 0}) {
+  if (at > (pattern.length - 1)) return false;
+  return pattern.codeUnitAt(at) == 40;
+}
+
 // *
 bool isWildCard(String pattern, {int at = 0}) {
   if (at > (pattern.length - 1)) return false;
@@ -69,4 +74,21 @@ List<IndexedSymbol> extractIndexedSymbols(String pattern) {
     result.add((index: i, char: char));
   }
   return result;
+}
+
+int getClosingParenthesisPosition(String path, int idx) {
+  /// track the number of opening parenthesis we have seen
+  int parentheses = 1;
+
+  while (++idx < path.length) {
+    if (path[idx] == '\\') {
+      idx++; // skip escaped characters
+    } else if (path[idx] == '(') {
+      parentheses++;
+    } else if (path[idx] == ')' && --parentheses == 0) {
+      return idx;
+    }
+  }
+
+  throw ArgumentError('Invalid regexp expression in "$path"');
 }

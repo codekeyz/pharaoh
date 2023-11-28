@@ -16,3 +16,8 @@ class ParametricNode extends Node<Map<String, dynamic>> {
   final String name;
   ParametricNode(this.name);
 }
+
+class RegexericNode extends Node<Map<String, dynamic>> {
+  final String regexStr;
+  RegexericNode(this.regexStr);
+}

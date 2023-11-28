@@ -34,16 +34,24 @@ class RadixRouter {
     for (int i = 0; i < path.length; i++) {
       String char = path[i];
       if (!config.caseSensitive) char = char.toLowerCase();
+      final currentpart = path.substring(i);
 
       /// checking early on to know if the we're iterating
       /// on the start of a parametric route. If it's true, we need to construct
       /// the actual key. which will be :alphanumeric-until-symbol and then
       /// we increment the current Index with the length of the resolved key.
-      final hasParam = isParametric(path.substring(i));
+      final hasParam = isParametric(currentpart);
+      final hasRegex = isRegexeric(currentpart);
+
       if (hasParam) {
         final paramName = getPathParameter(path.substring(i + 1));
         char += paramName;
         i += paramName.length;
+      } else if (hasRegex) {
+        final closingAt = getClosingParenthesisPosition(currentpart, 0);
+        final regexStr = currentpart.substring(1, closingAt + 1);
+        char += regexStr;
+        i += regexStr.length;
       }
 
       var child = root.children[char];
@@ -51,6 +59,8 @@ class RadixRouter {
         if (hasParam) {
           final name = getPathParameter(char.substring(1));
           child = ParametricNode(name);
+        } else if (hasRegex) {
+          child = RegexericNode(char);
         } else {
           child = Node();
         }
