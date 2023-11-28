@@ -59,8 +59,6 @@ class RadixRouter {
         if (hasParam) {
           final name = getPathParameter(char.substring(1));
           child = ParametricNode(name);
-        } else if (hasRegex) {
-          child = RegexericNode(char);
         } else {
           child = Node();
         }
@@ -105,6 +103,7 @@ class RadixRouter {
 
     Map<String, String> resolvedParams = {};
 
+    outer:
     for (int i = 0; i < route.length; i++) {
       String char = route[i];
       if (!config.caseSensitive) char = char.toLowerCase();
@@ -165,13 +164,20 @@ class RadixRouter {
           }
           char = val;
 
+          resolvedParams[paramNode.name] = char;
+          rootNode = paramNode;
+          i = nextCharIndex - 1;
+
+          final canProceed = i < (path.length - 1) && !rootNode.terminal;
+
           if (debug) {
             print('We found parametric for $char');
           }
 
-          resolvedParams[paramNode.name] = char;
-          rootNode = paramNode;
-          i = nextCharIndex - 1;
+          /// if we find that we reached the end of the word,
+          /// and also the current parametric node is a terminal
+          /// then exit the outer loop. that's our guy
+          if (!canProceed) break outer;
           break;
         }
       }

@@ -14,10 +14,16 @@ class Node<T> {
 
 class ParametricNode extends Node<Map<String, dynamic>> {
   final String name;
-  ParametricNode(this.name);
-}
+  final String? regsrc;
 
-class RegexericNode extends Node<Map<String, dynamic>> {
-  final String regexStr;
-  RegexericNode(this.regexStr);
+  ParametricNode(this.name, {this.regsrc});
+
+  RegExp? _regexCache;
+  RegExp? get regex {
+    if (_regexCache != null) return _regexCache;
+    final source = regsrc;
+    if (source == null) return null;
+    final actual = source.substring(1, source.length - 1);
+    return _regexCache ??= RegExp(RegExp.escape(actual));
+  }
 }

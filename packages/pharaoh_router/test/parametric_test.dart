@@ -3,6 +3,16 @@ import 'package:pharaoh_router/pharaoh_router.dart';
 import 'package:test/test.dart';
 
 void main() {
+  test('parametric route, parametric and with fixed suffix', () {
+    const config = RadixRouterConfig(caseSensitive: false);
+    final router = RadixRouter(config: config)
+      ..on(HTTPMethod.GET, '/:a')
+      ..on(HTTPMethod.GET, '/:a.png');
+
+    expect(router.lookup(HTTPMethod.GET, '/chima')?.value, {'a': 'chima'});
+    expect(router.lookup(HTTPMethod.GET, '/dike.png')?.value, {'a': 'dike'});
+  });
+
   test('parametric route, request.url contains dash', () {
     final config = const RadixRouterConfig(caseSensitive: false);
     final router = RadixRouter(config: config)
