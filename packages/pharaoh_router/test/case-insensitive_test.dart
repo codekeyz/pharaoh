@@ -88,17 +88,27 @@ void main() {
     );
   });
 
-  ///
-  ///
-  ///
-  ///
-  ///
-  ///
-  ///
-  ///
-  ///
-  ///
-  ///
+  test('parametric case insensitive with multiple routes', () {
+    final router = RadixRouter()
+      ..insert(HTTPMethod.POST, '/foo/:param/Static/:userId/Save')
+      ..insert(HTTPMethod.POST, '/foo/:param/Static/:userId/Update')
+      ..insert(HTTPMethod.POST, '/foo/:param/Static/:userId/CANCEL');
+
+    expect(
+      router.lookup(HTTPMethod.POST, '/foo/bAR/static/one/SAVE')?.value,
+      {'param': 'bAR', 'userId': 'one'},
+    );
+
+    expect(
+      router.lookup(HTTPMethod.POST, '/fOO/Bar/Static/two/update')?.value,
+      {'param': 'Bar', 'userId': 'two'},
+    );
+
+    expect(
+      router.lookup(HTTPMethod.POST, '/Foo/bAR/STATIC/THREE/cAnCeL')?.value,
+      {'param': 'bAR', 'userId': 'THREE'},
+    );
+  });
 
   test('parametric route, request.url contains dash', () {
     final router = RadixRouter()..insert(HTTPMethod.GET, '/a/:param/b');
