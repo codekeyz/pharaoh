@@ -22,6 +22,23 @@ void main() {
     expect(result!.value, {'param': 'foo-bar'});
   });
 
+  test('parametric route, and suffixed', () {
+    const config = RadixRouterConfig(caseSensitive: false);
+    final router = RadixRouter(config: config)
+      ..on(HTTPMethod.POST, '/:file.png')
+      ..on(HTTPMethod.GET, '/:image');
+
+    expect(
+      router.lookup(HTTPMethod.GET, '/hello.png')?.value,
+      {'image': 'hello.png'},
+    );
+
+    expect(
+      router.lookup(HTTPMethod.POST, '/a@b.c..png')?.value,
+      {'file': 'a@b.c.'},
+    );
+  });
+
   test('parametric route with fixed suffix', () {
     final config = const RadixRouterConfig(caseSensitive: false);
     final router = RadixRouter(config: config)

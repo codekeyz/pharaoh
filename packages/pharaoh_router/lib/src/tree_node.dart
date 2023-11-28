@@ -27,3 +27,9 @@ class ParametricNode extends Node<Map<String, dynamic>> {
     return _regexCache ??= RegExp(RegExp.escape(actual));
   }
 }
+
+extension ParametricNodeExtension on Iterable<ParametricNode> {
+  bool get hasOnlyOneTerminal {
+    return length == 1 && first.terminal;
+  }
+}

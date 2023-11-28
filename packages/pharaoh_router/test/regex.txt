@@ -1,0 +1,19 @@
+Node? newNodeMaybe;
+
+      if (hasParam) {
+        final paramName = getPathParameter(path.substring(i + 1));
+        char += paramName;
+        i += paramName.length;
+
+        final nextCharIndex = i + 1;
+        final nextPart = path.substring(nextCharIndex);
+        if (isRegexeric(nextPart)) {
+          final closingAt = getClosingParenthesisPosition(nextPart, 0);
+          final regexStr = nextPart.substring(0, closingAt + 1);
+          // i += regexStr.length;
+
+          // newNodeMaybe = ParametricNode(paramName, regsrc: regexStr);
+        }
+
+        newNodeMaybe = ParametricNode(paramName);
+      }
