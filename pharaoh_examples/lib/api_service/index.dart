@@ -36,7 +36,7 @@ void main([args]) async {
   /// meaning only paths prefixed with "/api"
   /// will cause this middleware to be invoked
   app.use((req, res, next) {
-    var key = req.params['api-key'];
+    var key = req.query['api-key'];
 
     /// key isn't present
     if (key == null) {
