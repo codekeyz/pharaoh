@@ -23,5 +23,10 @@ void main() {
         {'param': 'param-param'});
     expect(router.search(HTTPMethod.GET, '/b/param.param.static')?.value,
         {'param': 'param.param'});
+
+    expect(router.search(HTTPMethod.GET, '/a/param.param-static')?.value,
+        {'param': 'param.param'});
+    expect(router.search(HTTPMethod.GET, '/b/param-param.static')?.value,
+        {'param': 'param-param'});
   });
 }
