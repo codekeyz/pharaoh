@@ -25,12 +25,11 @@ class RadixRouter {
   }
 
   void insert(HTTPMethod method, String path) {
-    if (!config.caseSensitive) path = path.toLowerCase();
-
     Node root = getMethodNode(method);
 
     for (int i = 0; i < path.length; i++) {
       String char = path[i];
+      if (!config.caseSensitive) char = char.toLowerCase();
 
       /// checking early on to know if the we're iterating
       /// on the start of a parametric route. If it's true, we need to construct
@@ -72,8 +71,7 @@ class RadixRouter {
     );
   }
 
-  Node? search(HTTPMethod method, String path, {bool debug = false}) {
-    if (!config.caseSensitive) path = path.toLowerCase();
+  Node? lookup(HTTPMethod method, String path, {bool debug = false}) {
     Node rootNode = getMethodNode(method);
 
     if (debug) {
@@ -84,7 +82,8 @@ class RadixRouter {
 
     String route = path;
     for (int i = 0; i < route.length; i++) {
-      var char = route[i];
+      String char = route[i];
+      if (!config.caseSensitive) char = char.toLowerCase();
 
       final hasChild = rootNode.hasChild(char);
 
