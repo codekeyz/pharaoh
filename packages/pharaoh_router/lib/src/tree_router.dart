@@ -78,7 +78,7 @@ class RadixRouter {
       print('------------- Finding node for $path -------------');
     }
 
-    Map<String, String> _pathParams = {};
+    Map<String, String> resolvedParams = {};
 
     String route = path;
     for (int i = 0; i < route.length; i++) {
@@ -145,7 +145,7 @@ class RadixRouter {
             print('We found parametric for $char');
           }
 
-          _pathParams[paramNode.name] = char;
+          resolvedParams[paramNode.name] = char;
           rootNode = paramNode;
           i = nextCharIndex - 1;
           break;
@@ -158,30 +158,6 @@ class RadixRouter {
     }
 
     if (!rootNode.terminal) return null;
-    return rootNode..value = _pathParams;
+    return rootNode..value = resolvedParams;
   }
-}
-
-void main() async {
-  final radixTree = RadixRouter();
-
-  // radixTree.insert(HTTPMethod.GET, '/foo/bar');
-  // radixTree.insert(HTTPMethod.GET, '/chima/bar');
-  // radixTree.insert(HTTPMethod.GET, '/foo/bar/home');
-  // radixTree.insert(HTTPMethod.GET, '/a/:user/c');
-  // radixTree.insert(HTTPMethod.GET, '/foo/:param1-:param2');
-  // radixTree.insert(HTTPMethod.GET, '/foo/:user1/:location');
-
-  // radixTree.printTree();
-
-  // final node = radixTree.search(HTTPMethod.GET, '/foo/bar/home');
-  // print(node);
-
-  // // case insensitive with multiple mixed-case params within same slash couple
-  // final node2 = radixTree.search(HTTPMethod.GET, '/FOO/My-bAR');
-  // print(node2);
-
-  // // case insensitive with multiple mixed-case params
-  // final node3 = radixTree.search(HTTPMethod.GET, '/FOO/My/bAR');
-  // print(node3);
 }
