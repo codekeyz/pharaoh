@@ -1,5 +1,10 @@
-class Node<T> {
+import 'package:collection/collection.dart';
+import 'package:pharaoh_router/src/tree_utils.dart';
+
+abstract class Node<T> {
   Map<String, Node> children = {};
+
+  String get name;
 
   bool terminal = false;
 
@@ -11,24 +16,69 @@ class Node<T> {
 
   bool get hasChildren => children.isNotEmpty;
 
+  ParametricNode? _paramNodecache;
+  ParametricNode? get paramNode {
+    if (_paramNodecache != null) return _paramNodecache;
+    final node = children.values.firstWhereOrNull((e) => e is ParametricNode);
+    if (node == null) return null;
+    return _paramNodecache = (node as ParametricNode);
+  }
+
+  Node addChildAndReturn(String key, Node node) {
+    children[key] = node;
+    return node;
+  }
+
   List<ParametricNode> get paramNodes =>
       !hasChildren ? [] : children.values.whereType<ParametricNode>().toList();
 }
 
+class StaticNode extends Node<String> {
+  final String _name;
+
+  @override
+  String get name => 'static($_name)';
+
+  StaticNode(this._name);
+}
+
+typedef ParametricDefinition = ({String name, String? suffix, RegExp? regex});
+
 class ParametricNode extends Node<Map<String, dynamic>> {
-  final String name;
-  final String? regsrc;
+  final List<ParametricDefinition> _definitions = [];
 
-  ParametricNode(this.name, {this.regsrc});
+  List<ParametricDefinition> get definitions =>
+      UnmodifiableListView(_definitions);
 
-  RegExp? _regexCache;
-  RegExp? get regex {
-    if (_regexCache != null) return _regexCache;
-    final source = regsrc;
-    if (source == null) return null;
-    final actual = source.substring(1, source.length - 1);
-    return _regexCache ??= RegExp(RegExp.escape(actual));
+  ParametricNode(ParametricDefinition defn) {
+    _definitions.add(defn);
   }
+
+  factory ParametricNode.fromPath(String path) {
+    final name = getPathParameter(path, start: 1);
+    final remaining = path.substring(name.length + 1);
+    return ParametricNode((name: name, suffix: remaining, regex: null));
+  }
+
+  void addNewDefinition(String part) {
+    print(part);
+
+    final name = getPathParameter(part, start: 1);
+
+    _definitions.add((name: name, suffix: null, regex: null));
+  }
+
+  @override
+  String get name => 'parametric(${_definitions.length})';
+
+  // RegExp? _regexCache;
+  // RegExp? get regex {
+  //   if (_regexCache != null) return _regexCache;
+  //   final source = regsrc;
+  //   if (source == null) return null;
+  //   final actual = source.substring(1, source.length - 1);
+  //   return _regexCache ??= RegExp(RegExp.escape(actual));
+  // }
 }
 
 extension NodeExtension on Iterable<Node> {
