@@ -107,6 +107,7 @@ class RadixRouter {
           '------------- Finding node for ${method.name} $route -------------');
     }
 
+    finderLoop:
     for (int i = 0; i < route.length; i++) {
       String char = route[i];
       if (!config.caseSensitive) char = char.toLowerCase();
@@ -119,13 +120,38 @@ class RadixRouter {
               .writeln('- Found Static for             ->              $char');
         }
       } else {
-        print('Char $char   $rootNode');
+        switch (rootNode.runtimeType) {
+          case ParametricNode:
+            debugLog.writeln(
+                'Special case unhandled: We should a parametric Node here');
+            break finderLoop;
+          case Node:
+            debugLog.writeln('- Current Node does not have child for $char');
+            final parametrics = rootNode.paramNodes;
+            if (parametrics.isEmpty) return null;
+            debugLog
+                .writeln("- But it has ${parametrics.length} parametric node");
 
-        break;
+            final resolve = getParametricNode(path.substring(i), parametrics);
+            if (resolve == null) break finderLoop;
 
-        // i += value.param.length;
-        // rootNode = node;
-        // resolvedParams[node.name] = value.param;
+            final resolvedNode = resolve.node;
+
+            if (resolvedNode is ParametricNode) {
+              final param = resolve.param;
+              debugLog.writeln(
+                  "- Then we found ParametricNode with ${resolvedNode.name}:$param");
+
+              resolvedParams[resolvedNode.name] = param;
+              final formerIndex = i;
+              i += (param.length - 1);
+
+              debugLog.writeln(
+                  "- Current index is now moved from $formerIndex  to $i");
+            }
+            rootNode = resolvedNode;
+            break;
+        }
 
         // debugLog.writeln(
         //     '- Found Node($node) ${value.param} for     ->              $char');
@@ -155,8 +181,6 @@ ParamValueAndNode? getParametricNode(
   for (final node in paramNodes) {
     String param = '';
     for (final sym in indexedSymbols) {
-      print(sym.char);
-
       final hasChild = node.hasChild(sym.char);
       if (!hasChild) break;
 

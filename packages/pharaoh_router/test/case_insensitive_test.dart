@@ -97,10 +97,8 @@ void main() {
     final router = RadixRouter(config: config)
       ..on(HTTPMethod.GET, '/foo/:param1-:param2');
 
-    router.printTree();
-
     expect(
-      router.lookup(HTTPMethod.GET, '/FOO/My-bAR', debug: true)?.value,
+      router.lookup(HTTPMethod.GET, '/FOO/My-bAR')?.value,
       {'param1': 'My', 'param2': 'bAR'},
     );
   });
