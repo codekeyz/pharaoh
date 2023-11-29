@@ -35,13 +35,13 @@ bool isAlphabetic(String character) {
 /// `:name/foo/bar` --> `name`
 ///
 /// `:user/`    --> `user`
-String getPathParameter(String pattern, {int at = 0}) {
+String getPathParameter(String pattern, {int start = 0}) {
   final length = pattern.length;
-  if (at > (length - 1)) {
+  if (start > (length - 1)) {
     throw RangeError('Index is out of bounds of $pattern');
   }
   final sb = StringBuffer();
-  for (int i = at; i < length; i++) {
+  for (int i = start; i < length; i++) {
     final char = pattern[i];
     if (!isAlphabetic(char)) break;
     sb.write(char);

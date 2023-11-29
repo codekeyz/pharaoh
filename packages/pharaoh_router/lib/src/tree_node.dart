@@ -10,6 +10,9 @@ class Node<T> {
   Node getChild(String char) => children[char]!;
 
   bool get hasChildren => children.isNotEmpty;
+
+  List<ParametricNode> get paramNodes =>
+      !hasChildren ? [] : children.values.whereType<ParametricNode>().toList();
 }
 
 class ParametricNode extends Node<Map<String, dynamic>> {
@@ -28,7 +31,7 @@ class ParametricNode extends Node<Map<String, dynamic>> {
   }
 }
 
-extension ParametricNodeExtension on Iterable<ParametricNode> {
+extension NodeExtension on Iterable<Node> {
   bool get hasOnlyOneTerminal {
     return length == 1 && first.terminal;
   }

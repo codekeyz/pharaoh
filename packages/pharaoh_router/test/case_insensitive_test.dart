@@ -33,7 +33,10 @@ void main() {
     final router = RadixRouter(config: config)
       ..on(HTTPMethod.GET, '/foo/:param');
 
-    expect(router.lookup(HTTPMethod.GET, '/Foo/bAR')?.value, {'param': 'bAR'});
+    expect(
+      router.lookup(HTTPMethod.GET, '/Foo/bAR')?.value,
+      {'param': 'bAR'},
+    );
   });
 
   test('parametric case insensitive with a static part', () {

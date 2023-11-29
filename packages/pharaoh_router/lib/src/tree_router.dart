@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:pharaoh/pharaoh.dart';
 import 'tree_node.dart';
 import 'tree_utils.dart';
@@ -106,13 +107,11 @@ class RadixRouter {
           '------------- Finding node for ${method.name} $route -------------');
     }
 
-    outer:
     for (int i = 0; i < route.length; i++) {
       String char = route[i];
       if (!config.caseSensitive) char = char.toLowerCase();
 
       final hasChild = rootNode.hasChild(char);
-
       if (hasChild) {
         rootNode = rootNode.getChild(char);
         if (debug) {
@@ -120,102 +119,28 @@ class RadixRouter {
               .writeln('- Found Static for             ->              $char');
         }
       } else {
-        final paramNodes = rootNode.children.values.whereType<ParametricNode>();
-        if (paramNodes.isEmpty) return null;
+        final paramNodes = rootNode.paramNodes;
+        if (paramNodes.isEmpty) break;
+
+        final value = getParametricNode(path.substring(i), paramNodes.toList());
+        if (value == null) break;
+
+        final node = value.node;
+
+        if (node is ParametricNode) {
+          i += value.param.length;
+          rootNode = node;
+          resolvedParams[node.name] = value.param;
+        } else {
+          print('We found a static node');
+          rootNode = node;
+        }
+
+        debugLog.writeln(
+            '- Found Node($node) ${value.param} for     ->              $char');
 
         if (debug) {
-          debugLog.writeln(
-              '- Found Parametric (${paramNodes.length}) for     ->              $char');
-        }
-
-        /// special case when we have only one parametric route in this node
-        if (paramNodes.hasOnlyOneTerminal) {
-          final paramNode = paramNodes.first;
-          final val = path.substring(i, path.length);
-          char = val;
-          resolvedParams[paramNode.name] = char;
-          rootNode = paramNode;
-
-          if (debug) {
-            debugLog.writeln(
-                '  and is a terminal so end.    ->              $char   ✅');
-          }
-          break;
-        }
-
-        parametericFind:
-        for (final paramNode in paramNodes) {
-          if (debug) {
-            debugLog.writeln('     *maybe?    :${paramNode.name}');
-          }
-          final currentPath = path.substring(i);
-          String val = getPathParameter(currentPath);
-
-          /// If there are any symbols in the current path segment,
-          /// we need to be sure the current node doesn't have it as a child.
-          ///
-          /// we do find that the current node has it as a child, then,
-          /// resolved parameter will be everything until that special character.
-          final indexedSymbols = extractIndexedSymbols(currentPath);
-          if (debug) {
-            debugLog.writeln(
-                '     *symbols:  ${indexedSymbols.map((e) => e.char).join(', ')}');
-          }
-
-          /// if we have symbols in the current path segment
-          /// we need to verify that what we're capturing is the
-          /// actual parameter.
-          ///
-          /// If we find no static nodes for the symbols,
-          /// the whole string is written off as a parameter.
-          ///
-          /// eg: user-name/ -> will give us user as parameter. But then we have
-          /// - and / as symbols.
-          if (indexedSymbols.isNotEmpty) {
-            for (final sym in indexedSymbols) {
-              final symIndex = sym.index;
-              final charAfterSymbol = symIndex + 1;
-              final symbolPath = path.substring(charAfterSymbol + 1);
-              final nextCharacter = symbolPath[0];
-
-              final isActualNodeToUse = paramNode.hasChild(sym.char) &&
-                  paramNode.getChild(sym.char).hasChild(nextCharacter);
-
-              if (isActualNodeToUse) {
-                if (debug) {
-                  debugLog.writeln(
-                      "- Found Static for             ->            _(${sym.char})_ and it's next $nextCharacter");
-                }
-
-                i += charAfterSymbol;
-                rootNode = paramNode.getChild(sym.char).getChild(nextCharacter);
-                resolvedParams[paramNode.name] = val;
-                break parametericFind;
-              } else {
-                val = currentPath.substring(0, symIndex + 1);
-              }
-            }
-          }
-
-          final nextCharIndex = val.length + i;
-          final endOfPath = nextCharIndex >= path.length;
-          if (!endOfPath) {
-            final nextChar = path[nextCharIndex];
-            if (!paramNode.hasChild(nextChar)) continue;
-          }
-
-          if (!paramNode.terminal) continue;
-
-          char = val;
-          resolvedParams[paramNode.name] = char;
-          rootNode = paramNode;
-          i = nextCharIndex - 1;
-
-          if (debug) {
-            debugLog.writeln(
-                '- Node :${paramNode.name} works for ->        $char  ✅');
-          }
-          break;
+          debugLog.writeln('Path: $path    Mext Char ${path[i]}');
         }
       }
     }
@@ -227,4 +152,30 @@ class RadixRouter {
     if (!rootNode.terminal) return null;
     return rootNode..value = resolvedParams;
   }
+}
+
+typedef ParamValueAndNode = ({String param, Node node});
+
+ParamValueAndNode? getParametricNode(
+  String path,
+  List<ParametricNode> paramNodes,
+) {
+  final indexedSymbols = extractIndexedSymbols(path);
+  if (indexedSymbols.isEmpty && paramNodes.length == 1) {
+    return (param: path, node: paramNodes.first);
+  }
+
+  for (final node in paramNodes) {
+    String param = '';
+    for (final sym in indexedSymbols) {
+      print(sym.char);
+
+      final hasChild = node.hasChild(sym.char);
+      if (!hasChild) break;
+
+      param += path.substring(0, sym.index);
+      return (node: node, param: param);
+    }
+  }
+  return null;
 }
