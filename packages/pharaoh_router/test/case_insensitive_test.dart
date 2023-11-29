@@ -103,37 +103,37 @@ void main() {
     );
   });
 
-  // test('case insensitive with multiple mixed-case params', () {
-  //   final config = const RadixRouterConfig(caseSensitive: false);
-  //   final router = RadixRouter(config: config)
-  //     ..on(HTTPMethod.GET, '/foo/:param1/:param2');
+  test('case insensitive with multiple mixed-case params', () {
+    final config = const RadixRouterConfig(caseSensitive: false);
+    final router = RadixRouter(config: config)
+      ..on(HTTPMethod.GET, '/foo/:param1/:param2');
 
-  //   expect(
-  //     router.lookup(HTTPMethod.GET, '/FOO/My/bAR')?.value,
-  //     {'param1': 'My', 'param2': 'bAR'},
-  //   );
-  // });
+    expect(
+      router.lookup(HTTPMethod.GET, '/FOO/My/bAR')?.value,
+      {'param1': 'My', 'param2': 'bAR'},
+    );
+  });
 
-  // test('parametric case insensitive with multiple routes', () {
-  //   final config = const RadixRouterConfig(caseSensitive: false);
-  //   final router = RadixRouter(config: config)
-  //     ..on(HTTPMethod.POST, '/foo/:param/Static/:userId/Save')
-  //     ..on(HTTPMethod.POST, '/foo/:param/Static/:userId/Update')
-  //     ..on(HTTPMethod.POST, '/foo/:param/Static/:userId/CANCEL');
+  test('parametric case insensitive with multiple routes', () {
+    final config = const RadixRouterConfig(caseSensitive: false);
+    final router = RadixRouter(config: config)
+      ..on(HTTPMethod.POST, '/foo/:param/Static/:userId/Save')
+      ..on(HTTPMethod.POST, '/foo/:param/Static/:userId/Update')
+      ..on(HTTPMethod.POST, '/foo/:param/Static/:userId/CANCEL');
 
-  //   expect(
-  //     router.lookup(HTTPMethod.POST, '/foo/bAR/static/one/SAVE')?.value,
-  //     {'param': 'bAR', 'userId': 'one'},
-  //   );
+    expect(
+      router.lookup(HTTPMethod.POST, '/foo/bAR/static/one/SAVE')?.value,
+      {'param': 'bAR', 'userId': 'one'},
+    );
 
-  //   expect(
-  //     router.lookup(HTTPMethod.POST, '/fOO/Bar/Static/two/update')?.value,
-  //     {'param': 'Bar', 'userId': 'two'},
-  //   );
+    expect(
+      router.lookup(HTTPMethod.POST, '/fOO/Bar/Static/two/update')?.value,
+      {'param': 'Bar', 'userId': 'two'},
+    );
 
-  //   expect(
-  //     router.lookup(HTTPMethod.POST, '/Foo/bAR/STATIC/THREE/cAnCeL')?.value,
-  //     {'param': 'bAR', 'userId': 'THREE'},
-  //   );
-  // });
+    expect(
+      router.lookup(HTTPMethod.POST, '/Foo/bAR/STATIC/THREE/cAnCeL')?.value,
+      {'param': 'bAR', 'userId': 'THREE'},
+    );
+  });
 }
