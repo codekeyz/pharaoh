@@ -119,29 +119,16 @@ class RadixRouter {
               .writeln('- Found Static for             ->              $char');
         }
       } else {
-        final paramNodes = rootNode.paramNodes;
-        if (paramNodes.isEmpty) break;
+        print('Char $char   $rootNode');
 
-        final value = getParametricNode(path.substring(i), paramNodes.toList());
-        if (value == null) break;
+        break;
 
-        final node = value.node;
+        // i += value.param.length;
+        // rootNode = node;
+        // resolvedParams[node.name] = value.param;
 
-        if (node is ParametricNode) {
-          i += value.param.length;
-          rootNode = node;
-          resolvedParams[node.name] = value.param;
-        } else {
-          print('We found a static node');
-          rootNode = node;
-        }
-
-        debugLog.writeln(
-            '- Found Node($node) ${value.param} for     ->              $char');
-
-        if (debug) {
-          debugLog.writeln('Path: $path    Mext Char ${path[i]}');
-        }
+        // debugLog.writeln(
+        //     '- Found Node($node) ${value.param} for     ->              $char');
       }
     }
 
