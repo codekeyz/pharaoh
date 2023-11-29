@@ -124,6 +124,7 @@ class RadixRouter {
           case ParametricNode:
             debugLog.writeln(
                 'Special case unhandled: We should a parametric Node here');
+
             break finderLoop;
           case Node:
             debugLog.writeln('- Current Node does not have child for $char');
@@ -132,7 +133,8 @@ class RadixRouter {
             debugLog
                 .writeln("- But it has ${parametrics.length} parametric node");
 
-            final resolve = getParametricNode(path.substring(i), parametrics);
+            final resolve = getParametricNode(path.substring(i), parametrics,
+                debugLog: debugLog);
             if (resolve == null) break finderLoop;
 
             final resolvedNode = resolve.node;
@@ -171,22 +173,45 @@ typedef ParamValueAndNode = ({String param, Node node});
 
 ParamValueAndNode? getParametricNode(
   String path,
-  List<ParametricNode> paramNodes,
-) {
+  List<ParametricNode> paramNodes, {
+  StringBuffer? debugLog,
+}) {
   final indexedSymbols = extractIndexedSymbols(path);
   if (indexedSymbols.isEmpty && paramNodes.length == 1) {
     return (param: path, node: paramNodes.first);
   }
 
-  for (final node in paramNodes) {
-    String param = '';
-    for (final sym in indexedSymbols) {
-      final hasChild = node.hasChild(sym.char);
-      if (!hasChild) break;
+  final symStr = indexedSymbols.map((e) => e.char).join(', ');
+  debugLog?.writeln("   > resolving values in path $path");
+  debugLog?.writeln("         > symbols -> $symStr");
 
-      param += path.substring(0, sym.index);
-      return (node: node, param: param);
+  late Node root;
+  late String param;
+
+  for (final node in paramNodes) {
+    root = node;
+
+    if (node.terminal) {
+      param = path;
+
+      debugLog?.writeln(
+          "   > ${node.runtimeType.toString().toLowerCase()} is a terminal");
+      break;
+    }
+
+    for (final sym in indexedSymbols) {
+      final hasChild = root.hasChild(sym.char);
+      if (hasChild) {
+        param = path.substring(0, sym.index);
+        debugLog?.writeln("         > symbol  -> ${sym.char} has a node");
+      } else {
+        param = path.substring(0, sym.index + 1);
+        debugLog?.writeln("         > symbol  -> ${sym.char} has no node");
+      }
+
+      debugLog?.writeln("   > param is now $param");
     }
   }
-  return null;
+
+  return (node: root, param: param);
 }
