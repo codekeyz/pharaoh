@@ -15,9 +15,11 @@ void main() {
   test('parametric route with fixed suffix', () async {
     final config = const RadixRouterConfig(caseSensitive: false);
     RadixRouter(config: config)
+      ..addRoute(HTTPMethod.GET, '/user')
       ..addRoute(HTTPMethod.GET, '/user/:a')
-      ..addRoute(HTTPMethod.GET, '/user/:b/hello')
-      ..addRoute(HTTPMethod.GET, '/user/:b-adcd/hello', debug: true)
+      ..addRoute(HTTPMethod.GET, '/a/:param/b')
+      ..addRoute(HTTPMethod.GET, '/:param-static/hello')
+      ..addRoute(HTTPMethod.GET, '/home/come/here/:filename.png')
       ..printTree();
   });
 }

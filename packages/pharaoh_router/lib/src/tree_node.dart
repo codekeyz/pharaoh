@@ -61,11 +61,11 @@ class ParametricNode extends Node<Map<String, dynamic>> {
   }
 
   void addNewDefinition(String part) {
-    print(part);
-
     final name = getPathParameter(part, start: 1);
-
-    _definitions.add((name: name, suffix: null, regex: null));
+    final paramLength = name.length + 1;
+    final isEnd = part.length == paramLength;
+    final remaining = isEnd ? null : part.substring(paramLength);
+    _definitions.add((name: name, suffix: remaining, regex: null));
   }
 
   @override
