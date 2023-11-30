@@ -1,4 +1,6 @@
 // <username>
+import 'tree_node.dart';
+
 bool isParametric(String pattern, {int start = 0}) {
   return pattern.codeUnitAt(start) == 60;
 }
@@ -88,3 +90,37 @@ int getClosingParenthesisPosition(String path, int idx) {
 
   throw ArgumentError('Invalid regexp expression in "$path"');
 }
+
+dynamic resolveActualParamValue(ParametricDefinition defn, String pattern) {
+  String actualValue = pattern;
+  final suffix = defn.suffix;
+  if (suffix != null) {
+    if (suffix.length >= pattern.length) return null;
+    actualValue = pattern.substring(0, pattern.length - suffix.length);
+  }
+  return actualValue;
+}
+
+ParametricDefinition? findMatchingParametricDefinition(
+  ParametricNode node,
+  String pattern, {
+  bool terminal = false,
+}) {
+  final defns = node.definitions;
+
+  ParametricDefinition? result;
+  for (final defn in defns) {
+    if (terminal != defn.terminal) continue;
+
+    final expectedSuffix = defn.suffix;
+    if (expectedSuffix != null) {
+      if (!pattern.endsWith(expectedSuffix)) continue;
+    }
+    result = defn;
+    break;
+  }
+
+  return result;
+}
+
+

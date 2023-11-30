@@ -23,11 +23,10 @@ void main() {
       ..on(HTTPMethod.GET, '/user/<file>.png/download')
       ..on(HTTPMethod.GET, '/user/<file>.png/<user2>/hello')
       ..on(HTTPMethod.GET, '/a/<param>-static')
-      ..on(HTTPMethod.GET, '/b/<param>.static')
-      ..printTree();
+      ..on(HTTPMethod.GET, '/b/<param>.static');
 
     var node = router.lookup(HTTPMethod.GET, '/user');
-    expect(node, hasStaticNode('user'));
+    expect(node, isStaticNode('user'));
 
     node = router.lookup(HTTPMethod.GET, '/user/24');
     expect(node, havingParameters({'userId': '24'}));
@@ -44,25 +43,4 @@ void main() {
     node = router.lookup(HTTPMethod.GET, '/b/param.static');
     expect(node, havingParameters({'param': 'param'}));
   });
-
-  // test('parametric route with fixed suffix', () {
-  //   final config = const RadixRouterConfig(caseSensitive: false);
-  //   final router = RadixRouter(config: config)
-
-  //     ..printTree();
-
-  //   expect(
-  //     router
-  //         .lookup(HTTPMethod.GET, '/a/param-param-static', debug: true)
-  //         ?.value,
-  //     {'param': 'param-param'},
-  //   );
-  //   // expect(router.lookup(HTTPMethod.GET, '/b/param.param.static')?.value,
-  //   //     {'param': 'param.param'});
-
-  //   // expect(router.lookup(HTTPMethod.GET, '/a/param.param-static')?.value,
-  //   //     {'param': 'param.param'});
-  //   // expect(router.lookup(HTTPMethod.GET, '/b/param-param.static')?.value,
-  //   //     {'param': 'param-param'});
-  // });
 }

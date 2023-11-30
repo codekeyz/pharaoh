@@ -1,4 +1,3 @@
-import 'package:collection/collection.dart';
 import 'package:pharaoh/pharaoh.dart';
 import 'tree_node.dart';
 import 'tree_utils.dart';
@@ -30,7 +29,7 @@ class RadixRouter {
   }
 
   void on(HTTPMethod method, String path, {bool debug = false}) {
-    path = cleanPath(path);
+    path = _cleanPath(path);
     Node root = getMethodNode(method);
 
     StringBuffer debugLog = StringBuffer();
@@ -43,7 +42,11 @@ class RadixRouter {
 
     final parts = path.split('/');
     for (int i = 0; i < parts.length; i++) {
-      final part = parts[i];
+      final String routePart = parts[i];
+
+      String part = routePart;
+      if (!config.caseSensitive) part = part.toLowerCase();
+
       final parametric = isParametric(part);
       final key = parametric ? ':' : part;
       final isLastPart = i == (parts.length - 1);
@@ -72,11 +75,14 @@ class RadixRouter {
         if (paramNode == null) {
           devlog('- No existing parametric on ${root.name} so we create one');
 
-          assignNewRoot(ParametricNode.fromPath(part, terminal: isLastPart));
+          assignNewRoot(ParametricNode.fromPath(
+            routePart,
+            terminal: isLastPart,
+          ));
           continue;
         }
 
-        paramNode.addNewDefinition(part, terminal: isLastPart);
+        paramNode.addNewDefinition(routePart, terminal: isLastPart);
 
         devlog('- Found & updated definitions to ${paramNode.name}');
         assignNewRoot(paramNode);
@@ -92,7 +98,7 @@ class RadixRouter {
 
   Node? lookup(HTTPMethod method, String path, {bool debug = false}) {
     Node rootNode = getMethodNode(method);
-    String route = cleanPath(path);
+    String route = _cleanPath(path);
 
     Map<String, String> resolvedParams = {};
 
@@ -107,60 +113,56 @@ class RadixRouter {
     final parts = route.split('/');
 
     for (int i = 0; i < parts.length; i++) {
-      final currPart = parts[i];
-      final hasStaticChild = rootNode.hasChild(currPart);
+      final String currPart = parts[i];
+
+      var routePart = currPart;
+      if (!config.caseSensitive) routePart = routePart.toLowerCase();
+
+      final hasStaticChild = rootNode.hasChild(routePart);
       final isEndOfPath = i == (parts.length - 1);
-      final nextPart = isEndOfPath ? null : parts[i + 1];
 
       if (hasStaticChild) {
-        rootNode = rootNode.getChild(currPart);
-        devlog('- Found Static for             ->              $currPart');
+        rootNode = rootNode.getChild(routePart);
+        devlog('- Found Static for             ->              $routePart');
       } else {
         final paramNode = rootNode.paramNode;
         final shouldBeTerminal = isEndOfPath;
         if (paramNode == null) {
-          devlog('x Found no static node for part       ->         $currPart');
+          devlog('x Found no static node for part       ->         $routePart');
           devlog('x Route is not registered             ->         $route');
           break;
         }
 
-        final hasChild = paramNode.hasChild(currPart);
+        final hasChild = paramNode.hasChild(routePart);
         if (hasChild) {
-          devlog('- Found Static for             ->              $currPart');
-          rootNode = paramNode.getChild(currPart);
+          devlog('- Found Static for             ->              $routePart');
+          rootNode = paramNode.getChild(routePart);
           continue;
         }
 
         devlog(
-            '- Finding Defn for $currPart        -> terminal?    $shouldBeTerminal');
+            '- Finding Defn for $routePart        -> terminal?    $shouldBeTerminal');
 
         final paramDefn = findMatchingParametricDefinition(
           paramNode,
-          currPart,
+          routePart,
           terminal: isEndOfPath,
         );
 
         devlog('    * parametric defn:         ${paramDefn.toString()}');
 
         if (paramDefn == null) {
-          /// TODO(codekeyz) route not found because either you have a
-          /// static child or fall into the parametric zone.
-          /// If you fall here, and we find no definition, then route entry doesn't exist
-          devlog('x Found no defn for route part      ->         $currPart');
+          devlog('x Found no defn for route part      ->         $routePart');
           devlog('x Route is not registered             ->         $route');
           break;
         }
 
-        devlog('- Found defn for route part    ->              $currPart');
+        devlog('- Found defn for route part    ->              $routePart');
 
-        /// TODO(codekey) this is where we will need to use the [maybeStatic]
-        /// props to validate the parameter and accurately resolve the paramValue.
-        /// for now, we're just using the entire [currPart] as the value.
         final actualValue = resolveActualParamValue(paramDefn, currPart);
         resolvedParams[paramDefn.name] = actualValue;
         rootNode = paramNode;
 
-        /// we rety on
         if (paramDefn.terminal) rootNode.terminal = true;
       }
     }
@@ -189,7 +191,7 @@ class RadixRouter {
     );
   }
 
-  String cleanPath(String path) {
+  String _cleanPath(String path) {
     if (config.ignoreDuplicateSlashes) {
       path = path.replaceAll(RegExp(r'/+'), '/');
     }
@@ -199,36 +201,4 @@ class RadixRouter {
 
     return path.substring(1);
   }
-}
-
-ParametricDefinition? findMatchingParametricDefinition(
-  ParametricNode node,
-  String pattern, {
-  bool terminal = false,
-}) {
-  final defns = node.definitions;
-
-  ParametricDefinition? result;
-  for (final defn in defns) {
-    if (terminal != defn.terminal) continue;
-
-    final expectedSuffix = defn.suffix;
-    if (expectedSuffix != null) {
-      if (!pattern.endsWith(expectedSuffix)) continue;
-    }
-    result = defn;
-    break;
-  }
-
-  return result;
-}
-
-dynamic resolveActualParamValue(ParametricDefinition defn, String pattern) {
-  String actualValue = pattern;
-  final suffix = defn.suffix;
-  if (suffix != null) {
-    if (suffix.length >= pattern.length) return null;
-    actualValue = pattern.substring(0, pattern.length - suffix.length);
-  }
-  return actualValue;
 }
