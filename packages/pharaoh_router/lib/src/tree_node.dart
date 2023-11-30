@@ -1,9 +1,10 @@
 import 'package:collection/collection.dart';
+import 'package:equatable/equatable.dart';
 import 'package:pharaoh_router/src/tree_utils.dart';
 
 import 'helpers/parametric.dart';
 
-abstract class Node {
+abstract class Node with EquatableMixin {
   Map<String, Node> children = {};
 
   String get name;
@@ -39,6 +40,9 @@ class StaticNode extends Node {
   String get name => 'static($_name)';
 
   StaticNode(this._name);
+
+  @override
+  List<Object?> get props => [name, children];
 }
 
 typedef ParamAndRemaining = ({String param, String? remaining});
@@ -86,6 +90,9 @@ class ParametricNode extends Node {
 
   @override
   String get name => 'parametric(${_definitions.length})';
+
+  @override
+  List<Object?> get props => [name, _definitions, children];
 
   // RegExp? _regexCache;
   // RegExp? get regex {

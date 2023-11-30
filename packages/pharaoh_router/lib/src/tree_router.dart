@@ -47,8 +47,8 @@ class RadixRouter {
       String part = routePart;
       if (!config.caseSensitive) part = part.toLowerCase();
 
-      final parametric = isParametric(part);
-      final key = parametric ? ':' : part;
+      final parametric = part.isParametric;
+      final key = parametric ? '<:>' : part;
       final isLastPart = i == (parts.length - 1);
 
       void assignNewRoot(Node node) {

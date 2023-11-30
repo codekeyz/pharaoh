@@ -1,3 +1,5 @@
+import 'package:equatable/equatable.dart';
+
 import '../tree_utils.dart';
 
 final parametricRegex = RegExp(r"<\w+>");
@@ -36,7 +38,7 @@ ParametricDefinition? _deriveDefnFromString(String part, bool terminal) {
   );
 }
 
-class ParametricDefinition {
+class ParametricDefinition with EquatableMixin {
   final String name;
   final String? prefix;
   final String? suffix;
@@ -50,14 +52,6 @@ class ParametricDefinition {
     this.regex,
     this.terminal = false,
   });
-
-  Map<String, dynamic> toJson() => {
-        'name': name,
-        'prefix': prefix,
-        'suffix': suffix,
-        'regex': regex,
-        'terminal': terminal
-      };
 
   factory ParametricDefinition.from(String part, {bool terminal = false}) {
     return _deriveDefnFromString(part, terminal)!;
@@ -73,6 +67,9 @@ class ParametricDefinition {
 
     return true;
   }
+
+  @override
+  List<Object?> get props => [name, prefix, suffix, regex, terminal];
 }
 
 class CompositeParametricDefinition extends ParametricDefinition {
@@ -92,4 +89,7 @@ class CompositeParametricDefinition extends ParametricDefinition {
   bool hasMatch(String pattern, {bool shouldbeTerminal = false}) {
     return false;
   }
+
+  @override
+  List<Object?> get props => [...super.props, subparts];
 }

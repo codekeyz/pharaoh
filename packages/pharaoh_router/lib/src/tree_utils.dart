@@ -2,10 +2,6 @@
 import 'helpers/parametric.dart';
 import 'tree_node.dart';
 
-bool isParametric(String pattern, {int start = 0}) {
-  return pattern.codeUnitAt(start) == 60;
-}
-
 extension StringExtension on String {
   bool get isParametric => parametricRegex.hasMatch(this);
 
@@ -15,10 +11,12 @@ extension StringExtension on String {
 // <username> --> username
 String? getParameter(String pattern, {int start = 0}) {
   if (start != 0) pattern = pattern.substring(start);
-  if (!isParametric(pattern)) return null;
+  // <
+  if (pattern.codeUnitAt(start) != 60) return null;
 
   final sb = StringBuffer();
   for (int i = 1; i < pattern.length; i++) {
+    // >
     if (pattern.codeUnitAt(i) == 62) break;
     sb.write(pattern[i]);
   }
@@ -53,7 +51,7 @@ bool isAlphabetic(String character) {
 /// `:name/foo/bar` --> `name`
 ///
 /// `:user/`    --> `user`
-String getPathParameter(String pattern, {int start = 0}) {
+String getParameterName(String pattern, {int start = 0}) {
   final length = pattern.length;
   if (start > (length - 1)) {
     throw RangeError('Index is out of bounds of $pattern');

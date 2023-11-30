@@ -6,11 +6,10 @@ version: 1.0.0
 environment:
   sdk: ^3.0.0
 
-
 dependencies:
   collection: ^1.18.0
+  equatable: ^2.0.5
   pharaoh:
-
 
 dev_dependencies:
   lints: ^2.1.0
