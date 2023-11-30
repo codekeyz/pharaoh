@@ -1,10 +1,19 @@
-// :name
-bool isParametric(String pattern, {int at = 0}) {
-  if (at > (pattern.length - 1)) return false;
-  final safeNext = (at + 1) < pattern.length;
-  return pattern.codeUnitAt(at) == 58 &&
-      safeNext &&
-      pattern.codeUnitAt(at + 1) != 58;
+// <username>
+bool isParametric(String pattern, {int start = 0}) {
+  return pattern.codeUnitAt(start) == 60;
+}
+
+// <username> --> username
+String? getParameter(String pattern, {int start = 0}) {
+  if (start != 0) pattern = pattern.substring(start);
+  if (!isParametric(pattern)) return null;
+
+  final sb = StringBuffer();
+  for (int i = 1; i < pattern.length; i++) {
+    if (pattern.codeUnitAt(i) == 62) break;
+    sb.write(pattern[i]);
+  }
+  return sb.toString();
 }
 
 // ::
@@ -45,19 +54,6 @@ String getPathParameter(String pattern, {int start = 0}) {
     final char = pattern[i];
     if (!isAlphabetic(char)) break;
     sb.write(char);
-  }
-  return sb.toString();
-}
-
-String getValueinPath(String pattern, {int at = 0}) {
-  final length = pattern.length;
-  if (at > (length - 1)) {
-    throw RangeError('Index is out of bounds of $pattern');
-  }
-  final sb = StringBuffer();
-  for (int i = at; i < length; i++) {
-    final char = pattern[i];
-    if (char == '/') break;
   }
   return sb.toString();
 }

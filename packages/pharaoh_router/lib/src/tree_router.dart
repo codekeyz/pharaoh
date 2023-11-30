@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:pharaoh/pharaoh.dart';
 import 'tree_node.dart';
 import 'tree_utils.dart';
@@ -28,103 +29,122 @@ class RadixRouter {
     return _nodeMap[method] = StaticNode('/');
   }
 
-  void addRoute(HTTPMethod method, String path, {bool debug = false}) {
+  void on(HTTPMethod method, String path, {bool debug = false}) {
     path = cleanPath(path);
     Node root = getMethodNode(method);
 
-    void log(String message) {
-      if (!debug) return;
-      print('$message\n');
+    StringBuffer debugLog = StringBuffer();
+
+    void devlog(String message) {
+      if (debug) debugLog.writeln(message.toLowerCase());
     }
 
-    log('Building node tree for --------- $path --------------');
+    devlog('Building node tree for --------- $path --------------');
 
     final parts = path.split('/');
     for (int i = 0; i < parts.length; i++) {
       final part = parts[i];
       final parametric = isParametric(part);
-      final isLastPart = i == (parts.length - 1);
-
       final key = parametric ? ':' : part;
+      final isLastPart = i == (parts.length - 1);
 
       void assignNewRoot(Node node) {
         root = root.addChildAndReturn(key, node);
-        log('Root node is now ${node.name}');
+        devlog('- Root node is now ${node.name}');
       }
 
-      log('Search node for $part');
+      devlog('- Find node for $part');
 
       var child = root.children[part];
       if (child == null) {
-        log('Found no node for $part');
+        devlog('- Found no node for $part');
 
         if (!parametric) {
           child = StaticNode(key);
           assignNewRoot(child);
         } else {
-          log('$part is parametric');
+          devlog('- $part is parametric');
 
           final paramNode = root.paramNode;
           if (paramNode == null) {
-            log('No existing parametric on ${root.name} yet so we create one');
+            devlog('- No existing parametric on ${root.name} so we create one');
 
-            assignNewRoot(ParametricNode.fromPath(part));
+            assignNewRoot(ParametricNode.fromPath(part, terminal: isLastPart));
             continue;
           }
 
-          paramNode.addNewDefinition(part);
+          paramNode.addNewDefinition(part, terminal: isLastPart);
 
-          log('Found & updated definitions for ${paramNode.name}');
+          devlog('- Found & updated definitions to ${paramNode.name}');
           assignNewRoot(paramNode);
         }
       } else {
+        devlog('- Found node for $part');
+
         assignNewRoot(child);
       }
     }
 
     root.terminal = true;
+
+    if (debug) print(debugLog);
   }
 
-  // void on(HTTPMethod method, String path) {
-  //   Node root = getMethodNode(method);
+  Node? lookup(HTTPMethod method, String path, {bool debug = false}) {
+    Node rootNode = getMethodNode(method);
+    String route = cleanPath(path);
 
-  //   for (int i = 0; i < path.length; i++) {
-  //     String char = path[i];
-  //     if (!config.caseSensitive) char = char.toLowerCase();
-  //     final currentpart = path.substring(i);
+    Map<String, String> resolvedParams = {};
 
-  //     /// checking early on to know if the we're iterating
-  //     /// on the start of a parametric or regexeric route.
-  //     ///
-  //     /// If it's true, we need to construct the actual key.
-  //     final hasParam = isParametric(currentpart);
-  //     final hasRegex = isRegexeric(currentpart);
+    final debugLog = StringBuffer("\n");
 
-  //     if (hasParam) {
-  //       final paramName = getPathParameter(path.substring(i + 1));
-  //       char += paramName;
-  //       i += paramName.length;
-  //     } else if (hasRegex) {
-  //       final closingAt = getClosingParenthesisPosition(currentpart, 0);
-  //       final regexStr = currentpart.substring(1, closingAt + 1);
-  //       char += regexStr;
-  //       i += regexStr.length;
-  //     }
+    void devlog(String message) {
+      if (debug) debugLog.writeln(message.toLowerCase());
+    }
 
-  //     var child = root.children[char];
-  //     if (child == null) {
-  //       if (hasParam) {
-  //         final name = getPathParameter(char.substring(1));
-  //         child = ParametricNode(name);
-  //       } else {
-  //         child = StaticNode(char);
-  //       }
-  //     }
+    devlog('Finding node for ---------  ${method.name} $route ------------\n');
 
-  //     root = root.children[char] = child;
-  //   }
-  //   root.terminal = true;
-  // }
+    final parts = route.split('/');
+
+    for (int i = 0; i < parts.length; i++) {
+      final currPart = parts[i];
+      final hasStaticChild = rootNode.hasChild(currPart);
+      final isEndOfPath = i == (parts.length - 1);
+      final nextPart = isEndOfPath ? null : parts[i + 1];
+
+      if (hasStaticChild) {
+        rootNode = rootNode.getChild(currPart);
+        devlog('- Found Static for             ->              $currPart');
+      } else {
+        final paramNode = rootNode.paramNode;
+        final shouldBeTerminal = isEndOfPath;
+        if (paramNode == null) return null;
+
+        devlog(
+            '- Finding Defn for $currPart -> should be terminal?    $shouldBeTerminal');
+
+        final maybeStatic = paramNode.definitions.firstWhereOrNull(
+          (e) => e.terminal == shouldBeTerminal && nextPart == null,
+        );
+
+        if (maybeStatic != null) {
+          devlog('- Found defn for route part    ->              $currPart');
+
+          resolvedParams[maybeStatic.name] = currPart;
+          paramNode.value = resolvedParams;
+          rootNode = paramNode;
+          if (maybeStatic.terminal) break;
+        }
+      }
+    }
+
+    if (debug) print(debugLog);
+
+    if (!rootNode.terminal) return null;
+
+    return rootNode;
+    // return rootNode..value = resolvedParams;
+  }
 
   void printTree() {
     _nodeMap.forEach(

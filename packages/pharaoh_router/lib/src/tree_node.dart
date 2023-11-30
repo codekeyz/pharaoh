@@ -28,9 +28,6 @@ abstract class Node<T> {
     children[key] = node;
     return node;
   }
-
-  List<ParametricNode> get paramNodes =>
-      !hasChildren ? [] : children.values.whereType<ParametricNode>().toList();
 }
 
 class StaticNode extends Node<String> {
@@ -42,7 +39,12 @@ class StaticNode extends Node<String> {
   StaticNode(this._name);
 }
 
-typedef ParametricDefinition = ({String name, String? suffix, RegExp? regex});
+typedef ParametricDefinition = ({
+  String name,
+  String? suffix,
+  RegExp? regex,
+  bool terminal,
+});
 
 class ParametricNode extends Node<Map<String, dynamic>> {
   final List<ParametricDefinition> _definitions = [];
@@ -54,18 +56,30 @@ class ParametricNode extends Node<Map<String, dynamic>> {
     _definitions.add(defn);
   }
 
-  factory ParametricNode.fromPath(String path) {
-    final name = getPathParameter(path, start: 1);
-    final remaining = path.substring(name.length + 1);
-    return ParametricNode((name: name, suffix: remaining, regex: null));
+  factory ParametricNode.fromPath(String path, {bool terminal = false}) {
+    final parameter = getParameter(path)!;
+    final remaining = path.substring(parameter.length + 1);
+
+    return ParametricNode((
+      name: parameter,
+      suffix: remaining,
+      regex: null,
+      terminal: terminal,
+    ));
   }
 
-  void addNewDefinition(String part) {
-    final name = getPathParameter(part, start: 1);
-    final paramLength = name.length + 1;
+  void addNewDefinition(String part, {bool terminal = false}) {
+    final name = getParameter(part)!;
+    final paramLength = '<$name>'.length;
     final isEnd = part.length == paramLength;
     final remaining = isEnd ? null : part.substring(paramLength);
-    _definitions.add((name: name, suffix: remaining, regex: null));
+
+    _definitions.add((
+      name: name,
+      suffix: remaining,
+      regex: null,
+      terminal: terminal,
+    ));
   }
 
   @override
