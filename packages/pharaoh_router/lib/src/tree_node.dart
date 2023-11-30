@@ -1,7 +1,7 @@
 import 'package:collection/collection.dart';
 import 'package:pharaoh_router/src/tree_utils.dart';
 
-import 'helpers/parametric_defn.dart';
+import 'helpers/parametric.dart';
 
 abstract class Node {
   Map<String, Node> children = {};
@@ -74,18 +74,12 @@ class ParametricNode extends Node {
   }
 
   factory ParametricNode.fromPath(String path, {bool terminal = false}) {
-    final result = getParamAndRemainingPart(path);
-    final defn = ParametricDefinition(result.param,
-        suffix: result.remaining, terminal: terminal);
-
+    final defn = ParametricDefinition.from(path, terminal: terminal);
     return ParametricNode(defn);
   }
 
   void addNewDefinition(String part, {bool terminal = false}) {
-    final result = getParamAndRemainingPart(part);
-    final defn = ParametricDefinition(result.param,
-        suffix: result.remaining, terminal: terminal);
-
+    final defn = ParametricDefinition.from(part, terminal: terminal);
     _definitions.add(defn);
     sortParametricDefinition(_definitions);
   }
