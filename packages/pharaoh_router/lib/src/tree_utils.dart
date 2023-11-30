@@ -1,4 +1,5 @@
 // <username>
+import 'helpers/parametric_defn.dart';
 import 'tree_node.dart';
 
 bool isParametric(String pattern, {int start = 0}) {
@@ -122,5 +123,3 @@ ParametricDefinition? findMatchingParametricDefinition(
 
   return result;
 }
-
-

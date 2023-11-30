@@ -1,6 +1,8 @@
 import 'package:collection/collection.dart';
 import 'package:pharaoh_router/src/tree_utils.dart';
 
+import 'helpers/parametric_defn.dart';
+
 abstract class Node {
   Map<String, Node> children = {};
 
@@ -49,13 +51,6 @@ ParamAndRemaining getParamAndRemainingPart(String pattern) {
   return (param: name, remaining: remaining);
 }
 
-typedef ParametricDefinition = ({
-  String name,
-  String? suffix,
-  RegExp? regex,
-  bool terminal,
-});
-
 void sortParametricDefinition(List<ParametricDefinition> definitions) {
   final Map<int, int> nullCount = {};
   for (final def in definitions) {
@@ -80,23 +75,18 @@ class ParametricNode extends Node {
 
   factory ParametricNode.fromPath(String path, {bool terminal = false}) {
     final result = getParamAndRemainingPart(path);
-    return ParametricNode((
-      name: result.param,
-      suffix: result.remaining,
-      regex: null,
-      terminal: terminal,
-    ));
+    final defn = ParametricDefinition(result.param,
+        suffix: result.remaining, terminal: terminal);
+
+    return ParametricNode(defn);
   }
 
   void addNewDefinition(String part, {bool terminal = false}) {
     final result = getParamAndRemainingPart(part);
-    _definitions.add((
-      name: result.param,
-      suffix: result.remaining,
-      regex: null,
-      terminal: terminal,
-    ));
+    final defn = ParametricDefinition(result.param,
+        suffix: result.remaining, terminal: terminal);
 
+    _definitions.add(defn);
     sortParametricDefinition(_definitions);
   }
 
