@@ -1,5 +1,3 @@
-import 'dart:ffi';
-
 import 'package:collection/collection.dart';
 import 'package:pharaoh_router/src/tree_utils.dart';
 
