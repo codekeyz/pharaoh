@@ -3,6 +3,8 @@ import 'package:pharaoh_router/pharaoh_router.dart';
 import 'package:pharaoh_router/src/tree_node.dart';
 import 'package:test/test.dart';
 
+import 'helpers/matchers.dart';
+
 void main() {
   // test('parametric route, request.url contains dash', () {
   //   final config = const RadixRouterConfig(caseSensitive: false);
@@ -18,28 +20,20 @@ void main() {
     final router = RadixRouter(config: config)
       ..on(HTTPMethod.GET, '/user')
       ..on(HTTPMethod.GET, '/user/<userId>')
-      // ..on(HTTPMethod.GET, '/user/<userId>/details')
-      // ..on(HTTPMethod.GET, '/user/<file>.png/download')
+      ..on(HTTPMethod.GET, '/user/<userId>/details')
+      ..on(HTTPMethod.GET, '/user/<file>.png/download')
       ..printTree();
 
     var node = router.lookup(HTTPMethod.GET, '/user');
-    expect(node, hasStatisName('user'));
+    expect(node, hasStaticNode('user'));
 
     node = router.lookup(HTTPMethod.GET, '/user/24');
     expect(node, havingParameters({'userId': '24'}));
 
-    node = router.lookup(HTTPMethod.GET, '/user/3948/details', debug: true);
-    print(node?.value);
+    node = router.lookup(HTTPMethod.GET, '/user/3948/details');
+    expect(node, havingParameters({'userId': '3948'}));
 
-    // expect(node, havingParameters({'userId': '3948'}));
+    node = router.lookup(HTTPMethod.GET, '/user/aws-image.png/download');
+    expect(node, havingParameters({'file': 'aws-image'}));
   });
-}
-
-Matcher havingParameters(Map<String, dynamic> params) {
-  return isA<ParametricNode>()
-      .having((p0) => p0.value, 'has parameters', params);
-}
-
-Matcher hasStatisName(String name) {
-  return isA<StaticNode>().having((p0) => p0.name, 'has name', 'static($name)');
 }

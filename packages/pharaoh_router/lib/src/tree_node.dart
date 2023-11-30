@@ -1,14 +1,16 @@
+import 'dart:ffi';
+
 import 'package:collection/collection.dart';
 import 'package:pharaoh_router/src/tree_utils.dart';
 
-abstract class Node<T> {
+abstract class Node {
   Map<String, Node> children = {};
 
   String get name;
 
   bool terminal = false;
 
-  T? value;
+  Map<String, dynamic> params = {};
 
   bool hasChild(String char) => children.containsKey(char);
 
@@ -30,13 +32,23 @@ abstract class Node<T> {
   }
 }
 
-class StaticNode extends Node<String> {
+class StaticNode extends Node {
   final String _name;
 
   @override
   String get name => 'static($_name)';
 
   StaticNode(this._name);
+}
+
+typedef ParamAndRemaining = ({String param, String? remaining});
+
+ParamAndRemaining getParamAndRemainingPart(String pattern) {
+  final name = getParameter(pattern)!;
+  final paramLength = '<$name>'.length;
+  final isEnd = pattern.length == paramLength;
+  final remaining = isEnd ? null : pattern.substring(paramLength);
+  return (param: name, remaining: remaining);
 }
 
 typedef ParametricDefinition = ({
@@ -46,7 +58,19 @@ typedef ParametricDefinition = ({
   bool terminal,
 });
 
-class ParametricNode extends Node<Map<String, dynamic>> {
+void sortParametricDefinition(List<ParametricDefinition> definitions) {
+  final Map<int, int> nullCount = {};
+  for (final def in definitions) {
+    int count = 0;
+    if (def.suffix == null) count += 1;
+    if (def.regex == null) count += 1;
+    nullCount[def.hashCode] = count;
+  }
+  definitions
+      .sort((a, b) => nullCount[a.hashCode]!.compareTo(nullCount[b.hashCode]!));
+}
+
+class ParametricNode extends Node {
   final List<ParametricDefinition> _definitions = [];
 
   List<ParametricDefinition> get definitions =>
@@ -57,29 +81,25 @@ class ParametricNode extends Node<Map<String, dynamic>> {
   }
 
   factory ParametricNode.fromPath(String path, {bool terminal = false}) {
-    final parameter = getParameter(path)!;
-    final remaining = path.substring(parameter.length + 1);
-
+    final result = getParamAndRemainingPart(path);
     return ParametricNode((
-      name: parameter,
-      suffix: remaining,
+      name: result.param,
+      suffix: result.remaining,
       regex: null,
       terminal: terminal,
     ));
   }
 
   void addNewDefinition(String part, {bool terminal = false}) {
-    final name = getParameter(part)!;
-    final paramLength = '<$name>'.length;
-    final isEnd = part.length == paramLength;
-    final remaining = isEnd ? null : part.substring(paramLength);
-
+    final result = getParamAndRemainingPart(part);
     _definitions.add((
-      name: name,
-      suffix: remaining,
+      name: result.param,
+      suffix: result.remaining,
       regex: null,
       terminal: terminal,
     ));
+
+    sortParametricDefinition(_definitions);
   }
 
   @override
@@ -93,10 +113,4 @@ class ParametricNode extends Node<Map<String, dynamic>> {
   //   final actual = source.substring(1, source.length - 1);
   //   return _regexCache ??= RegExp(RegExp.escape(actual));
   // }
-}
-
-extension NodeExtension on Iterable<Node> {
-  bool get hasOnlyOneTerminal {
-    return length == 1 && first.terminal;
-  }
 }
