@@ -37,6 +37,9 @@ void main() {
     node = router.lookup(HTTPMethod.GET, '/user/aws-image.png/download');
     expect(node, havingParameters({'file': 'aws-image'}));
 
+    node = router.lookup(HTTPMethod.GET, '/user/aws-image.png/A29384/hello');
+    expect(node, havingParameters({'file': 'aws-image', 'user2': 'A29384'}));
+
     node = router.lookup(HTTPMethod.GET, '/a/param-static');
     expect(node, havingParameters({'param': 'param'}));
 
