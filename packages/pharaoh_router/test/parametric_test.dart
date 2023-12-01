@@ -19,26 +19,26 @@ void main() {
         expect(exception.message, contains('<hello>.png'));
       });
 
-      test('closed door parameter definitions', () {
+      test('close door parameter definitions', () {
         router() => RadixRouter()..on(HTTPMethod.GET, '/user/<userId><keyId>');
 
         final exception = runSyncAndReturnException<ArgumentError>(router);
-        expect(exception.message,
-            contains('Route part is not valid. Close door neighbors'));
+        expect(
+            exception.message,
+            contains(
+                'Parameter definition is not valid. Close door neighbors'));
         expect(exception.invalidValue, '<userId><keyId>');
       });
 
-      test('invalid characters in parameter definition', () {
+      test('invalid parameter definition', () {
         router() => RadixRouter()
-          ..on(HTTPMethod.GET, '/user/<userId>', debug: true)
+          ..on(HTTPMethod.GET, '/user/<userId#@#.XDkd@#>>#>', debug: true)
           ..printTree();
 
-        router();
-
-        // final exception = runSyncAndReturnException<ArgumentError>(router);
-        // expect(exception.message,
-        //     contains('Route part is not valid. Close door neighbors'));
-        // expect(exception.invalidValue, '<userId><keyId>');
+        final exception = runSyncAndReturnException<ArgumentError>(router);
+        expect(
+            exception.message, contains('Parameter definition is not valid'));
+        expect(exception.invalidValue, '<userId#@#.XDkd@#>>#>');
       });
     });
 

@@ -58,7 +58,7 @@ class RadixRouter {
 
       var child = root.children[part];
       if (child != null) {
-        devlog('- Found node for $part');
+        devlog('- Found static node for $part');
         assignNewRoot(child);
       } else {
         devlog('- Found no static node for $part');
@@ -121,15 +121,14 @@ class RadixRouter {
       var routePart = currPart;
       if (!config.caseSensitive) routePart = routePart.toLowerCase();
 
-      final hasStaticChild = rootNode.hasChild(routePart);
+      final hasChild = rootNode.hasChild(routePart);
       final isEndOfPath = i == (parts.length - 1);
 
-      if (hasStaticChild) {
+      if (hasChild) {
         rootNode = rootNode.getChild(routePart);
         devlog('- Found Static for             ->              $routePart');
       } else {
         final paramNode = rootNode.paramNode;
-        final shouldBeTerminal = isEndOfPath;
         if (paramNode == null) {
           devlog('x Found no static node for part       ->         $routePart');
           devlog('x Route is not registered             ->         $route');
@@ -144,7 +143,7 @@ class RadixRouter {
         }
 
         devlog(
-            '- Finding Defn for $routePart        -> terminal?    $shouldBeTerminal');
+            '- Finding Defn for $routePart        -> terminal?    $isEndOfPath');
 
         final paramDefn = paramNode.findMatchingDefinition(routePart,
             shouldBeTerminal: isEndOfPath);

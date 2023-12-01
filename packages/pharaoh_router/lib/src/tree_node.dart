@@ -51,22 +51,23 @@ class StaticNode extends Node {
 }
 
 class ParametricNode extends Node {
-  final List<ParametricDefinition> _definitions = [];
+  final List<ParameterDefinition> _definitions = [];
 
-  List<ParametricDefinition> get definitions =>
+  List<ParameterDefinition> get definitions =>
       UnmodifiableListView(_definitions);
 
-  ParametricNode(ParametricDefinition defn) {
+  ParametricNode(ParameterDefinition defn) {
     _definitions.add(defn);
   }
 
   factory ParametricNode.fromPath(String path, {bool terminal = false}) {
-    final defn = ParametricDefinition.from(path, terminal: terminal);
-    return ParametricNode(defn);
+    return ParametricNode(
+      ParameterDefinition.from(path, terminal: terminal),
+    );
   }
 
   void addNewDefinition(String part, {bool terminal = false}) {
-    final defn = ParametricDefinition.from(part, terminal: terminal);
+    final defn = ParameterDefinition.from(part, terminal: terminal);
     final existing =
         _definitions.firstWhereOrNull((e) => e.isExactExceptName(defn));
     if (existing != null) {
@@ -95,7 +96,7 @@ class ParametricNode extends Node {
   @override
   bool get isTerminal => _definitions.any((e) => e.terminal);
 
-  ParametricDefinition? findMatchingDefinition(
+  ParameterDefinition? findMatchingDefinition(
     String part, {
     bool shouldBeTerminal = false,
   }) =>

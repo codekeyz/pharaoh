@@ -3,22 +3,29 @@ import 'package:equatable/equatable.dart';
 
 import '../tree_utils.dart';
 
-final parametricRegex = RegExp(r"<\w+>");
+final parametricRegex = RegExp(r"<[^>]+>");
 
-final parametricDefnsRegex = RegExp(r"([^<]*)(<\w+>)([^<]*)");
+/// This regex has 3 Groups
+///
+/// - ([^<]*) -> this captures prefix
+///
+/// - (<\w+(?:\|[^>|]+)*>) -> this captures the value within definition
+///
+/// - ([^<]*) -> this captures suffix
+final parametricDefnsRegex = RegExp(r"([^<]*)(<\w+(?:\|[^>|]+)*>)([^<]*)");
 
 final closeDoorParametricRegex = RegExp(r"><");
 
 /// build a parametric definition from a route part
-ParametricDefinition? deriveDefnFromString(String part, bool terminal) {
+ParameterDefinition? deriveDefnFromString(String part, bool terminal) {
   if (closeDoorParametricRegex.hasMatch(part)) {
     throw ArgumentError.value(
-        part, null, 'Route part is not valid. Close door neighbors');
+        part, null, 'Parameter definition is not valid. Close door neighbors');
   }
 
-  ParametricDefinition makeDefn(RegExpMatch m, {bool end = false}) {
+  ParameterDefinition makeDefn(RegExpMatch m, {bool end = false}) {
     final name = getParameter(m.group(2)!)!;
-    return ParametricDefinition._(
+    return ParameterDefinition._(
       name,
       prefix: m.group(1)?.nullIfEmpty,
       suffix: m.group(3)?.nullIfEmpty,
@@ -27,7 +34,9 @@ ParametricDefinition? deriveDefnFromString(String part, bool terminal) {
   }
 
   final matches = parametricDefnsRegex.allMatches(part);
-  if (matches.isEmpty) return null;
+  if (matches.isEmpty) {
+    throw ArgumentError.value(part, null, 'Parameter definition is not valid');
+  }
 
   if (matches.length == 1) {
     return makeDefn(matches.first, end: terminal);
@@ -38,7 +47,7 @@ ParametricDefinition? deriveDefnFromString(String part, bool terminal) {
   final subparts = subdefns
       .mapIndexed((i, e) => makeDefn(e, end: i == (subdefns.length - 1)));
 
-  return CompositeParametricDefinition(
+  return CompositeParameterDefinition(
     parent,
     subparts: UnmodifiableListView(subparts),
   );
@@ -61,7 +70,7 @@ RegExp buildRegexFromTemplate(String template) {
   return RegExp(regexPattern, caseSensitive: false);
 }
 
-extension ParametricDefinitionsSort on List<ParametricDefinition> {
+extension ParametricDefinitionsSort on List<ParameterDefinition> {
   void sortByProps() {
     final Map<int, int> nullCount = {};
     for (final def in this) {
@@ -86,14 +95,14 @@ Map<String, dynamic> resolveParamsFromPath(RegExp templateRegex, String path) {
   return resolvedParams;
 }
 
-class ParametricDefinition with EquatableMixin {
+class ParameterDefinition with EquatableMixin {
   final String name;
   final String? prefix;
   final String? suffix;
   final RegExp? regex;
   final bool terminal;
 
-  ParametricDefinition._(
+  ParameterDefinition._(
     this.name, {
     this.prefix,
     this.suffix,
@@ -114,7 +123,7 @@ class ParametricDefinition with EquatableMixin {
     return _paramRegexCache = buildRegexFromTemplate(template);
   }
 
-  factory ParametricDefinition.from(String part, {bool terminal = false}) {
+  factory ParameterDefinition.from(String part, {bool terminal = false}) {
     return deriveDefnFromString(part, terminal)!;
   }
 
@@ -123,7 +132,7 @@ class ParametricDefinition with EquatableMixin {
     return paramRegex.hasMatch(pattern);
   }
 
-  bool isExactExceptName(ParametricDefinition defn) {
+  bool isExactExceptName(ParameterDefinition defn) {
     return prefix == defn.prefix &&
         suffix == defn.suffix &&
         regex == defn.regex &&
@@ -138,11 +147,11 @@ class ParametricDefinition with EquatableMixin {
   List<Object?> get props => [name, prefix, suffix, regex, terminal];
 }
 
-class CompositeParametricDefinition extends ParametricDefinition {
-  final UnmodifiableListView<ParametricDefinition> subparts;
+class CompositeParameterDefinition extends ParameterDefinition {
+  final UnmodifiableListView<ParameterDefinition> subparts;
 
-  CompositeParametricDefinition(
-    ParametricDefinition parent, {
+  CompositeParameterDefinition(
+    ParameterDefinition parent, {
     required this.subparts,
   }) : super._(
           parent.name,
