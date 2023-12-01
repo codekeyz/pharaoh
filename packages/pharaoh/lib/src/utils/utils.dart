@@ -51,12 +51,3 @@ String hashData(dynamic sess) {
   if (sess is! String) sess = jsonEncode(sess);
   return sha1.convert(utf8.encode(sess)).toString();
 }
-
-/// Custom encoder to serialize [data]
-Object? customEncoder(Object? data) {
-  if (data == null) return null;
-  if (data is DateTime) {
-    return data.toUtc().toIso8601String();
-  }
-  return data;
-}

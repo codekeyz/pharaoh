@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http_parser/http_parser.dart';
-import '../utils/utils.dart';
 
 import '../utils/exceptions.dart';
 import '../shelf_interop/shelf.dart' as shelf;
@@ -30,6 +29,7 @@ abstract interface class $Response {
 
   Response status(int code);
 
+  /// [data] should be json-encodable
   Response json(Object? data);
 
   Response ok([String? data]);
@@ -183,13 +183,12 @@ class Response extends Message<shelf.Body?> implements $Response {
     );
   }
 
-  /// [data] should be json-encodable
   @override
   Response json(Object? data) {
     late Object result;
     try {
       if (data is Set) data = data.toList();
-      result = jsonEncode(data, toEncodable: customEncoder);
+      result = jsonEncode(data);
     } catch (_) {
       final errStr = jsonEncode(makeError(message: _.toString()).toJson);
       return Response(

@@ -139,7 +139,7 @@ void main() {
     test('should create a new session', () async {
       final app = Pharaoh()
           .use(session(secret: 'foo bar baz'))
-          .get('/', (req, res) => res.json(req.session?.toJson()));
+          .get('/', (req, res) => res.json(req.session));
 
       await (await request(app))
           .get('/')
