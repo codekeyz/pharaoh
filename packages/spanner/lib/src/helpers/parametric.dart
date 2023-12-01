@@ -17,6 +17,9 @@ final closeDoorParametricRegex = RegExp(r"><");
 extension StringExtension on String {
   bool get isParametric => parametricRegex.hasMatch(this);
 
+  // *
+  bool get isWildCard => codeUnitAt(0) == 42;
+
   String? get nullIfEmpty => isEmpty ? null : this;
 }
 
@@ -199,4 +202,8 @@ class CompositeParameterDefinition extends ParameterDefinition {
     if (!match) return false;
     return shouldbeTerminal && terminal;
   }
+}
+
+class WildCardDefinition extends ParameterDefinition {
+  WildCardDefinition() : super._('*', terminal: true);
 }

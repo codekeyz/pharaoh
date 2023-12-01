@@ -66,7 +66,8 @@ class ParametricNode extends Node {
     );
   }
 
-  void addNewDefinition(String part, {bool terminal = false}) {
+  /// This will return false if the definition is known
+  bool addNewDefinition(String part, {bool terminal = false}) {
     final defn = ParameterDefinition.from(part, terminal: terminal);
     final existing =
         _definitions.firstWhereOrNull((e) => e.isExactExceptName(defn));
@@ -79,11 +80,24 @@ class ParametricNode extends Node {
           ].join('\n')}',
         );
       }
-      return;
+      return false;
     }
 
     _definitions
       ..add(defn)
+      ..sortByProps();
+
+    return true;
+  }
+
+  void addWildcard() {
+    final wildcardDefn = _definitions.whereType<WildCardDefinition>();
+    if (wildcardDefn.isNotEmpty) {
+      throw ArgumentError('Route is not valid. Wildcard can only appear once');
+    }
+
+    _definitions
+      ..add(WildCardDefinition())
       ..sortByProps();
   }
 
