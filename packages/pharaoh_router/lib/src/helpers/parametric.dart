@@ -42,6 +42,30 @@ ParametricDefinition? _deriveDefnFromString(String part, bool terminal) {
   );
 }
 
+RegExp buildRegexPattern(String template) {
+  String escapedTemplate = RegExp.escape(template);
+
+  // Replace <...> placeholders with named capturing groups
+  String regexPattern = escapedTemplate.replaceAllMapped(
+    RegExp(r"<([^>]+)>"),
+    (Match match) {
+      String paramName = match.group(1)!;
+      return "(?<$paramName>[^/]+)";
+    },
+  );
+
+  return RegExp(regexPattern);
+}
+
+Map<String, dynamic> resolveParamsFromPath(RegExp templateRegex, String path) {
+  final resolvedParams = <String, dynamic>{};
+  final match = templateRegex.firstMatch(path)!;
+  for (final param in match.groupNames) {
+    resolvedParams[param] = match.namedGroup(param);
+  }
+  return resolvedParams;
+}
+
 class ParametricDefinition with EquatableMixin {
   final String name;
   final String? prefix;
@@ -49,7 +73,7 @@ class ParametricDefinition with EquatableMixin {
   final RegExp? regex;
   final bool terminal;
 
-  const ParametricDefinition._(
+  ParametricDefinition._(
     this.name, {
     this.prefix,
     this.suffix,
@@ -57,29 +81,33 @@ class ParametricDefinition with EquatableMixin {
     this.terminal = false,
   });
 
+  String get template {
+    String result = '<$name>';
+    if (prefix != null) result = "$prefix$result";
+    if (suffix != null) result = '$result$suffix';
+    return result;
+  }
+
+  RegExp? _paramRegexCache;
+  RegExp get paramRegex {
+    if (_paramRegexCache != null) return _paramRegexCache!;
+    return _paramRegexCache = buildRegexPattern(template);
+  }
+
   factory ParametricDefinition.from(String part, {bool terminal = false}) {
     return _deriveDefnFromString(part, terminal)!;
   }
 
   bool matches(String pattern, {bool shouldbeTerminal = false}) {
-    final prefixMatches = prefix == null || pattern.startsWith(prefix!);
-    final suffixMatches = suffix == null || pattern.endsWith(suffix!);
-    return prefixMatches && suffixMatches && shouldbeTerminal == terminal;
+    if (terminal != shouldbeTerminal) return false;
+    return paramRegex.hasMatch(pattern);
   }
 
   Map<String, dynamic> resolveParams(final String pattern) {
-    String partLeftAsResult = pattern;
-
-    partLeftAsResult = prefix != null
-        ? partLeftAsResult.substring(prefix!.length)
-        : partLeftAsResult;
-
-    partLeftAsResult = suffix != null
-        ? partLeftAsResult.substring(
-            0, partLeftAsResult.length - suffix!.length)
-        : partLeftAsResult;
-
-    return {name: partLeftAsResult};
+    return resolveParamsFromPath(
+      paramRegex,
+      pattern,
+    );
   }
 
   @override
@@ -101,4 +129,27 @@ class CompositeParametricDefinition extends ParametricDefinition {
 
   @override
   List<Object?> get props => [...super.props, subparts];
+
+  @override
+  String get template {
+    return '${super.template}${subparts.map((e) => e.template).join()}';
+  }
+
+  RegExp? _fullParamRegexCache;
+  RegExp get fullParamRegex {
+    if (_fullParamRegexCache != null) return _fullParamRegexCache!;
+    return _fullParamRegexCache = buildRegexPattern(template);
+  }
+
+  @override
+  Map<String, dynamic> resolveParams(String pattern) {
+    return resolveParamsFromPath(fullParamRegex, pattern);
+  }
+
+  @override
+  bool matches(String pattern, {bool shouldbeTerminal = false}) {
+    if (terminal != shouldbeTerminal) return false;
+
+    return fullParamRegex.hasMatch(pattern);
+  }
 }
