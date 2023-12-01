@@ -183,6 +183,7 @@ class Response extends Message<shelf.Body?> implements $Response {
     );
   }
 
+  /// [data] should be json-encodable
   @override
   Response json(Object? data) {
     late Object result;
