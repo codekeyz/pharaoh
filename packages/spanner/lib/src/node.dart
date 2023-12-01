@@ -69,7 +69,7 @@ class ParametricNode extends Node {
   }
 
   /// This will return false if the definition is known
-  bool addNewDefinition(String part, {bool terminal = false}) {
+  void addNewDefinition(String part, {bool terminal = false}) {
     final defn = ParameterDefinition.from(part, terminal: terminal);
     final existing =
         _definitions.firstWhereOrNull((e) => e.isExactExceptName(defn));
@@ -98,8 +98,6 @@ class ParametricNode extends Node {
     _definitions
       ..add(defn)
       ..sortByProps();
-
-    return true;
   }
 
   @override
@@ -107,9 +105,6 @@ class ParametricNode extends Node {
 
   @override
   List<Object?> get props => [name, _definitions, children];
-
-  @override
-  bool get terminal => _definitions.any((e) => e.terminal);
 
   ParameterDefinition? findMatchingDefinition(
     String part, {

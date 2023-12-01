@@ -79,5 +79,21 @@ void main() {
       node = router.lookup(HTTPMethod.GET, '/b/param.static');
       expect(node, havingParameters({'param': 'param'}));
     });
+
+    test('contain param and wildcard together', () {
+      final router = RadixRouter()
+        ..on(HTTPMethod.GET, '/<lang>/item/<id>')
+        ..on(HTTPMethod.GET, '/<lang>/item/*');
+
+      expect(
+        router.lookup(HTTPMethod.GET, '/fr/item/12345'),
+        havingParameters({'lang': 'fr', 'id': '12345'}),
+      );
+
+      expect(
+        router.lookup(HTTPMethod.GET, '/fr/item/12345/edit'),
+        havingParameters({'lang': 'fr', '*': '12345/edit'}),
+      );
+    });
   });
 }

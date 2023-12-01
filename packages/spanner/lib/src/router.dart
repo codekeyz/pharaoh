@@ -47,8 +47,11 @@ class RadixRouter {
       String part = routePart;
       if (!config.caseSensitive) part = part.toLowerCase();
 
-      final parametric = part.isParametric;
-      final key = parametric ? '<:>' : part;
+      final key = part.isParametric
+          ? '<:>'
+          : part.isWildCard
+              ? '<*>'
+              : part;
       final isLastPart = i == (parts.length - 1);
 
       void assignNewRoot(Node node) {
@@ -61,15 +64,20 @@ class RadixRouter {
         devlog('- Found static node for $part');
         assignNewRoot(child);
       } else {
-        devlog('- Found no static node for $part');
-
-        if (!parametric) {
+        if (part.isStatic) {
           child = StaticNode(key);
           assignNewRoot(child);
           continue;
-        }
+        } else if (part.isWildCard) {
+          if (!isLastPart) {
+            throw ArgumentError.value(path, null,
+                'Route definition is not valid. Wildcard must be the end of the route');
+          }
 
-        devlog('- $part is parametric');
+          child = WildcardNode();
+          assignNewRoot(child);
+          continue;
+        }
 
         final paramNode = root.paramNode;
         if (paramNode == null) {
@@ -83,10 +91,6 @@ class RadixRouter {
         }
 
         paramNode.addNewDefinition(routePart, terminal: isLastPart);
-
-        devlog('- Found & updated parametric definitions');
-        devlog(
-            '- Parametric definitions now ↓\n    ${paramNode.definitions.join('\n    ')}');
 
         assignNewRoot(paramNode);
       }
@@ -124,6 +128,11 @@ class RadixRouter {
       final hasChild = rootNode.hasChild(routePart);
       final isEndOfPath = i == (parts.length - 1);
 
+      void useWildcard(WildcardNode wildcard) {
+        resolvedParams['*'] = parts.sublist(i).join('/');
+        rootNode = wildcard;
+      }
+
       if (hasChild) {
         rootNode = rootNode.getChild(routePart);
         devlog('- Found Static for             ->              $routePart');
@@ -132,7 +141,13 @@ class RadixRouter {
         if (paramNode == null) {
           devlog('x Found no static node for part       ->         $routePart');
           devlog('x Route is not registered             ->         $route');
-          break;
+
+          final wc = rootNode.wildcardNode;
+          if (wc != null) {
+            useWildcard(wc);
+            break;
+          }
+          return null;
         }
 
         final hasChild = paramNode.hasChild(routePart);
@@ -153,7 +168,10 @@ class RadixRouter {
         if (paramDefn == null) {
           devlog('x Found no defn for route part      ->         $routePart');
           devlog('x Route is not registered             ->         $route');
-          return null;
+
+          final wc = rootNode.wildcardNode;
+          if (wc != null) useWildcard(wc);
+          break;
         }
 
         devlog('- Found defn for route part    ->              $routePart');
@@ -162,13 +180,16 @@ class RadixRouter {
         resolvedParams.addAll(params);
         rootNode = paramNode;
 
-        if (paramDefn.terminal) rootNode.terminal = true;
+        if (paramDefn.terminal) {
+          rootNode.terminal = true;
+          break;
+        }
       }
     }
 
     if (debug) print(debugLog);
 
-    if (!rootNode.isTerminal) return null;
+    if (!rootNode.terminal) return null;
     return rootNode..params = resolvedParams;
   }
 
@@ -179,12 +200,9 @@ class RadixRouter {
   }
 
   void _printNode(Node node, String prefix) {
-    if (node.isTerminal) print('$prefix*');
-
+    if (node.terminal) print('$prefix*');
     node.children.forEach(
-      (char, node) {
-        _printNode(node, '$prefix$char -> ');
-      },
+      (char, node) => _printNode(node, '$prefix$char -> '),
     );
   }
 
