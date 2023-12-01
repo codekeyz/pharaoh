@@ -84,7 +84,10 @@ class RadixRouter {
 
         paramNode.addNewDefinition(routePart, terminal: isLastPart);
 
-        devlog('- Found & updated definitions to ${paramNode.name}');
+        devlog('- Found & updated parametric definitions');
+        devlog(
+            '- Parametric definitions now ↓\n    ${paramNode.definitions.join('\n    ')}');
+
         assignNewRoot(paramNode);
       }
     }
@@ -100,7 +103,7 @@ class RadixRouter {
     Node rootNode = getMethodNode(method);
     String route = _cleanPath(path);
 
-    Map<String, String> resolvedParams = {};
+    Map<String, dynamic> resolvedParams = {};
 
     final debugLog = StringBuffer("\n");
 
@@ -154,13 +157,13 @@ class RadixRouter {
         if (paramDefn == null) {
           devlog('x Found no defn for route part      ->         $routePart');
           devlog('x Route is not registered             ->         $route');
-          break;
+          return null;
         }
 
         devlog('- Found defn for route part    ->              $routePart');
 
-        final actualValue = resolveActualParamValue(paramDefn, currPart);
-        resolvedParams[paramDefn.name] = actualValue;
+        final params = paramDefn.resolveParams(currPart);
+        resolvedParams.addAll(params);
         rootNode = paramNode;
 
         if (paramDefn.terminal) rootNode.terminal = true;

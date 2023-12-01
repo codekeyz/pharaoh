@@ -68,6 +68,16 @@ class ParametricDefinition with EquatableMixin {
     return true;
   }
 
+  Map<String, dynamic> resolveParams(String pattern) {
+    String actualValue = pattern;
+    final suffix_ = suffix;
+    if (suffix_ != null) {
+      if (suffix_.length >= pattern.length) return {};
+      actualValue = pattern.substring(0, pattern.length - suffix_.length);
+    }
+    return {name: actualValue};
+  }
+
   @override
   List<Object?> get props => [name, prefix, suffix, regex, terminal];
 }
