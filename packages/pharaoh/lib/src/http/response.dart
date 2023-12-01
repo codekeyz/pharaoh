@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http_parser/http_parser.dart';
-import 'package:pharaoh/src/utils/utils.dart';
+import '../utils/utils.dart';
 
 import '../utils/exceptions.dart';
 import '../shelf_interop/shelf.dart' as shelf;
@@ -188,10 +188,7 @@ class Response extends Message<shelf.Body?> implements $Response {
     late Object result;
     try {
       if (data is Set) data = data.toList();
-      result = jsonEncode(
-        data,
-        toEncodable: (Object? object) => customEncoder(object),
-      );
+      result = jsonEncode(data, toEncodable: customEncoder);
     } catch (_) {
       final errStr = jsonEncode(makeError(message: _.toString()).toJson);
       return Response(
