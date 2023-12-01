@@ -21,7 +21,7 @@ ParametricDefinition _createDefinition(RegExpMatch m, {bool terminal = false}) {
 
 ParametricDefinition? _deriveDefnFromString(String part, bool terminal) {
   if (closedDoorParametricRegex.hasMatch(part)) {
-    throw ArgumentError('Route part is not valid. Closed door neighbors', part);
+    throw ArgumentError('Route part is not valid. Close door neighbors', part);
   }
 
   final matches = parametricDefnsRegex.allMatches(part);

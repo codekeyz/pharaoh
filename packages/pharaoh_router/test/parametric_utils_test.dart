@@ -67,18 +67,4 @@ void main() {
       ),
     );
   });
-
-  test('test hello', () {
-    final router = RadixRouter()
-      ..on(HTTPMethod.GET, '/users')
-      ..on(HTTPMethod.GET, '/users/<userId>')
-      ..on(HTTPMethod.GET, '/users/user-<userId>.png<roomId>.dmg')
-      ..printTree();
-
-    var node = router.lookup(HTTPMethod.GET, '/users/24');
-    expect(node?.params, {'userId': '24'});
-
-    node = router.lookup(HTTPMethod.GET, '/users/user-200.png234.dmg');
-    expect(node?.params, {'userId': '200', 'roomId': '234'});
-  });
 }

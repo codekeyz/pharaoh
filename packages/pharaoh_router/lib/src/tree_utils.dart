@@ -1,6 +1,4 @@
-// <username>
 import 'helpers/parametric.dart';
-import 'tree_node.dart';
 
 extension StringExtension on String {
   bool get isParametric => parametricRegex.hasMatch(this);

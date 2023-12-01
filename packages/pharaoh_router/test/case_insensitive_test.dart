@@ -115,20 +115,30 @@ void main() {
     );
   });
 
-  /// TODO(codekeyz) Handle symbols in between parameters
-  // test(
-  //     'case insensitive with multiple mixed-case params within same slash couple',
-  //     () {
-  //   final config = const RadixRouterConfig(caseSensitive: false);
-  //   final router = RadixRouter(config: config)
-  //     ..on(HTTPMethod.GET, '/foo/<param1>-<param2>');
+  test(
+      'case insensitive with multiple mixed-case params within same slash couple',
+      () {
+    final config = const RadixRouterConfig(caseSensitive: false);
+    final router = RadixRouter(config: config)
+      ..on(HTTPMethod.GET, '/users/<userId>')
+      ..on(HTTPMethod.GET, '/users/user-<userId>.png<roomId>.dmg')
+      ..on(HTTPMethod.GET, '/foo/<param1>-<param2>');
 
-  //   expect(
-  //     router.lookup(HTTPMethod.GET, '/FOO/My-bAR'),
-  //     havingParameters({'param1': 'My', 'param2': 'bAR'}),
-  //   );
-  // });
+    expect(
+      router.lookup(HTTPMethod.GET, '/FOO/My-bAR'),
+      havingParameters({'param1': 'My', 'param2': 'bAR'}),
+    );
 
+    expect(
+      router.lookup(HTTPMethod.GET, '/users/24'),
+      havingParameters({'userId': '24'}),
+    );
+
+    expect(
+      router.lookup(HTTPMethod.GET, '/users/user-200.png234.dmg'),
+      havingParameters({'userId': '200', 'roomId': '234'}),
+    );
+  });
   // test('parametric case insensitive with a static part', () {
   //   final config = const RadixRouterConfig(caseSensitive: false);
   //   final router = RadixRouter(config: config)
