@@ -146,11 +146,8 @@ class RadixRouter {
         devlog(
             '- Finding Defn for $routePart        -> terminal?    $shouldBeTerminal');
 
-        final paramDefn = findMatchingParametricDefinition(
-          paramNode,
-          routePart,
-          terminal: isEndOfPath,
-        );
+        final paramDefn = paramNode.findMatchingDefinition(routePart,
+            shouldBeTerminal: isEndOfPath);
 
         devlog('    * parametric defn:         ${paramDefn.toString()}');
 

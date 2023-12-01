@@ -94,6 +94,26 @@ class ParametricNode extends Node {
   @override
   List<Object?> get props => [name, _definitions, children];
 
+  ParametricDefinition? findMatchingDefinition(
+    String part, {
+    bool shouldBeTerminal = false,
+  }) {
+    ParametricDefinition? result;
+
+    for (final defn in definitions) {
+      if (shouldBeTerminal != defn.terminal) continue;
+
+      final expectedSuffix = defn.suffix;
+      if (expectedSuffix != null) {
+        if (!part.endsWith(expectedSuffix)) continue;
+      }
+      result = defn;
+      break;
+    }
+
+    return result;
+  }
+
   // RegExp? _regexCache;
   // RegExp? get regex {
   //   if (_regexCache != null) return _regexCache;

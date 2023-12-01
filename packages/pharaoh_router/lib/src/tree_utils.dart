@@ -105,25 +105,3 @@ dynamic resolveActualParamValue(ParametricDefinition defn, String pattern) {
   }
   return actualValue;
 }
-
-ParametricDefinition? findMatchingParametricDefinition(
-  ParametricNode node,
-  String pattern, {
-  bool terminal = false,
-}) {
-  final defns = node.definitions;
-
-  ParametricDefinition? result;
-  for (final defn in defns) {
-    if (terminal != defn.terminal) continue;
-
-    final expectedSuffix = defn.suffix;
-    if (expectedSuffix != null) {
-      if (!pattern.endsWith(expectedSuffix)) continue;
-    }
-    result = defn;
-    break;
-  }
-
-  return result;
-}
