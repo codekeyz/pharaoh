@@ -92,7 +92,7 @@ class ParametricNode extends Node {
         );
       }
 
-      return false;
+      return;
     }
 
     _definitions
