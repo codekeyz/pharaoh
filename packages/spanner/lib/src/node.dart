@@ -4,7 +4,9 @@ import 'package:equatable/equatable.dart';
 import 'helpers/parametric.dart';
 
 abstract class Node with EquatableMixin {
-  Map<String, Node> children = {};
+  final Map<String, Node> _children = {};
+
+  Map<String, Node> get children => UnmodifiableMapView(_children);
 
   String get name;
 
@@ -35,7 +37,7 @@ abstract class Node with EquatableMixin {
   }
 
   Node addChildAndReturn(String key, Node node) {
-    children[key] = node;
+    _children[key] = node;
     return node;
   }
 }
