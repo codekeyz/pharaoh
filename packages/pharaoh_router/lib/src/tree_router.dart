@@ -169,7 +169,7 @@ class RadixRouter {
 
     if (debug) print(debugLog);
 
-    if (!rootNode.terminal) return null;
+    if (!rootNode.isTerminal) return null;
     return rootNode..params = resolvedParams;
   }
 
@@ -180,9 +180,7 @@ class RadixRouter {
   }
 
   void _printNode(Node node, String prefix) {
-    final isTerminal = node.terminal ||
-        (node is ParametricNode && node.definitions.any((e) => e.terminal));
-    if (isTerminal) print('$prefix*');
+    if (node.isTerminal) print('$prefix*');
 
     node.children.forEach(
       (char, node) {

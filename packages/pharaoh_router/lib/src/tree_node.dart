@@ -8,7 +8,13 @@ abstract class Node with EquatableMixin {
 
   String get name;
 
-  bool terminal = false;
+  bool _terminal = false;
+
+  bool get isTerminal => _terminal;
+
+  set terminal(bool isend) {
+    _terminal = isend;
+  }
 
   Map<String, dynamic> params = {};
 
@@ -61,6 +67,20 @@ class ParametricNode extends Node {
 
   void addNewDefinition(String part, {bool terminal = false}) {
     final defn = ParametricDefinition.from(part, terminal: terminal);
+    final existing =
+        _definitions.firstWhereOrNull((e) => e.isExactExceptName(defn));
+    if (existing != null) {
+      if (existing.name != defn.name) {
+        throw ArgumentError(
+          'Route has inconsistent name in parametric definition\n${[
+            ' - ${existing.template}',
+            ' - ${defn.template}',
+          ].join('\n')}',
+        );
+      }
+      return;
+    }
+
     _definitions
       ..add(defn)
       ..sortByProps();
@@ -71,6 +91,9 @@ class ParametricNode extends Node {
 
   @override
   List<Object?> get props => [name, _definitions, children];
+
+  @override
+  bool get isTerminal => _definitions.any((e) => e.terminal);
 
   ParametricDefinition? findMatchingDefinition(
     String part, {

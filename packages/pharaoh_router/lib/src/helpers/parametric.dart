@@ -122,6 +122,13 @@ class ParametricDefinition with EquatableMixin {
     return paramRegex.hasMatch(pattern);
   }
 
+  bool isExactExceptName(ParametricDefinition defn) {
+    return prefix == defn.prefix &&
+        suffix == defn.suffix &&
+        regex == defn.regex &&
+        terminal == defn.terminal;
+  }
+
   Map<String, dynamic> resolveParams(final String pattern) {
     return resolveParamsFromPath(paramRegex, pattern);
   }

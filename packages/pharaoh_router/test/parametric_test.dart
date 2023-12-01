@@ -46,4 +46,28 @@ void main() {
     node = router.lookup(HTTPMethod.GET, '/b/param.static');
     expect(node, havingParameters({'param': 'param'}));
   });
+
+  test('detect and reject inconsistent parametric definitions', () {
+    final config = const RadixRouterConfig(caseSensitive: false);
+
+    bool exceptionThrown = false;
+
+    try {
+      RadixRouter(config: config)
+        ..on(HTTPMethod.GET, '/user')
+        ..on(HTTPMethod.GET, '/user/<file>.png')
+        ..on(HTTPMethod.GET, '/user/<file>.png/download')
+        ..on(HTTPMethod.GET, '/user/<hello>.png/<user2>/hello');
+    } catch (error) {
+      exceptionThrown = true;
+      expect(error, isA<ArgumentError>());
+      error as ArgumentError;
+      expect(error.message,
+          contains('Route has inconsistent name in parametric definition'));
+      expect(error.message, contains('<file>.png'));
+      expect(error.message, contains('<hello>.png'));
+    }
+
+    expect(exceptionThrown, isTrue);
+  });
 }
