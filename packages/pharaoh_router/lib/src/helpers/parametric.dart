@@ -7,34 +7,35 @@ final parametricRegex = RegExp(r"<\w+>");
 
 final parametricDefnsRegex = RegExp(r"([^<]*)(<\w+>)([^<]*)");
 
-final closedDoorParametricRegex = RegExp(r"><");
+final closeDoorParametricRegex = RegExp(r"><");
 
-ParametricDefinition _createDefinition(RegExpMatch m, {bool terminal = false}) {
-  final name = getParameter(m.group(2)!)!;
-  return ParametricDefinition._(
-    name,
-    prefix: m.group(1)?.nullIfEmpty,
-    suffix: m.group(3)?.nullIfEmpty,
-    terminal: terminal,
-  );
-}
-
-ParametricDefinition? _deriveDefnFromString(String part, bool terminal) {
-  if (closedDoorParametricRegex.hasMatch(part)) {
+/// build a parametric definition from a route part
+ParametricDefinition? deriveDefnFromString(String part, bool terminal) {
+  if (closeDoorParametricRegex.hasMatch(part)) {
     throw ArgumentError('Route part is not valid. Close door neighbors', part);
+  }
+
+  ParametricDefinition makeDefn(RegExpMatch m, {bool end = false}) {
+    final name = getParameter(m.group(2)!)!;
+    return ParametricDefinition._(
+      name,
+      prefix: m.group(1)?.nullIfEmpty,
+      suffix: m.group(3)?.nullIfEmpty,
+      terminal: end,
+    );
   }
 
   final matches = parametricDefnsRegex.allMatches(part);
   if (matches.isEmpty) return null;
 
   if (matches.length == 1) {
-    return _createDefinition(matches.first, terminal: terminal);
+    return makeDefn(matches.first, end: terminal);
   }
 
-  final parent = _createDefinition(matches.first, terminal: false);
+  final parent = makeDefn(matches.first, end: false);
   final subdefns = matches.skip(1);
-  final subparts = subdefns.mapIndexed(
-      (i, e) => _createDefinition(e, terminal: i == (subdefns.length - 1)));
+  final subparts = subdefns
+      .mapIndexed((i, e) => makeDefn(e, end: i == (subdefns.length - 1)));
 
   return CompositeParametricDefinition(
     parent,
@@ -42,11 +43,11 @@ ParametricDefinition? _deriveDefnFromString(String part, bool terminal) {
   );
 }
 
-RegExp buildRegexPattern(String template) {
+RegExp buildRegexFromTemplate(String template) {
   String escapedTemplate = RegExp.escape(template);
 
   // Replace <...> placeholders with named capturing groups
-  String regexPattern = escapedTemplate.replaceAllMapped(
+  final regexPattern = escapedTemplate.replaceAllMapped(
     RegExp(r"<([^>]+)>"),
     (Match match) {
       String paramName = match.group(1)!;
@@ -54,12 +55,30 @@ RegExp buildRegexPattern(String template) {
     },
   );
 
-  return RegExp(regexPattern);
+  /// TODO(codekeyz) figure out if we need to pass the case sensitivity flag
+  /// from the wider context down here or it's safe to keep it case insensitive.
+  return RegExp(regexPattern, caseSensitive: false);
+}
+
+extension ParametricDefinitionsSort on List<ParametricDefinition> {
+  void sortByProps() {
+    final Map<int, int> nullCount = {};
+    for (final def in this) {
+      int count = 0;
+      if (def.suffix == null) count += 1;
+      if (def.regex == null) count += 1;
+      nullCount[def.hashCode] = count;
+    }
+
+    sort((a, b) => nullCount[a.hashCode]!.compareTo(nullCount[b.hashCode]!));
+  }
 }
 
 Map<String, dynamic> resolveParamsFromPath(RegExp templateRegex, String path) {
+  final match = templateRegex.firstMatch(path);
+  if (match == null) return const {};
+
   final resolvedParams = <String, dynamic>{};
-  final match = templateRegex.firstMatch(path)!;
   for (final param in match.groupNames) {
     resolvedParams[param] = match.namedGroup(param);
   }
@@ -91,11 +110,11 @@ class ParametricDefinition with EquatableMixin {
   RegExp? _paramRegexCache;
   RegExp get paramRegex {
     if (_paramRegexCache != null) return _paramRegexCache!;
-    return _paramRegexCache = buildRegexPattern(template);
+    return _paramRegexCache = buildRegexFromTemplate(template);
   }
 
   factory ParametricDefinition.from(String part, {bool terminal = false}) {
-    return _deriveDefnFromString(part, terminal)!;
+    return deriveDefnFromString(part, terminal)!;
   }
 
   bool matches(String pattern, {bool shouldbeTerminal = false}) {
@@ -104,10 +123,7 @@ class ParametricDefinition with EquatableMixin {
   }
 
   Map<String, dynamic> resolveParams(final String pattern) {
-    return resolveParamsFromPath(
-      paramRegex,
-      pattern,
-    );
+    return resolveParamsFromPath(paramRegex, pattern);
   }
 
   @override
@@ -140,7 +156,7 @@ class CompositeParametricDefinition extends ParametricDefinition {
   RegExp? _fullParamRegexCache;
   RegExp get fullParamRegex {
     if (_fullParamRegexCache != null) return _fullParamRegexCache!;
-    return _fullParamRegexCache = buildRegexPattern(compositeTemplate);
+    return _fullParamRegexCache = buildRegexFromTemplate(compositeTemplate);
   }
 
   @override

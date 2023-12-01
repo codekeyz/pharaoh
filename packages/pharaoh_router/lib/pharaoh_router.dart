@@ -4,3 +4,4 @@
 library;
 
 export 'src/tree_router.dart';
+export 'src/tree_node.dart';

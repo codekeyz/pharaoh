@@ -1,6 +1,5 @@
 import 'package:collection/collection.dart';
 import 'package:equatable/equatable.dart';
-import 'package:pharaoh_router/src/tree_utils.dart';
 
 import 'helpers/parametric.dart';
 
@@ -45,28 +44,6 @@ class StaticNode extends Node {
   List<Object?> get props => [name, children];
 }
 
-typedef ParamAndRemaining = ({String param, String? remaining});
-
-ParamAndRemaining getParamAndRemainingPart(String pattern) {
-  final name = getParameter(pattern)!;
-  final paramLength = '<$name>'.length;
-  final isEnd = pattern.length == paramLength;
-  final remaining = isEnd ? null : pattern.substring(paramLength);
-  return (param: name, remaining: remaining);
-}
-
-void sortParametricDefinition(List<ParametricDefinition> definitions) {
-  final Map<int, int> nullCount = {};
-  for (final def in definitions) {
-    int count = 0;
-    if (def.suffix == null) count += 1;
-    if (def.regex == null) count += 1;
-    nullCount[def.hashCode] = count;
-  }
-  definitions
-      .sort((a, b) => nullCount[a.hashCode]!.compareTo(nullCount[b.hashCode]!));
-}
-
 class ParametricNode extends Node {
   final List<ParametricDefinition> _definitions = [];
 
@@ -84,12 +61,13 @@ class ParametricNode extends Node {
 
   void addNewDefinition(String part, {bool terminal = false}) {
     final defn = ParametricDefinition.from(part, terminal: terminal);
-    _definitions.add(defn);
-    sortParametricDefinition(_definitions);
+    _definitions
+      ..add(defn)
+      ..sortByProps();
   }
 
   @override
-  String get name => 'parametric(${_definitions.length})';
+  String get name => 'param(${_definitions.length})';
 
   @override
   List<Object?> get props => [name, _definitions, children];

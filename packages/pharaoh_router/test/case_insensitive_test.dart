@@ -139,14 +139,15 @@ void main() {
       havingParameters({'userId': '200', 'roomId': '234'}),
     );
   });
-  // test('parametric case insensitive with a static part', () {
-  //   final config = const RadixRouterConfig(caseSensitive: false);
-  //   final router = RadixRouter(config: config)
-  //     ..on(HTTPMethod.GET, '/foo/my-<param>', debug: true);
 
-  //   expect(
-  //     router.lookup(HTTPMethod.GET, '/Foo/MY-bAR'),
-  //     havingParameters({'param': 'bAR'}),
-  //   );
-  // });
+  test('parametric case insensitive with a static part', () {
+    final config = const RadixRouterConfig(caseSensitive: false);
+    final router = RadixRouter(config: config)
+      ..on(HTTPMethod.GET, '/foo/my-<param>');
+
+    expect(
+      router.lookup(HTTPMethod.GET, '/Foo/MY-bAR'),
+      havingParameters({'param': 'bAR'}),
+    );
+  });
 }
