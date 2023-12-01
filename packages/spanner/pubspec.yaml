@@ -1,5 +1,5 @@
-name: pharaoh_router
-description: A starting point for Dart libraries or applications.
+name: spanner
+description: A crazy fast HTTP router, internally uses an highly performant Radix Tree (aka compact Prefix Tree), supports route params, wildcards.
 version: 1.0.0
 # repository: https://github.com/my_org/my_repo
 

@@ -1,5 +1,5 @@
 import 'package:pharaoh/pharaoh.dart';
-import 'package:pharaoh_router/pharaoh_router.dart';
+import 'package:spanner/spanner.dart';
 import 'package:test/test.dart';
 
 import 'helpers/test_utils.dart';

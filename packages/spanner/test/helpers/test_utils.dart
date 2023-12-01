@@ -1,4 +1,4 @@
-import 'package:pharaoh_router/src/tree_node.dart';
+import 'package:spanner/src/tree_node.dart';
 import 'package:test/expect.dart';
 
 Matcher havingParameters(Map<String, dynamic> params) {
