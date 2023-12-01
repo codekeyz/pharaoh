@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:equatable/equatable.dart';
 
 import '../tree_utils.dart';
@@ -26,15 +27,18 @@ ParametricDefinition? _deriveDefnFromString(String part, bool terminal) {
   final matches = parametricDefnsRegex.allMatches(part);
   if (matches.isEmpty) return null;
 
-  final parent = _createDefinition(matches.first, terminal: terminal);
-  if (matches.length == 1) return parent;
+  if (matches.length == 1) {
+    return _createDefinition(matches.first, terminal: terminal);
+  }
 
-  final remainingMatches =
-      matches.skip(1).map((e) => _createDefinition(e)).toList();
+  final parent = _createDefinition(matches.first, terminal: false);
+  final subdefns = matches.skip(1);
+  final subparts = subdefns.mapIndexed(
+      (i, e) => _createDefinition(e, terminal: i == (subdefns.length - 1)));
 
   return CompositeParametricDefinition(
     parent,
-    subparts: remainingMatches,
+    subparts: UnmodifiableListView(subparts),
   );
 }
 
@@ -58,24 +62,24 @@ class ParametricDefinition with EquatableMixin {
   }
 
   bool matches(String pattern, {bool shouldbeTerminal = false}) {
-    if (shouldbeTerminal != terminal) return false;
-
-    final expectedSuffix = suffix;
-    if (expectedSuffix != null) {
-      if (!pattern.endsWith(expectedSuffix)) return false;
-    }
-
-    return true;
+    final prefixMatches = prefix == null || pattern.startsWith(prefix!);
+    final suffixMatches = suffix == null || pattern.endsWith(suffix!);
+    return prefixMatches && suffixMatches && shouldbeTerminal == terminal;
   }
 
-  Map<String, dynamic> resolveParams(String pattern) {
-    String actualValue = pattern;
-    final suffix_ = suffix;
-    if (suffix_ != null) {
-      if (suffix_.length >= pattern.length) return {};
-      actualValue = pattern.substring(0, pattern.length - suffix_.length);
-    }
-    return {name: actualValue};
+  Map<String, dynamic> resolveParams(final String pattern) {
+    String partLeftAsResult = pattern;
+
+    partLeftAsResult = prefix != null
+        ? partLeftAsResult.substring(prefix!.length)
+        : partLeftAsResult;
+
+    partLeftAsResult = suffix != null
+        ? partLeftAsResult.substring(
+            0, partLeftAsResult.length - suffix!.length)
+        : partLeftAsResult;
+
+    return {name: partLeftAsResult};
   }
 
   @override
@@ -83,7 +87,7 @@ class ParametricDefinition with EquatableMixin {
 }
 
 class CompositeParametricDefinition extends ParametricDefinition {
-  final List<ParametricDefinition> subparts;
+  final UnmodifiableListView<ParametricDefinition> subparts;
 
   CompositeParametricDefinition(ParametricDefinition parent,
       {required this.subparts})
@@ -94,13 +98,6 @@ class CompositeParametricDefinition extends ParametricDefinition {
           suffix: parent.suffix,
           terminal: parent.terminal,
         );
-
-  @override
-  bool matches(String pattern, {bool shouldbeTerminal = false}) {
-    print('We are here to search');
-
-    return false;
-  }
 
   @override
   List<Object?> get props => [...super.props, subparts];
