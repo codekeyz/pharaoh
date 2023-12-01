@@ -14,7 +14,7 @@ void main() {
 
         final exception = runSyncAndReturnException<ArgumentError>(router);
         expect(exception.message,
-            contains('Route has inconsistent name in parametric definition'));
+            contains('Route has inconsistent naming in parameter definition'));
         expect(exception.message, contains('<file>.png'));
         expect(exception.message, contains('<hello>.png'));
       });

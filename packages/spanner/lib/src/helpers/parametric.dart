@@ -15,8 +15,9 @@ final parametricDefnsRegex = RegExp(r"([^<]*)<(\w+(?:\|[^>|]+)*)>([^<]*)");
 final closeDoorParametricRegex = RegExp(r"><");
 
 extension StringExtension on String {
-  bool get isParametric => parametricRegex.hasMatch(this);
+  bool get isStatic => !isParametric && !isWildCard;
 
+  bool get isParametric => parametricRegex.hasMatch(this);
   // *
   bool get isWildCard => codeUnitAt(0) == 42;
 
@@ -24,7 +25,7 @@ extension StringExtension on String {
 }
 
 /// build a parametric definition from a route part
-ParameterDefinition? deriveDefnFromString(String part, bool terminal) {
+ParameterDefinition? _buildParamDefinition(String part, bool terminal) {
   if (closeDoorParametricRegex.hasMatch(part)) {
     throw ArgumentError.value(
         part, null, 'Parameter definition is not valid. Close door neighbors');
@@ -135,7 +136,7 @@ class ParameterDefinition with EquatableMixin {
   }
 
   factory ParameterDefinition.from(String part, {bool terminal = false}) {
-    return deriveDefnFromString(part, terminal)!;
+    return _buildParamDefinition(part, terminal)!;
   }
 
   bool matches(String pattern, {bool shouldbeTerminal = false}) {
@@ -172,7 +173,7 @@ class CompositeParameterDefinition extends ParameterDefinition {
         );
 
   @override
-  List<Object?> get props => [...super.props, subparts];
+  List<Object?> get props => [super.props, ...subparts];
 
   @override
   bool get terminal => subparts.any((e) => e.terminal);
@@ -202,8 +203,4 @@ class CompositeParameterDefinition extends ParameterDefinition {
     if (!match) return false;
     return shouldbeTerminal && terminal;
   }
-}
-
-class WildCardDefinition extends ParameterDefinition {
-  WildCardDefinition() : super._('*', terminal: true);
 }

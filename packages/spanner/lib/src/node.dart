@@ -8,13 +8,7 @@ abstract class Node with EquatableMixin {
 
   String get name;
 
-  bool _terminal = false;
-
-  bool get isTerminal => _terminal;
-
-  set terminal(bool isend) {
-    _terminal = isend;
-  }
+  bool terminal = false;
 
   Map<String, dynamic> params = {};
 
@@ -30,6 +24,14 @@ abstract class Node with EquatableMixin {
     final node = children.values.firstWhereOrNull((e) => e is ParametricNode);
     if (node == null) return null;
     return _paramNodecache = (node as ParametricNode);
+  }
+
+  WildcardNode? _wildcardNodeCache;
+  WildcardNode? get wildcardNode {
+    if (_wildcardNodeCache != null) return _wildcardNodeCache;
+    final node = children.values.firstWhereOrNull((e) => e is WildcardNode);
+    if (node == null) return null;
+    return _wildcardNodeCache = (node as WildcardNode);
   }
 
   Node addChildAndReturn(String key, Node node) {
@@ -60,9 +62,9 @@ class ParametricNode extends Node {
     _definitions.add(defn);
   }
 
-  factory ParametricNode.fromPath(String path, {bool terminal = false}) {
+  factory ParametricNode.fromPath(String part, {bool terminal = false}) {
     return ParametricNode(
-      ParameterDefinition.from(path, terminal: terminal),
+      ParameterDefinition.from(part, terminal: terminal),
     );
   }
 
@@ -74,12 +76,22 @@ class ParametricNode extends Node {
     if (existing != null) {
       if (existing.name != defn.name) {
         throw ArgumentError(
-          'Route has inconsistent name in parametric definition\n${[
+          'Route has inconsistent naming in parameter definition\n${[
             ' - ${existing.template}',
             ' - ${defn.template}',
           ].join('\n')}',
         );
       }
+
+      if (existing.terminal && defn.terminal) {
+        throw ArgumentError(
+          'Route already exists.${[
+            ' - ${existing.template}',
+            ' - ${defn.template}',
+          ].join('\n')}',
+        );
+      }
+
       return false;
     }
 
@@ -90,17 +102,6 @@ class ParametricNode extends Node {
     return true;
   }
 
-  void addWildcard() {
-    final wildcardDefn = _definitions.whereType<WildCardDefinition>();
-    if (wildcardDefn.isNotEmpty) {
-      throw ArgumentError('Route is not valid. Wildcard can only appear once');
-    }
-
-    _definitions
-      ..add(WildCardDefinition())
-      ..sortByProps();
-  }
-
   @override
   String get name => 'parametric(${_definitions.length}-defns)';
 
@@ -108,7 +109,7 @@ class ParametricNode extends Node {
   List<Object?> get props => [name, _definitions, children];
 
   @override
-  bool get isTerminal => _definitions.any((e) => e.terminal);
+  bool get terminal => _definitions.any((e) => e.terminal);
 
   ParameterDefinition? findMatchingDefinition(
     String part, {
@@ -117,4 +118,20 @@ class ParametricNode extends Node {
       definitions.firstWhereOrNull(
         (e) => e.matches(part, shouldbeTerminal: shouldBeTerminal),
       );
+}
+
+class WildcardNode extends Node {
+  @override
+  String get name => 'wildcard(*)';
+
+  @override
+  List<Object?> get props => [name];
+
+  @override
+  bool get terminal => true;
+
+  @override
+  Node addChildAndReturn(key, node) {
+    throw ArgumentError('Wildcard cannot have a child');
+  }
 }
