@@ -9,10 +9,10 @@ final parametricRegex = RegExp(r"<[^>]+>");
 ///
 /// - ([^<]*) -> this captures prefix
 ///
-/// - (<\w+(?:\|[^>|]+)*>) -> this captures the value within definition
+/// - (\w+(?:\|[^>|]+)*) -> this captures the value within definition
 ///
 /// - ([^<]*) -> this captures suffix
-final parametricDefnsRegex = RegExp(r"([^<]*)(<\w+(?:\|[^>|]+)*>)([^<]*)");
+final parametricDefnsRegex = RegExp(r"([^<]*)<(\w+(?:\|[^>|]+)*)>([^<]*)");
 
 final closeDoorParametricRegex = RegExp(r"><");
 
@@ -24,9 +24,13 @@ ParameterDefinition? deriveDefnFromString(String part, bool terminal) {
   }
 
   ParameterDefinition makeDefn(RegExpMatch m, {bool end = false}) {
-    final name = getParameter(m.group(2)!)!;
+    final sourceParts = m.group(2)!.split('|');
+
+    /// TODO(codekeyz) complete support for regex and parsers
+    /// in the remaining parts of [sourceParts]
+
     return ParameterDefinition._(
-      name,
+      sourceParts.first,
       prefix: m.group(1)?.nullIfEmpty,
       suffix: m.group(3)?.nullIfEmpty,
       terminal: end,
