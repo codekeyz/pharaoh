@@ -190,7 +190,7 @@ class Response extends Message<shelf.Body?> implements $Response {
       if (data is Set) data = data.toList();
       result = jsonEncode(
         data,
-        toEncodable: (Object? object) => customEncoder(object),
+        toEncodable: customEncoder,
       );
     } catch (_) {
       final errStr = jsonEncode(makeError(message: _.toString()).toJson);
