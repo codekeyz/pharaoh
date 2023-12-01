@@ -2,7 +2,7 @@ import 'package:pharaoh/pharaoh.dart';
 import 'package:pharaoh_router/pharaoh_router.dart';
 import 'package:test/test.dart';
 
-import 'helpers/matchers.dart';
+import 'helpers/test_utils.dart';
 
 void main() {
   test('case insensitive static routes of level 1', () {

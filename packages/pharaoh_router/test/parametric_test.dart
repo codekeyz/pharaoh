@@ -2,48 +2,39 @@ import 'package:pharaoh/pharaoh.dart';
 import 'package:pharaoh_router/pharaoh_router.dart';
 import 'package:test/test.dart';
 
-import 'helpers/matchers.dart';
+import 'helpers/test_utils.dart';
 
 void main() {
   group('parametric route', () {
     group('should reject', () {
-      test('inconsistent parametric definitions', () {
-        final config = const RadixRouterConfig(caseSensitive: false);
+      test('inconsistent parameter definitions', () {
+        RadixRouter makeRouter() => RadixRouter()
+          ..on(HTTPMethod.GET, '/user/<file>.png/download')
+          ..on(HTTPMethod.GET, '/user/<hello>.png/<user2>/hello');
 
-        bool exceptionThrown = false;
+        final exception = runSyncAndReturnException<ArgumentError>(makeRouter);
+        expect(exception.message,
+            contains('Route has inconsistent name in parametric definition'));
+        expect(exception.message, contains('<file>.png'));
+        expect(exception.message, contains('<hello>.png'));
+      });
 
-        try {
-          RadixRouter(config: config)
-            ..on(HTTPMethod.GET, '/user')
-            ..on(HTTPMethod.GET, '/user/<file>.png')
-            ..on(HTTPMethod.GET, '/user/<file>.png/download')
-            ..on(HTTPMethod.GET, '/user/<hello>.png/<user2>/hello');
-        } catch (error) {
-          exceptionThrown = true;
-          expect(error, isA<ArgumentError>());
-          error as ArgumentError;
-          expect(error.message,
-              contains('Route has inconsistent name in parametric definition'));
-          expect(error.message, contains('<file>.png'));
-          expect(error.message, contains('<hello>.png'));
-        }
-
-        expect(exceptionThrown, isTrue);
+      test('invalid name in parameter definition', () {
+        // expect(exception.message,
+        //     contains('Route has inconsistent name in parametric definition'));
+        // expect(exception.message, contains('<file>.png'));
+        // expect(exception.message, contains('<hello>.png'));
       });
     });
 
     test('with request.url contains dash', () {
-      final config = const RadixRouterConfig(caseSensitive: false);
-      final router = RadixRouter(config: config)
-        ..on(HTTPMethod.GET, '/a/<param>/b');
-
+      final router = RadixRouter()..on(HTTPMethod.GET, '/a/<param>/b');
       final result = router.lookup(HTTPMethod.GET, '/a/foo-bar/b');
       expect(result, havingParameters({'param': 'foo-bar'}));
     });
 
     test('with fixed suffix', () async {
-      final config = const RadixRouterConfig(caseSensitive: false);
-      final router = RadixRouter(config: config)
+      final router = RadixRouter()
         ..on(HTTPMethod.GET, '/user')
         ..on(HTTPMethod.GET, '/user/<userId>')
         ..on(HTTPMethod.GET, '/user/<userId>/details')
