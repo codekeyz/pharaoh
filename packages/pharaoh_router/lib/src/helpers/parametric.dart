@@ -149,27 +149,28 @@ class CompositeParametricDefinition extends ParametricDefinition {
   @override
   bool get terminal => subparts.any((e) => e.terminal);
 
-  String get compositeTemplate {
-    return '$template${subparts.map((e) => e.template).join()}';
+  @override
+  String get template {
+    return '${super.template}${subparts.map((e) => e.template).join()}';
   }
 
-  RegExp? _fullParamRegexCache;
-  RegExp get fullParamRegex {
-    if (_fullParamRegexCache != null) return _fullParamRegexCache!;
-    return _fullParamRegexCache = buildRegexFromTemplate(compositeTemplate);
+  @override
+  RegExp get paramRegex {
+    if (_paramRegexCache != null) return _paramRegexCache!;
+    return _paramRegexCache = buildRegexFromTemplate(template);
   }
 
   @override
   Map<String, dynamic> resolveParams(String pattern) {
     return resolveParamsFromPath(
-      fullParamRegex,
+      paramRegex,
       pattern,
     );
   }
 
   @override
   bool matches(String pattern, {bool shouldbeTerminal = false}) {
-    final match = fullParamRegex.hasMatch(pattern);
+    final match = paramRegex.hasMatch(pattern);
     if (!match) return false;
     return shouldbeTerminal && terminal;
   }
