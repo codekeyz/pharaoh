@@ -67,7 +67,7 @@ class ParametricNode extends Node {
   }
 
   @override
-  String get name => 'param(${_definitions.length})';
+  String get name => 'parametric(${_definitions.length}-defns)';
 
   @override
   List<Object?> get props => [name, _definitions, children];
@@ -79,13 +79,4 @@ class ParametricNode extends Node {
       definitions.firstWhereOrNull(
         (e) => e.matches(part, shouldbeTerminal: shouldBeTerminal),
       );
-
-  // RegExp? _regexCache;
-  // RegExp? get regex {
-  //   if (_regexCache != null) return _regexCache;
-  //   final source = regsrc;
-  //   if (source == null) return null;
-  //   final actual = source.substring(1, source.length - 1);
-  //   return _regexCache ??= RegExp(RegExp.escape(actual));
-  // }
 }
