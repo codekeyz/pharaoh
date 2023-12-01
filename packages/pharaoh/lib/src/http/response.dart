@@ -29,6 +29,7 @@ abstract interface class $Response {
 
   Response status(int code);
 
+  /// [data] should be json-encodable
   Response json(Object? data);
 
   Response ok([String? data]);

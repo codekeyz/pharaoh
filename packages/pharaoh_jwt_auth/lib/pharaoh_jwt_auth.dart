@@ -5,4 +5,4 @@ library;
 
 export 'src/pharaoh_jwt_auth_base.dart';
 
-// TODO: Export any libraries intended for clients of this package.
+export 'package:dart_jsonwebtoken/dart_jsonwebtoken.dart';
