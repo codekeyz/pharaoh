@@ -1,11 +1,3 @@
-import 'helpers/parametric.dart';
-
-extension StringExtension on String {
-  bool get isParametric => parametricRegex.hasMatch(this);
-
-  String? get nullIfEmpty => isEmpty ? null : this;
-}
-
 // <username> --> username
 String? getParameter(String pattern, {int start = 0}) {
   if (start != 0) pattern = pattern.substring(start);

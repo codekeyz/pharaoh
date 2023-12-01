@@ -1,6 +1,6 @@
 import 'package:pharaoh/pharaoh.dart';
+import 'helpers/parametric.dart';
 import 'node.dart';
-import 'utils.dart';
 
 class RadixRouterConfig {
   final bool caseSensitive;

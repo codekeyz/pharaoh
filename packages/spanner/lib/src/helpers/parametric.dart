@@ -1,8 +1,6 @@
 import 'package:collection/collection.dart';
 import 'package:equatable/equatable.dart';
 
-import '../tree_utils.dart';
-
 final parametricRegex = RegExp(r"<[^>]+>");
 
 /// This regex has 3 Groups
@@ -15,6 +13,12 @@ final parametricRegex = RegExp(r"<[^>]+>");
 final parametricDefnsRegex = RegExp(r"([^<]*)<(\w+(?:\|[^>|]+)*)>([^<]*)");
 
 final closeDoorParametricRegex = RegExp(r"><");
+
+extension StringExtension on String {
+  bool get isParametric => parametricRegex.hasMatch(this);
+
+  String? get nullIfEmpty => isEmpty ? null : this;
+}
 
 /// build a parametric definition from a route part
 ParameterDefinition? deriveDefnFromString(String part, bool terminal) {
