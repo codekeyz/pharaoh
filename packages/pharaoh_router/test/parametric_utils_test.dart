@@ -55,14 +55,4 @@ void main() {
       'ParametricDefinition(param3, null, null, null, true)'
     ]);
   });
-
-  test('parametric with closed neighbor params', () {
-    expect(
-      () => ParametricDefinition.from('param1><param2>'),
-      throwsA(
-        isA<ArgumentError>().having((p0) => p0.message, 'has message',
-            contains('Route part is not valid')),
-      ),
-    );
-  });
 }

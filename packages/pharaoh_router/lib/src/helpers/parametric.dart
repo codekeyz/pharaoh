@@ -12,7 +12,8 @@ final closeDoorParametricRegex = RegExp(r"><");
 /// build a parametric definition from a route part
 ParametricDefinition? deriveDefnFromString(String part, bool terminal) {
   if (closeDoorParametricRegex.hasMatch(part)) {
-    throw ArgumentError('Route part is not valid. Close door neighbors', part);
+    throw ArgumentError.value(
+        part, null, 'Route part is not valid. Close door neighbors');
   }
 
   ParametricDefinition makeDefn(RegExpMatch m, {bool end = false}) {

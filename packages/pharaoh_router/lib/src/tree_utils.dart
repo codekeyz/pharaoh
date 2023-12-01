@@ -46,37 +46,6 @@ bool isAlphabetic(String character) {
   return alphanumericRegex.hasMatch(character);
 }
 
-/// `:name/foo/bar` --> `name`
-///
-/// `:user/`    --> `user`
-String getParameterName(String pattern, {int start = 0}) {
-  final length = pattern.length;
-  if (start > (length - 1)) {
-    throw RangeError('Index is out of bounds of $pattern');
-  }
-  final sb = StringBuffer();
-  for (int i = start; i < length; i++) {
-    final char = pattern[i];
-    if (!isAlphabetic(char)) break;
-    sb.write(char);
-  }
-  return sb.toString();
-}
-
-final symbolRegex = RegExp(r'[@/_.-]');
-
-typedef IndexedSymbol = ({String char, int index});
-
-List<IndexedSymbol> extractIndexedSymbols(String pattern) {
-  final List<IndexedSymbol> result = [];
-  for (int i = 0; i < pattern.length; i++) {
-    final char = pattern[i];
-    if (!symbolRegex.hasMatch(char)) continue;
-    result.add((index: i, char: char));
-  }
-  return result;
-}
-
 int getClosingParenthesisPosition(String path, int idx) {
   /// track the number of opening parenthesis we have seen
   int parentheses = 1;
@@ -92,14 +61,4 @@ int getClosingParenthesisPosition(String path, int idx) {
   }
 
   throw ArgumentError('Invalid regexp expression in "$path"');
-}
-
-dynamic resolveActualParamValue(ParametricDefinition defn, String pattern) {
-  String actualValue = pattern;
-  final suffix = defn.suffix;
-  if (suffix != null) {
-    if (suffix.length >= pattern.length) return null;
-    actualValue = pattern.substring(0, pattern.length - suffix.length);
-  }
-  return actualValue;
 }

@@ -8,22 +8,37 @@ void main() {
   group('parametric route', () {
     group('should reject', () {
       test('inconsistent parameter definitions', () {
-        RadixRouter makeRouter() => RadixRouter()
+        router() => RadixRouter()
           ..on(HTTPMethod.GET, '/user/<file>.png/download')
           ..on(HTTPMethod.GET, '/user/<hello>.png/<user2>/hello');
 
-        final exception = runSyncAndReturnException<ArgumentError>(makeRouter);
+        final exception = runSyncAndReturnException<ArgumentError>(router);
         expect(exception.message,
             contains('Route has inconsistent name in parametric definition'));
         expect(exception.message, contains('<file>.png'));
         expect(exception.message, contains('<hello>.png'));
       });
 
-      test('invalid name in parameter definition', () {
+      test('closed door parameter definitions', () {
+        router() => RadixRouter()..on(HTTPMethod.GET, '/user/<userId><keyId>');
+
+        final exception = runSyncAndReturnException<ArgumentError>(router);
+        expect(exception.message,
+            contains('Route part is not valid. Close door neighbors'));
+        expect(exception.invalidValue, '<userId><keyId>');
+      });
+
+      test('invalid characters in parameter definition', () {
+        router() => RadixRouter()
+          ..on(HTTPMethod.GET, '/user/<userId>', debug: true)
+          ..printTree();
+
+        router();
+
+        // final exception = runSyncAndReturnException<ArgumentError>(router);
         // expect(exception.message,
-        //     contains('Route has inconsistent name in parametric definition'));
-        // expect(exception.message, contains('<file>.png'));
-        // expect(exception.message, contains('<hello>.png'));
+        //     contains('Route part is not valid. Close door neighbors'));
+        // expect(exception.invalidValue, '<userId><keyId>');
       });
     });
 
