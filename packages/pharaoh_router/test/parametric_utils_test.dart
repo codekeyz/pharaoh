@@ -1,4 +1,6 @@
+import 'package:pharaoh/pharaoh.dart';
 import 'package:pharaoh_router/src/helpers/parametric.dart';
+import 'package:pharaoh_router/src/tree_router.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -49,22 +51,10 @@ void main() {
     final subparts = (param as CompositeParametricDefinition).subparts;
     expect(subparts, hasLength(2));
 
-    final subPartsJson = subparts.map((e) => e.toJson()).toList();
-    expect(subPartsJson, [
-      {
-        'name': 'param2',
-        'prefix': null,
-        'suffix': 'hello@gmail.com',
-        'regex': null,
-        'terminal': false
-      },
-      {
-        'name': 'param3',
-        'prefix': null,
-        'suffix': null,
-        'regex': null,
-        'terminal': false
-      }
+    final subPartsStr = subparts.map((e) => e.toString()).toList();
+    expect(subPartsStr, [
+      'ParametricDefinition(param2, null, hello@gmail.com, null, false)',
+      'ParametricDefinition(param3, null, null, null, true)'
     ]);
   });
 
@@ -76,5 +66,19 @@ void main() {
             contains('Route part is not valid')),
       ),
     );
+  });
+
+  test('test hello', () {
+    final router = RadixRouter()
+      ..on(HTTPMethod.GET, '/users')
+      ..on(HTTPMethod.GET, '/users/<userId>')
+      ..on(HTTPMethod.GET, '/users/user-<userId>.png<roomId>.dmg')
+      ..printTree();
+
+    var node = router.lookup(HTTPMethod.GET, '/users/24');
+    expect(node?.params, {'userId': '24'});
+
+    node = router.lookup(HTTPMethod.GET, '/users/user-200.png234.dmg');
+    expect(node?.params, {'userId': '200', 'roomId': '234'});
   });
 }

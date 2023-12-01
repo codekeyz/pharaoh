@@ -117,39 +117,44 @@ class ParametricDefinition with EquatableMixin {
 class CompositeParametricDefinition extends ParametricDefinition {
   final UnmodifiableListView<ParametricDefinition> subparts;
 
-  CompositeParametricDefinition(ParametricDefinition parent,
-      {required this.subparts})
-      : super._(
+  CompositeParametricDefinition(
+    ParametricDefinition parent, {
+    required this.subparts,
+  }) : super._(
           parent.name,
           regex: parent.regex,
           prefix: parent.prefix,
           suffix: parent.suffix,
-          terminal: parent.terminal,
         );
 
   @override
   List<Object?> get props => [...super.props, subparts];
 
   @override
-  String get template {
-    return '${super.template}${subparts.map((e) => e.template).join()}';
+  bool get terminal => subparts.any((e) => e.terminal);
+
+  String get compositeTemplate {
+    return '$template${subparts.map((e) => e.template).join()}';
   }
 
   RegExp? _fullParamRegexCache;
   RegExp get fullParamRegex {
     if (_fullParamRegexCache != null) return _fullParamRegexCache!;
-    return _fullParamRegexCache = buildRegexPattern(template);
+    return _fullParamRegexCache = buildRegexPattern(compositeTemplate);
   }
 
   @override
   Map<String, dynamic> resolveParams(String pattern) {
-    return resolveParamsFromPath(fullParamRegex, pattern);
+    return resolveParamsFromPath(
+      fullParamRegex,
+      pattern,
+    );
   }
 
   @override
   bool matches(String pattern, {bool shouldbeTerminal = false}) {
-    if (terminal != shouldbeTerminal) return false;
-
-    return fullParamRegex.hasMatch(pattern);
+    final match = fullParamRegex.hasMatch(pattern);
+    if (!match) return false;
+    return shouldbeTerminal && terminal;
   }
 }
