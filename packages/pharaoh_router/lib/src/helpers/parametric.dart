@@ -57,7 +57,7 @@ class ParametricDefinition with EquatableMixin {
     return _deriveDefnFromString(part, terminal)!;
   }
 
-  bool hasMatch(String pattern, {bool shouldbeTerminal = false}) {
+  bool matches(String pattern, {bool shouldbeTerminal = false}) {
     if (shouldbeTerminal != terminal) return false;
 
     final expectedSuffix = suffix;
@@ -96,7 +96,9 @@ class CompositeParametricDefinition extends ParametricDefinition {
         );
 
   @override
-  bool hasMatch(String pattern, {bool shouldbeTerminal = false}) {
+  bool matches(String pattern, {bool shouldbeTerminal = false}) {
+    print('We are here to search');
+
     return false;
   }
 

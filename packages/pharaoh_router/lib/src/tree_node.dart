@@ -97,22 +97,10 @@ class ParametricNode extends Node {
   ParametricDefinition? findMatchingDefinition(
     String part, {
     bool shouldBeTerminal = false,
-  }) {
-    ParametricDefinition? result;
-
-    for (final defn in definitions) {
-      if (shouldBeTerminal != defn.terminal) continue;
-
-      final expectedSuffix = defn.suffix;
-      if (expectedSuffix != null) {
-        if (!part.endsWith(expectedSuffix)) continue;
-      }
-      result = defn;
-      break;
-    }
-
-    return result;
-  }
+  }) =>
+      definitions.firstWhereOrNull(
+        (e) => e.matches(part, shouldbeTerminal: shouldBeTerminal),
+      );
 
   // RegExp? _regexCache;
   // RegExp? get regex {
