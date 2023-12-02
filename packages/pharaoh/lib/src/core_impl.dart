@@ -38,7 +38,7 @@ class _$PharaohImpl implements Pharaoh {
   PharaohRouter router() => PharaohRouter();
 
   @override
-  List<Route> get routes => _router.routes;
+  List<dynamic> get routes => [];
 
   @override
   Pharaoh delete(String path, RequestHandlerFunc handler) {
@@ -89,33 +89,33 @@ class _$PharaohImpl implements Pharaoh {
   }
 
   @override
-  Pharaoh use(HandlerFunc reqResNext, [Route? route]) {
+  Pharaoh use(HandlerFunc reqResNext, [route]) {
     _router.use(reqResNext, route);
     return this;
   }
 
   @override
   Pharaoh group(final String path, final RouteHandler handler) {
-    final route = Route.path(path);
+    // final route = Route.path(path);
 
-    if (handler is PharaohRouter) {
-      _router.use((req, res, next) async {
-        final result = await drainRouter(handler.prefix(path), (
-          req: req,
-          res: res,
-        ));
+    // if (handler is PharaohRouter) {
+    //   _router.use((req, res, next) async {
+    //     final result = await drainRouter(handler.prefix(path), (
+    //       req: req,
+    //       res: res,
+    //     ));
 
-        if (!result.canNext) {
-          next();
-          return;
-        }
+    //     if (!result.canNext) {
+    //       next();
+    //       return;
+    //     }
 
-        next(result.reqRes.res);
-      }, route);
-      return this;
-    }
+    //     next(result.reqRes.res);
+    //   }, route);
+    //   return this;
+    // }
 
-    _router.use(handler.handler, route);
+    // _router.use(handler.handler, route);
     return this;
   }
 
@@ -144,9 +144,7 @@ class _$PharaohImpl implements Pharaoh {
     httpReq.response.headers.chunkedTransferEncoding = false;
     httpReq.response.headers.clear();
 
-    final req = Request.from(httpReq);
-    final result =
-        await drainRouter(_router, (req: req, res: Response.from(httpReq)));
+    final result = await resolve(httpReq);
     if (result.canNext == false) return;
 
     final res = result.reqRes.res;
@@ -156,20 +154,18 @@ class _$PharaohImpl implements Pharaoh {
         httpReq,
         res
             .type(ContentType.json)
-            .notFound("No handlers registered for path: ${req.path}"));
+            .notFound("No handlers registered for path: ${httpReq.uri.path}"));
   }
 
-  Future<HandlerResult> drainRouter(
-    PharaohRouter routerX,
-    ReqRes reqRes,
-  ) async {
+  Future<HandlerResult> resolve(HttpRequest request) async {
+    final req = Request.from(request);
+    final res = Response.from(request);
     try {
-      return await routerX.execute(reqRes);
+      return await _router.resolve(req, res);
     } catch (e) {
-      final res = reqRes.res.internalServerError(e.toString());
       return (
         canNext: true,
-        reqRes: (req: reqRes.req, res: res),
+        reqRes: (req: req, res: res.internalServerError(e.toString())),
       );
     }
   }

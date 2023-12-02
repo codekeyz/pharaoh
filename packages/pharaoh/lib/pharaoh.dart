@@ -1,7 +1,6 @@
 library;
 
 export './src/core.dart';
-export './src/router/route.dart';
 export './src/router/handler.dart';
 export './src/http/cookie.dart';
 export './src/http/request.dart';

@@ -1,34 +1,41 @@
 import 'package:pharaoh/pharaoh.dart';
-import 'helpers/parametric.dart';
+import '../helpers/parametric.dart';
 import 'node.dart';
 
-class RadixRouterConfig {
+class RouterConfig {
   final bool caseSensitive;
   final bool ignoreTrailingSlash;
   final bool ignoreDuplicateSlashes;
+  final String basePath;
 
-  const RadixRouterConfig({
+  const RouterConfig({
     this.caseSensitive = true,
     this.ignoreTrailingSlash = true,
     this.ignoreDuplicateSlashes = true,
+    this.basePath = '/',
   });
 }
 
-class RadixRouter {
-  final RadixRouterConfig config;
+class Router {
+  final RouterConfig config;
   final Map<HTTPMethod, Node> _nodeMap = {};
 
-  RadixRouter({
-    this.config = const RadixRouterConfig(),
+  Router({
+    this.config = const RouterConfig(),
   });
 
   Node getMethodNode(HTTPMethod method) {
     var node = _nodeMap[method];
     if (node != null) return node;
-    return _nodeMap[method] = StaticNode('/');
+    return _nodeMap[method] = StaticNode(config.basePath);
   }
 
-  void on(HTTPMethod method, String path, {bool debug = false}) {
+  void on(
+    HTTPMethod method,
+    String path,
+    RouteHandler handler, {
+    bool debug = false,
+  }) {
     path = _cleanPath(path);
     Node root = getMethodNode(method);
 
