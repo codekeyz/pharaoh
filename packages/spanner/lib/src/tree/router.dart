@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:pharaoh/pharaoh.dart';
 import '../helpers/parametric.dart';
 import 'node.dart';
@@ -90,27 +92,36 @@ class Router {
         if (paramNode == null) {
           devlog('- No existing parametric on ${root.name} so we create one');
 
-          assignNewRoot(ParametricNode.fromPath(
-            routePart,
-            terminal: isLastPart,
-          ));
+          final defn = ParameterDefinition.from(part, terminal: isLastPart);
+          if (isLastPart) defn.handler = handler;
+
+          assignNewRoot(ParametricNode(defn));
           continue;
         }
 
         paramNode.addNewDefinition(routePart, terminal: isLastPart);
+        print('I was here with $routePart');
 
         assignNewRoot(paramNode);
       }
     }
 
-    /// special case here because for parametric nodes,
-    /// the terminal is within each parametric definition
-    if (root is StaticNode) root.terminal = true;
+    /// parametric nodes being terminal is determined
+    /// by the exact definition that matched
+    if (root is StaticNode) {
+      (root as StaticNode)
+        ..addHandler(handler)
+        ..terminal = true;
+    }
 
     if (debug) print(debugLog);
   }
 
-  Node? lookup(HTTPMethod method, String path, {bool debug = false}) {
+  FutureOr<Node?> lookup(
+    HTTPMethod method,
+    String path, {
+    bool debug = false,
+  }) async {
     Node rootNode = getMethodNode(method);
     String route = _cleanPath(path);
 
@@ -198,6 +209,112 @@ class Router {
 
     if (!rootNode.terminal) return null;
     return rootNode..params = resolvedParams;
+  }
+
+  FutureOr<HandlerResult?> resolve(Request req, Response res) async {
+    Node rootNode = getMethodNode(req.method);
+    String route = _cleanPath(req.path);
+
+    Map<String, dynamic> resolvedParams = {};
+
+    HandlerResult reqRes = (canNext: true, reqRes: (req: req, res: res));
+    Future<bool> executeAndCheckCanProceed(List<RouteHandler> hdlrs) async {
+      if (hdlrs.isEmpty) return true;
+
+      for (final hdler in hdlrs) {
+        reqRes = await executeHandler(reqRes.reqRes, resolvedParams, hdler);
+        if (!reqRes.canNext) break;
+      }
+
+      return reqRes.canNext;
+    }
+
+    final parts = route.split('/');
+
+    for (int i = 0; i < parts.length; i++) {
+      final String currPart = parts[i];
+
+      var routePart = currPart;
+      if (!config.caseSensitive) routePart = routePart.toLowerCase();
+
+      final hasChild = rootNode.hasChild(routePart);
+      final isEndOfPath = i == (parts.length - 1);
+
+      void useWildcard(WildcardNode wildcard) {
+        resolvedParams['*'] = parts.sublist(i).join('/');
+        rootNode = wildcard;
+      }
+
+      if (hasChild) {
+        final child = rootNode.getChild(routePart) as StaticNode;
+        rootNode = child;
+
+        /// execution block
+        final canProceed = await executeAndCheckCanProceed(child.handlers);
+        if (!canProceed) break;
+      } else {
+        final paramNode = rootNode.paramNode;
+        if (paramNode == null) {
+          final wc = rootNode.wildcardNode;
+          if (wc != null) {
+            useWildcard(wc);
+            break;
+          }
+          return null;
+        }
+
+        final hasChild = paramNode.hasChild(routePart);
+        if (hasChild) {
+          rootNode = paramNode.getChild(routePart);
+
+          /// execution block
+          final canProceed = await executeAndCheckCanProceed(
+              (rootNode as StaticNode).handlers);
+          if (!canProceed) break;
+          continue;
+        }
+
+        final paramDefn = paramNode.findMatchingDefinition(routePart,
+            shouldBeTerminal: isEndOfPath);
+
+        if (paramDefn == null) {
+          final wc = rootNode.wildcardNode;
+          if (wc != null) useWildcard(wc);
+          break;
+        }
+
+        final params = paramDefn.resolveParams(currPart);
+        resolvedParams.addAll(params);
+        rootNode = paramNode;
+
+        /// execution block
+        final hdler = paramDefn.handler;
+        if (hdler != null) {
+          final canProceed = await executeAndCheckCanProceed([hdler]);
+          if (!canProceed) break;
+        }
+
+        if (paramDefn.terminal) {
+          rootNode.terminal = true;
+          break;
+        }
+      }
+    }
+
+    if (!rootNode.terminal) return null;
+
+    return reqRes;
+  }
+
+  Future<HandlerResult> executeHandler(
+    ReqRes reqRes,
+    Map<String, dynamic> params,
+    RouteHandler handler,
+  ) async {
+    for (final entry in params.entries) {
+      reqRes.req.setParams(entry.key, entry.value);
+    }
+    return handler.execute(reqRes);
   }
 
   void printTree() {

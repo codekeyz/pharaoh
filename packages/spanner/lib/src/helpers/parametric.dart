@@ -1,5 +1,6 @@
 import 'package:collection/collection.dart';
 import 'package:equatable/equatable.dart';
+import 'package:pharaoh/pharaoh.dart';
 
 final parametricRegex = RegExp(r"<[^>]+>");
 
@@ -113,9 +114,11 @@ class ParameterDefinition with EquatableMixin {
   final String? suffix;
   final RegExp? regex;
   final bool terminal;
+  RouteHandler? handler;
 
   ParameterDefinition._(
     this.name, {
+    this.handler,
     this.prefix,
     this.suffix,
     this.regex,
