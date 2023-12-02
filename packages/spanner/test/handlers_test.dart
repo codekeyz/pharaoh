@@ -12,5 +12,11 @@ void main() {
         .expectStatus(200)
         .expectBody('{"userId":"234"}')
         .test();
+
+    await (await request(app))
+        .get('/home/chima')
+        .expectStatus(200)
+        .expectBody('Okay 🚀')
+        .test();
   });
 }
