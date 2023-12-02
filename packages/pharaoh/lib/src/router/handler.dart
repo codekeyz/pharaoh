@@ -33,10 +33,7 @@ abstract interface class RouteHandler {
   late StreamController<HandlerFunc> _streamCtrl =
       StreamController<HandlerFunc>();
 
-  Future<HandlerResult> execute(
-    final ReqRes reqRes,
-    Map<String, dynamic> params,
-  ) async {
+  Future<HandlerResult> execute(final ReqRes reqRes) async {
     await _resetStream();
 
     ReqRes result = reqRes;

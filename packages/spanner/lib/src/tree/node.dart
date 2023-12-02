@@ -6,11 +6,8 @@ import '../helpers/parametric.dart';
 
 abstract class Node with EquatableMixin {
   final Map<String, Node> _children = {};
-  final List<RouteHandler> _handlers = [];
 
   Map<String, Node> get children => UnmodifiableMapView(_children);
-
-  List<RouteHandler> get handlers => UnmodifiableListView(_handlers);
 
   String get name;
 
@@ -44,14 +41,14 @@ abstract class Node with EquatableMixin {
     _children[key] = node;
     return node;
   }
-
-  void addHandler(RouteHandler handler) {
-    _handlers.add(handler);
-  }
 }
 
 class StaticNode extends Node {
+  final List<RouteHandler> _handlers = [];
+
   final String _name;
+
+  List<RouteHandler> get handlers => UnmodifiableListView(_handlers);
 
   @override
   String get name => 'static($_name)';
@@ -60,6 +57,10 @@ class StaticNode extends Node {
 
   @override
   List<Object?> get props => [name, children];
+
+  void addHandler(RouteHandler handler) {
+    _handlers.add(handler);
+  }
 }
 
 class ParametricNode extends Node {
@@ -70,12 +71,6 @@ class ParametricNode extends Node {
 
   ParametricNode(ParameterDefinition defn) {
     _definitions.add(defn);
-  }
-
-  factory ParametricNode.fromPath(String part, {bool terminal = false}) {
-    return ParametricNode(
-      ParameterDefinition.from(part, terminal: terminal),
-    );
   }
 
   /// This will return false if the definition is known
@@ -125,7 +120,9 @@ class ParametricNode extends Node {
       );
 }
 
-class WildcardNode extends Node {
+class WildcardNode extends StaticNode {
+  WildcardNode() : super('*');
+
   @override
   String get name => 'wildcard(*)';
 

@@ -82,9 +82,9 @@ class PharaohRouter implements RoutePathDefinitionContract<PharaohRouter> {
     return this;
   }
 
-  Future<HandlerResult> resolve(Request req, Response response) async {
-    final result = await _router.lookup(req.method, req.path);
-    return (canNext: true, reqRes: (req: req, res: response));
+  Future<HandlerResult> resolve(Request req, Response res) async {
+    final result = await _router.resolve(req, res);
+    return result ?? (canNext: true, reqRes: (req: req, res: res));
   }
 }
 
