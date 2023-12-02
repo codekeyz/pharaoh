@@ -3,9 +3,14 @@ import 'dart:async';
 import '../http/request.dart';
 import '../http/response.dart';
 import '../utils/exceptions.dart';
-import 'route.dart';
 
 typedef ReqRes = ({Request req, Response res});
+
+typedef NextFunction<Next> = dynamic Function([dynamic result, Next? chain]);
+
+typedef HandlerFunc = Function(Request req, Response res, NextFunction next);
+
+typedef HandlerResult = ({bool canNext, ReqRes reqRes});
 
 extension ReqResExtension on ReqRes {
   ReqRes merge(dynamic val) => switch (val.runtimeType) {
@@ -18,63 +23,21 @@ extension ReqResExtension on ReqRes {
       };
 }
 
-typedef NextFunction<Next> = dynamic Function([dynamic result, Next? chain]);
+abstract interface class RouteHandler {
+  final HandlerFunc _handler;
 
-/// This type of handler allows you to use the full
-/// [Request] and [Response] object
-///
-/// See here: [Middleware]
-typedef HandlerFunc = Function(Request req, Response res, NextFunction next);
+  RouteHandler._(this._handler);
 
-extension HandlerChainExtension on HandlerFunc {
-  /// Chains the current middleware with a new one.
-  HandlerFunc chain(HandlerFunc newChain) => (req, res, done) => this(
-        req,
-        res,
-        ([nr, chain]) {
-          // Use the existing chain if available, otherwise use the new chain
-          HandlerFunc nextFunc = chain ?? newChain;
+  FutureOr<void> setup;
 
-          // If there's an existing chain, recursively chain the new handler
-          if (chain != null) {
-            nextFunc = nextFunc.chain(newChain);
-          }
+  late StreamController<HandlerFunc> _streamCtrl =
+      StreamController<HandlerFunc>();
 
-          done(nr, nextFunc);
-        },
-      );
-}
-
-typedef HandlerResult = ({bool canNext, ReqRes reqRes});
-
-/// All route handler types must extend this class.
-///
-/// See: [RequestHandler] and [Middleware] types
-abstract class RouteHandler {
-  Route get route;
-  HandlerFunc get handler;
-
-  Map<String, String> _routeParams = {};
-
-  Map<String, String> get params => _routeParams;
-
-  void setParams(Map<String, String> params) {
-    _routeParams = params;
-  }
-
-  RouteHandler prefix(String prefix);
-
-  StreamController<HandlerFunc> _streamCtrl = StreamController<HandlerFunc>();
-
-  Future<HandlerResult> execute(final ReqRes reqRes) async {
+  Future<HandlerResult> execute(
+    final ReqRes reqRes,
+    Map<String, dynamic> params,
+  ) async {
     await _resetStream();
-
-    final request = reqRes.req;
-    if (_routeParams.isNotEmpty) {
-      for (final param in params.entries) {
-        request.setParams(param.key, param.value);
-      }
-    }
 
     ReqRes result = reqRes;
     bool canGotoNext = false;
@@ -104,55 +67,43 @@ abstract class RouteHandler {
     if (_streamCtrl.hasListener && !_streamCtrl.isClosed) {
       await _streamCtrl.close();
     }
-    _streamCtrl = StreamController<HandlerFunc>()..add(handler);
+    _streamCtrl = StreamController<HandlerFunc>()..add(_handler);
   }
 }
 
 typedef RequestHandlerFunc = FutureOr<dynamic> Function(
-  $Request req,
-  $Response res,
-);
+    $Request req, $Response res);
 
-/// - [RequestHandler] calls `next` automatically,
-///  hence the reason there's no next function. See [RequestHandlerFunc].
-class RequestHandler extends RouteHandler {
-  final RequestHandlerFunc _func;
-  final Route _route;
+extension HandlerChainExtension on HandlerFunc {
+  /// Chains the current middleware with a new one.
+  HandlerFunc chain(HandlerFunc newChain) => (req, res, done) => this(
+        req,
+        res,
+        ([nr, chain]) {
+          // Use the existing chain if available, otherwise use the new chain
+          HandlerFunc nextFunc = chain ?? newChain;
 
-  RequestHandler(this._func, this._route);
+          // If there's an existing chain, recursively chain the new handler
+          if (chain != null) {
+            nextFunc = nextFunc.chain(newChain);
+          }
 
-  @override
-  RequestHandler prefix(String prefix) => RequestHandler(
-        _func,
-        route.withPrefix(prefix),
+          done(nr, nextFunc);
+        },
       );
-
-  @override
-  HandlerFunc get handler => (req, res, next_) async {
-        final result = await _func(req, res);
-        next_(result);
-      };
-
-  @override
-  Route get route => _route;
 }
 
-/// With middlewares, you get a `req`, `res`, and `next` function.
-/// you do your processing and then notify us to proceed when you call `next`.
+class RequestHandler extends RouteHandler {
+  RequestHandler(final RequestHandlerFunc _func)
+      : super._((req, res, next_) async {
+          final result = await _func(req, res);
+          next_(result);
+        });
+}
+
 class Middleware extends RouteHandler {
-  final HandlerFunc _func;
-  final Route _route;
-  Middleware(this._func, this._route);
+  Middleware(final HandlerFunc _func) : super._(_func);
 
   @override
-  Middleware prefix(String prefix) => Middleware(
-        _func,
-        route.withPrefix(prefix),
-      );
-
-  @override
-  HandlerFunc get handler => (req, res, next_) => _func(req, res, next_);
-
-  @override
-  Route get route => _route;
+  FutureOr<void> get setup => _resetStream();
 }

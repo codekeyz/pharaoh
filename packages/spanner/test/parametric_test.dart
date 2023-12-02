@@ -2,15 +2,16 @@ import 'package:pharaoh/pharaoh.dart';
 import 'package:spanner/spanner.dart';
 import 'package:test/test.dart';
 
+import 'fixtures/handlers.dart';
 import 'helpers/test_utils.dart';
 
 void main() {
   group('parametric route', () {
     group('should reject', () {
       test('inconsistent parameter definitions', () {
-        router() => RadixRouter()
-          ..on(HTTPMethod.GET, '/user/<file>.png/download')
-          ..on(HTTPMethod.GET, '/user/<hello>.png/<user2>/hello');
+        router() => Router()
+          ..on(HTTPMethod.GET, '/user/<file>.png/download', okHdler)
+          ..on(HTTPMethod.GET, '/user/<hello>.png/<user2>/hello', okHdler);
 
         final exception = runSyncAndReturnException<ArgumentError>(router);
         expect(exception.message,
@@ -20,7 +21,8 @@ void main() {
       });
 
       test('close door parameter definitions', () {
-        router() => RadixRouter()..on(HTTPMethod.GET, '/user/<userId><keyId>');
+        router() =>
+            Router()..on(HTTPMethod.GET, '/user/<userId><keyId>', okHdler);
 
         final exception = runSyncAndReturnException<ArgumentError>(router);
         expect(
@@ -31,9 +33,8 @@ void main() {
       });
 
       test('invalid parameter definition', () {
-        router() => RadixRouter()
-          ..on(HTTPMethod.GET, '/user/<userId#@#.XDkd@#>>#>', debug: true)
-          ..printTree();
+        router() => Router()
+          ..on(HTTPMethod.GET, '/user/<userId#@#.XDkd@#>>#>', okHdler);
 
         final exception = runSyncAndReturnException<ArgumentError>(router);
         expect(
@@ -43,20 +44,20 @@ void main() {
     });
 
     test('with request.url contains dash', () {
-      final router = RadixRouter()..on(HTTPMethod.GET, '/a/<param>/b');
+      final router = Router()..on(HTTPMethod.GET, '/a/<param>/b', okHdler);
       final result = router.lookup(HTTPMethod.GET, '/a/foo-bar/b');
       expect(result, havingParameters({'param': 'foo-bar'}));
     });
 
     test('with fixed suffix', () async {
-      final router = RadixRouter()
-        ..on(HTTPMethod.GET, '/user')
-        ..on(HTTPMethod.GET, '/user/<userId>')
-        ..on(HTTPMethod.GET, '/user/<userId>/details')
-        ..on(HTTPMethod.GET, '/user/<file>.png/download')
-        ..on(HTTPMethod.GET, '/user/<file>.png/<user2>/hello')
-        ..on(HTTPMethod.GET, '/a/<param>-static')
-        ..on(HTTPMethod.GET, '/b/<param>.static');
+      final router = Router()
+        ..on(HTTPMethod.GET, '/user', okHdler)
+        ..on(HTTPMethod.GET, '/user/<userId>', okHdler)
+        ..on(HTTPMethod.GET, '/user/<userId>/details', okHdler)
+        ..on(HTTPMethod.GET, '/user/<file>.png/download', okHdler)
+        ..on(HTTPMethod.GET, '/user/<file>.png/<user2>/hello', okHdler)
+        ..on(HTTPMethod.GET, '/a/<param>-static', okHdler)
+        ..on(HTTPMethod.GET, '/b/<param>.static', okHdler);
 
       var node = router.lookup(HTTPMethod.GET, '/user');
       expect(node, isStaticNode('user'));
@@ -81,9 +82,9 @@ void main() {
     });
 
     test('contain param and wildcard together', () {
-      final router = RadixRouter()
-        ..on(HTTPMethod.GET, '/<lang>/item/<id>')
-        ..on(HTTPMethod.GET, '/<lang>/item/*');
+      final router = Router()
+        ..on(HTTPMethod.GET, '/<lang>/item/<id>', okHdler)
+        ..on(HTTPMethod.GET, '/<lang>/item/*', okHdler);
 
       expect(
         router.lookup(HTTPMethod.GET, '/fr/item/12345'),

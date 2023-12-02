@@ -1,4 +1,4 @@
 library;
 
-export 'src/router.dart';
-export 'src/node.dart';
+export 'src/tree/router.dart';
+export 'src/tree/node.dart';

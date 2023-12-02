@@ -6,7 +6,6 @@ import 'package:mason_logger/mason_logger.dart';
 import 'package:meta/meta.dart';
 
 import './router/router.dart';
-import './router/route.dart';
 import './router/handler.dart';
 import './http/request.dart';
 import './http/response.dart';
@@ -20,7 +19,7 @@ abstract class Pharaoh implements RoutePathDefinitionContract<Pharaoh> {
 
   PharaohRouter router();
 
-  List<Route> get routes;
+  List<dynamic> get routes;
 
   Uri get uri;
 

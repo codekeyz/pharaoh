@@ -1,12 +1,16 @@
 import 'package:collection/collection.dart';
 import 'package:equatable/equatable.dart';
+import 'package:pharaoh/pharaoh.dart';
 
-import 'helpers/parametric.dart';
+import '../helpers/parametric.dart';
 
 abstract class Node with EquatableMixin {
   final Map<String, Node> _children = {};
+  final List<RouteHandler> _handlers = [];
 
   Map<String, Node> get children => UnmodifiableMapView(_children);
+
+  List<RouteHandler> get handlers => UnmodifiableListView(_handlers);
 
   String get name;
 
@@ -39,6 +43,10 @@ abstract class Node with EquatableMixin {
   Node addChildAndReturn(String key, Node node) {
     _children[key] = node;
     return node;
+  }
+
+  void addHandler(RouteHandler handler) {
+    _handlers.add(handler);
   }
 }
 
