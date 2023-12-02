@@ -12,6 +12,8 @@ typedef HandlerFunc = Function(Request req, Response res, NextFunction next);
 
 typedef HandlerResult = ({bool canNext, ReqRes reqRes});
 
+typedef ReqResHook = FutureOr<ReqRes> Function(ReqRes reqRes);
+
 extension ReqResExtension on ReqRes {
   ReqRes merge(dynamic val) => switch (val.runtimeType) {
         Request => (req: val, res: this.res),

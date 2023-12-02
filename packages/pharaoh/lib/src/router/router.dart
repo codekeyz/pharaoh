@@ -1,9 +1,10 @@
+import 'dart:async';
+
+import 'package:pharaoh/src/middleware/session_mw.dart';
 import 'package:spanner/spanner.dart';
 import '../http/request.dart';
 import '../http/response.dart';
 import 'handler.dart';
-
-const basePath = '/';
 
 abstract interface class RoutePathDefinitionContract<T> {
   T get(String path, RequestHandlerFunc hdler);
@@ -27,6 +28,9 @@ abstract interface class RoutePathDefinitionContract<T> {
 
 class PharaohRouter implements RoutePathDefinitionContract<PharaohRouter> {
   final Router _router = Router();
+  final List<ReqResHook> _preResponseHooks = [
+    sessionPreResponseHook,
+  ];
 
   @override
   PharaohRouter delete(String path, RequestHandlerFunc hdler) {
@@ -83,49 +87,14 @@ class PharaohRouter implements RoutePathDefinitionContract<PharaohRouter> {
   }
 
   Future<HandlerResult> resolve(Request req, Response res) async {
-    final result = await _router.resolve(req, res);
-    return result ?? (canNext: true, reqRes: (req: req, res: res));
+    final _ = await _router.resolve(req, res);
+    final canNext = _?.canNext ?? false;
+    var reqRes = _?.reqRes ?? (req: req, res: res);
+    if (_ != null) {
+      for (final job in _preResponseHooks) {
+        reqRes = await Future.microtask(() => job(reqRes));
+      }
+    }
+    return (canNext: canNext, reqRes: reqRes);
   }
 }
-
-
-// final handlers = _group.findHandlers(reqRes.req);
-// if (handlers.isEmpty) {
-//   return (
-//     canNext: true,
-//     reqRes: (req: reqRes.req, res: reqRes.res.notFound())
-//   );
-// }
-
-// final handlerStream = Stream.fromIterable(handlers);
-
-// ReqRes result = reqRes;
-// bool canNext = false;
-
-// await for (final handler in handlerStream) {
-//   canNext = false;
-//   final hdlerResult = await handler.execute(reqRes);
-//   result = hdlerResult.reqRes;
-//   canNext = hdlerResult.canNext;
-
-//   final breakOut = result.res.ended || !canNext;
-//   if (breakOut) break;
-// }
-
-// result = await _postHandlerJob(result);
-
-// return (canNext: canNext, reqRes: result);
-
-// Future<ReqRes> _postHandlerJob(ReqRes reqRes) async {
-//   var req = reqRes.req, res = reqRes.res;
-
-//   /// deal with sessions
-//   final session = req.session;
-//   if (session != null &&
-//       (session.saveUninitialized || session.resave || session.modified)) {
-//     await session.save();
-//     res = res.withCookie(session.cookie!);
-//   }
-
-//   return (req: req, res: res);
-// }
