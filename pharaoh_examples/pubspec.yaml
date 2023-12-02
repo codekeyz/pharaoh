@@ -12,8 +12,14 @@ dependencies:
   shelf_helmet: ^2.1.1
   shelf_cors_headers: ^0.1.5
   pharaoh_static:
+  pharaoh_jwt_auth:
+  dart_firebase_admin:
+    git:
+      url: https://github.com/samtuga1/dart_firebase_admin.git
+      ref: main
+      path: packages/dart_firebase_admin
 
 dev_dependencies:
   lints: ^3.0.0
   test: ^1.24.9
-  http: ^1.1.0
+  http: ^0.13.6
