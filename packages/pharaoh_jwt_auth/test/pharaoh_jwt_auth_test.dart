@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:dart_jsonwebtoken/dart_jsonwebtoken.dart';
 import 'package:pharaoh/pharaoh.dart';
 import 'package:pharaoh_jwt_auth/pharaoh_jwt_auth.dart';
 import 'package:spookie/spookie.dart';
