@@ -1,31 +1,8 @@
 import 'package:collection/collection.dart';
 import 'package:equatable/equatable.dart';
-import 'package:pharaoh/pharaoh.dart';
 
-import '../constraint/constraint.dart';
-
-final parametricRegex = RegExp(r"<[^>]+>");
-
-/// This regex has 3 Groups
-///
-/// - ([^<]*) -> this captures prefix
-///
-/// - (\w+(?:\|[^>|]+)*) -> this captures the value within definition
-///
-/// - ([^<]*) -> this captures suffix
-final parametricDefnsRegex = RegExp(r"([^<]*)<(\w+(?:\|[^>|]+)*)>([^<]*)");
-
-final closeDoorParametricRegex = RegExp(r"><");
-
-extension StringExtension on String {
-  bool get isStatic => !isParametric && !isWildCard;
-
-  bool get isParametric => parametricRegex.hasMatch(this);
-  // *
-  bool get isWildCard => codeUnitAt(0) == 42;
-
-  String? get nullIfEmpty => isEmpty ? null : this;
-}
+import '../route/action.dart';
+import 'utils.dart';
 
 /// build a parametric definition from a route part
 ParameterDefinition? _buildParamDefinition(String part, bool terminal) {
@@ -68,68 +45,22 @@ ParameterDefinition? _buildParamDefinition(String part, bool terminal) {
   );
 }
 
-RegExp buildRegexFromTemplate(String template) {
-  String escapedTemplate = RegExp.escape(template);
-
-  // Replace <...> placeholders with named capturing groups
-  final regexPattern = escapedTemplate.replaceAllMapped(
-    RegExp(r"<([^>]+)>"),
-    (Match match) {
-      String paramName = match.group(1)!;
-      return "(?<$paramName>[^/]+)";
-    },
-  );
-
-  /// TODO(codekeyz) figure out if we need to pass the case sensitivity flag
-  /// from the wider context down here or it's safe to keep it case insensitive.
-  return RegExp(regexPattern, caseSensitive: false);
-}
-
-extension ParametricDefinitionsSort on List<ParameterDefinition> {
-  void sortByProps() {
-    final Map<int, int> nullCount = {};
-    for (final def in this) {
-      int count = 0;
-      if (def.suffix == null) count += 1;
-      if (def.regex == null) count += 1;
-      nullCount[def.hashCode] = count;
-    }
-
-    sort((a, b) => nullCount[a.hashCode]!.compareTo(nullCount[b.hashCode]!));
-  }
-}
-
-Map<String, dynamic> resolveParamsFromPath(RegExp templateRegex, String path) {
-  final match = templateRegex.firstMatch(path);
-  if (match == null) return const {};
-
-  final resolvedParams = <String, dynamic>{};
-  for (final param in match.groupNames) {
-    resolvedParams[param] = match.namedGroup(param);
-  }
-  return resolvedParams;
-}
-
-class ParameterDefinition with EquatableMixin {
+class ParameterDefinition with EquatableMixin, RouteActionMixin {
   final String name;
   final String? prefix;
   final String? suffix;
   final RegExp? regex;
   final bool terminal;
-  final List<RouteConstraint> constraints;
-  RouteHandler? handler;
 
   ParameterDefinition._(
     this.name, {
-    this.handler,
     this.prefix,
     this.suffix,
     this.regex,
     this.terminal = false,
-    this.constraints = const [],
   });
 
-  String get template {
+  String get templateStr {
     String result = '<$name>';
     if (prefix != null) result = "$prefix$result";
     if (suffix != null) result = '$result$suffix';
@@ -137,9 +68,9 @@ class ParameterDefinition with EquatableMixin {
   }
 
   RegExp? _paramRegexCache;
-  RegExp get paramRegex {
+  RegExp get template {
     if (_paramRegexCache != null) return _paramRegexCache!;
-    return _paramRegexCache = buildRegexFromTemplate(template);
+    return _paramRegexCache = buildRegexFromTemplate(templateStr);
   }
 
   factory ParameterDefinition.from(String part, {bool terminal = false}) {
@@ -148,29 +79,23 @@ class ParameterDefinition with EquatableMixin {
 
   bool matches(String pattern, {bool shouldbeTerminal = false}) {
     if (terminal != shouldbeTerminal) return false;
-    return paramRegex.hasMatch(pattern);
+    return template.hasMatch(pattern);
   }
 
   bool isExactExceptName(ParameterDefinition defn) {
     return prefix == defn.prefix &&
         suffix == defn.suffix &&
         regex == defn.regex &&
-        terminal == defn.terminal;
+        terminal == defn.terminal &&
+        methods.any((e) => defn.methods.contains(e));
   }
 
   Map<String, dynamic> resolveParams(final String pattern) {
-    return resolveParamsFromPath(paramRegex, pattern);
+    return resolveParamsFromPath(template, pattern);
   }
 
   @override
-  List<Object?> get props => [
-        name,
-        prefix,
-        suffix,
-        regex,
-        terminal,
-        constraints,
-      ];
+  List<Object?> get props => [name, prefix, suffix, regex, terminal];
 }
 
 class CompositeParameterDefinition extends ParameterDefinition {
@@ -185,7 +110,6 @@ class CompositeParameterDefinition extends ParameterDefinition {
           prefix: parent.prefix,
           suffix: parent.suffix,
           terminal: false,
-          constraints: [],
         );
 
   @override
@@ -195,27 +119,24 @@ class CompositeParameterDefinition extends ParameterDefinition {
   bool get terminal => subparts.any((e) => e.terminal);
 
   @override
-  String get template {
-    return '${super.template}${subparts.map((e) => e.template).join()}';
+  String get templateStr {
+    return '${super.templateStr}${subparts.map((e) => e.templateStr).join()}';
   }
 
   @override
-  RegExp get paramRegex {
+  RegExp get template {
     if (_paramRegexCache != null) return _paramRegexCache!;
-    return _paramRegexCache = buildRegexFromTemplate(template);
+    return _paramRegexCache = buildRegexFromTemplate(templateStr);
   }
 
   @override
   Map<String, dynamic> resolveParams(String pattern) {
-    return resolveParamsFromPath(
-      paramRegex,
-      pattern,
-    );
+    return resolveParamsFromPath(template, pattern);
   }
 
   @override
   bool matches(String pattern, {bool shouldbeTerminal = false}) {
-    final match = paramRegex.hasMatch(pattern);
+    final match = template.hasMatch(pattern);
     if (!match) return false;
     return shouldbeTerminal && terminal;
   }
