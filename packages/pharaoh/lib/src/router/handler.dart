@@ -30,18 +30,16 @@ abstract interface class RouteHandler {
 
   RouteHandler._(this._handler);
 
-  FutureOr<void> setup;
-
-  late StreamController<HandlerFunc> _streamCtrl =
-      StreamController<HandlerFunc>();
+  StreamController<HandlerFunc>? _streamCtrl;
 
   Future<HandlerResult> execute(final ReqRes reqRes) async {
     await _resetStream();
+    final streamCtrl = _streamCtrl!;
 
     ReqRes result = reqRes;
     bool canGotoNext = false;
 
-    await for (final executor in _streamCtrl.stream) {
+    await for (final executor in streamCtrl.stream) {
       canGotoNext = false;
       await executor.call(
         result.req,
@@ -51,9 +49,9 @@ abstract interface class RouteHandler {
           canGotoNext = true;
 
           if (chain == null || result.res.ended) {
-            _streamCtrl.close();
+            streamCtrl.close();
           } else {
-            _streamCtrl.add(chain);
+            streamCtrl.add(chain);
           }
         },
       );
@@ -63,10 +61,12 @@ abstract interface class RouteHandler {
   }
 
   Future<void> _resetStream() async {
-    if (_streamCtrl.hasListener && !_streamCtrl.isClosed) {
-      await _streamCtrl.close();
-    }
-    _streamCtrl = StreamController<HandlerFunc>()..add(_handler);
+    void newStream() =>
+        _streamCtrl = StreamController<HandlerFunc>()..add(_handler);
+    final ctrl = _streamCtrl;
+    if (ctrl == null) return newStream();
+    if (ctrl.hasListener && ctrl.isClosed) await ctrl.close();
+    return newStream();
   }
 }
 
@@ -102,7 +102,4 @@ class RequestHandler extends RouteHandler {
 
 class Middleware extends RouteHandler {
   Middleware(final HandlerFunc _func) : super._(_func);
-
-  @override
-  FutureOr<void> get setup => _resetStream();
 }
