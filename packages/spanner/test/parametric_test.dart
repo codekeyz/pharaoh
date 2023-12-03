@@ -1,5 +1,6 @@
 import 'package:pharaoh/pharaoh.dart';
 import 'package:spanner/spanner.dart';
+import 'package:spanner/src/parametric/definition.dart';
 import 'package:test/test.dart';
 
 import 'fixtures/handlers.dart';
@@ -11,6 +12,7 @@ void main() {
       test('inconsistent parameter definitions', () {
         router() => Router()
           ..on(HTTPMethod.GET, '/user/<file>.png/download', okHdler)
+          // ..on(HTTPMethod.POST, '/user/<heyyou>.png', okHdler)
           ..on(HTTPMethod.GET, '/user/<hello>.png/<user2>/hello', okHdler);
 
         final exception = runSyncAndReturnException<ArgumentError>(router);
@@ -63,22 +65,25 @@ void main() {
       expect(node, isStaticNode('user'));
 
       node = router.lookup(HTTPMethod.GET, '/user/24');
-      expect(node, havingParameters({'userId': '24'}));
+      expect(node, havingParameters<ParameterDefinition>({'userId': '24'}));
 
       node = router.lookup(HTTPMethod.GET, '/user/3948/details');
-      expect(node, havingParameters({'userId': '3948'}));
+      expect(node, havingParameters<StaticNode>({'userId': '3948'}));
 
       node = router.lookup(HTTPMethod.GET, '/user/aws-image.png/download');
-      expect(node, havingParameters({'file': 'aws-image'}));
+      expect(node, havingParameters<StaticNode>({'file': 'aws-image'}));
 
       node = router.lookup(HTTPMethod.GET, '/user/aws-image.png/A29384/hello');
-      expect(node, havingParameters({'file': 'aws-image', 'user2': 'A29384'}));
+      expect(
+          node,
+          havingParameters<StaticNode>(
+              {'file': 'aws-image', 'user2': 'A29384'}));
 
       node = router.lookup(HTTPMethod.GET, '/a/param-static');
-      expect(node, havingParameters({'param': 'param'}));
+      expect(node, havingParameters<ParameterDefinition>({'param': 'param'}));
 
       node = router.lookup(HTTPMethod.GET, '/b/param.static');
-      expect(node, havingParameters({'param': 'param'}));
+      expect(node, havingParameters<ParameterDefinition>({'param': 'param'}));
     });
 
     test('contain param and wildcard together', () {

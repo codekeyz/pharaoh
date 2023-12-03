@@ -1,12 +1,18 @@
 import 'package:spanner/spanner.dart';
 import 'package:test/expect.dart';
 
-Matcher havingParameters(Map<String, dynamic> params) {
-  return isA<Node>().having((p0) => p0.params, 'has parameters', params);
+Matcher havingParameters<T>(Map<String, dynamic> params) {
+  return isA<RouteResult>()
+      .having((p0) => p0.actual, 'with actual', isA<T>())
+      .having((p0) => p0.params, 'with parameters', params);
 }
 
 Matcher isStaticNode(String name) {
-  return isA<Node>().having((p0) => p0.name, 'has name', 'static($name)');
+  return isA<RouteResult>().having(
+    (p0) => p0.actual,
+    'has actual',
+    isA<StaticNode>().having((p0) => p0.name, 'has name', 'static($name)'),
+  );
 }
 
 T runSyncAndReturnException<T>(Function call) {

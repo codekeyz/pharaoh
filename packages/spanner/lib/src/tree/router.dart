@@ -180,7 +180,11 @@ class Router {
 
         if (isLastPart && paramDefn.terminal) {
           rootNode.terminal = true;
-          return RouteResult(resolvedParams, paramDefn.getActions(method));
+          return RouteResult(
+            resolvedParams,
+            paramDefn.getActions(method),
+            actual: paramDefn,
+          );
         }
       }
     }
@@ -195,7 +199,7 @@ class Router {
       _ => [],
     };
 
-    return RouteResult(resolvedParams, handlers);
+    return RouteResult(resolvedParams, handlers, actual: rootNode);
   }
 
   void printTree() {

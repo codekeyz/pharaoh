@@ -1,5 +1,6 @@
 import 'package:pharaoh/pharaoh.dart';
 import 'package:spanner/spanner.dart';
+import 'package:spanner/src/parametric/definition.dart';
 import 'package:test/test.dart';
 
 import 'fixtures/handlers.dart';
@@ -39,7 +40,7 @@ void main() {
 
     expect(
       router.lookup(HTTPMethod.GET, '/Foo/bAR'),
-      havingParameters({'param': 'bAR'}),
+      havingParameters<ParameterDefinition>({'param': 'bAR'}),
     );
   });
 
@@ -50,7 +51,7 @@ void main() {
 
     expect(
       router.lookup(HTTPMethod.GET, '/Foo/bAR'),
-      havingParameters({'Param': 'bAR'}),
+      havingParameters<ParameterDefinition>({'Param': 'bAR'}),
     );
   });
 
@@ -61,7 +62,7 @@ void main() {
 
     expect(
       router.lookup(HTTPMethod.GET, '/foo/bar/baZ'),
-      havingParameters({'param': 'baZ'}),
+      havingParameters<ParameterDefinition>({'param': 'baZ'}),
     );
   });
 
@@ -75,11 +76,11 @@ void main() {
 
     expect(
       router.lookup(HTTPMethod.GET, '/foo/bar/baZ'),
-      havingParameters({'param': 'baZ'}),
+      havingParameters<ParameterDefinition>({'param': 'baZ'}),
     );
     expect(
       router.lookup(HTTPMethod.GET, '/foo/baz/baR'),
-      havingParameters({'param': 'baR'}),
+      havingParameters<ParameterDefinition>({'param': 'baR'}),
     );
   });
 
@@ -90,7 +91,7 @@ void main() {
 
     expect(
       router.lookup(HTTPMethod.GET, '/FOO/My/bAR'),
-      havingParameters({'param1': 'My', 'param2': 'bAR'}),
+      havingParameters<ParameterDefinition>({'param1': 'My', 'param2': 'bAR'}),
     );
   });
 
@@ -108,12 +109,12 @@ void main() {
 
     expect(
       router.lookup(HTTPMethod.POST, '/fOO/Bar/Static/two/update'),
-      havingParameters({'param': 'Bar', 'userId': 'two'}),
+      havingParameters<StaticNode>({'param': 'Bar', 'userId': 'two'}),
     );
 
     expect(
       router.lookup(HTTPMethod.POST, '/Foo/bAR/STATIC/THREE/cAnCeL'),
-      havingParameters({'param': 'bAR', 'userId': 'THREE'}),
+      havingParameters<StaticNode>({'param': 'bAR', 'userId': 'THREE'}),
     );
   });
 
