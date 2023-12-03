@@ -12,7 +12,7 @@ void main() {
       test('inconsistent parameter definitions', () {
         router() => Router()
           ..on(HTTPMethod.GET, '/user/<file>.png/download', okHdler)
-          // ..on(HTTPMethod.POST, '/user/<heyyou>.png', okHdler)
+          ..on(HTTPMethod.POST, '/user/<heyyou>.png', okHdler)
           ..on(HTTPMethod.GET, '/user/<hello>.png/<user2>/hello', okHdler);
 
         final exception = runSyncAndReturnException<ArgumentError>(router);
@@ -47,8 +47,9 @@ void main() {
 
     test('with request.url contains dash', () {
       final router = Router()..on(HTTPMethod.GET, '/a/<param>/b', okHdler);
+
       final result = router.lookup(HTTPMethod.GET, '/a/foo-bar/b');
-      expect(result, havingParameters({'param': 'foo-bar'}));
+      expect(result, havingParameters<StaticNode>({'param': 'foo-bar'}));
     });
 
     test('with fixed suffix', () async {
