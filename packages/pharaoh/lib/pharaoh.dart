@@ -2,6 +2,7 @@ library;
 
 export './src/core.dart';
 export './src/router/handler.dart';
+export './src/router/router_contract.dart';
 export './src/http/cookie.dart';
 export './src/http/request.dart';
 export './src/http/response.dart';

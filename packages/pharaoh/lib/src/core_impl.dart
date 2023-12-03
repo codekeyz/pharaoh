@@ -1,6 +1,6 @@
 part of 'core.dart';
 
-class _$PharaohImpl extends RoutePathDefinitionContract<Pharaoh>
+class _$PharaohImpl extends RouterContract<Pharaoh>
     with RouteDefinitionMixin<Pharaoh>
     implements Pharaoh {
   late final HttpServer _server;
@@ -14,7 +14,7 @@ class _$PharaohImpl extends RoutePathDefinitionContract<Pharaoh>
   }
 
   @override
-  RoutePathDefinitionContract router() => PharaohRouter(Spanner());
+  RouterContract router() => PharaohRouter(Spanner());
 
   @override
   List<dynamic> get routes => [];
@@ -43,7 +43,7 @@ class _$PharaohImpl extends RoutePathDefinitionContract<Pharaoh>
   }
 
   @override
-  Pharaoh group(final String path, final RoutePathDefinitionContract handler) {
+  Pharaoh group(final String path, final RouterContract handler) {
     // final route = Route.path(path);
 
     // if (handler is PharaohRouter) {

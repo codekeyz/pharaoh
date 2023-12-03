@@ -2,9 +2,9 @@ import 'package:spanner/spanner.dart';
 
 import '../http/request.dart';
 import 'handler.dart';
-import 'router.dart';
+import 'router_contract.dart';
 
-mixin RouteDefinitionMixin<T> on RoutePathDefinitionContract<T> {
+mixin RouteDefinitionMixin<T> on RouterContract<T> {
   late final Spanner spanner;
 
   void useSpanner(Spanner router) {

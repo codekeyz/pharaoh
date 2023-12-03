@@ -11,22 +11,23 @@ import './http/response.dart';
 import './middleware/body_parser.dart';
 import './shelf_interop/shelf.dart' as shelf;
 
+import 'router/router_contract.dart';
 import 'router/router_mixin.dart';
 import 'router/router.dart';
 import 'http/request.dart';
 
 part 'core_impl.dart';
 
-abstract class Pharaoh implements RoutePathDefinitionContract<Pharaoh> {
+abstract class Pharaoh implements RouterContract<Pharaoh> {
   factory Pharaoh() => _$PharaohImpl();
 
-  RoutePathDefinitionContract router();
+  RouterContract router();
 
   List<dynamic> get routes;
 
   Uri get uri;
 
-  Pharaoh group(String path, RoutePathDefinitionContract contract);
+  Pharaoh group(String path, RouterContract contract);
 
   Future<Pharaoh> listen({int port = 3000});
 

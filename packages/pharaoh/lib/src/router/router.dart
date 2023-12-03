@@ -1,37 +1,15 @@
 import 'dart:async';
 
-import 'package:pharaoh/pharaoh.dart';
 import 'package:spanner/spanner.dart';
 
+import '../http/request.dart';
+import '../http/response.dart';
+import '../middleware/session_mw.dart';
+import 'handler.dart';
 import 'router_mixin.dart';
+import 'router_contract.dart';
 
-abstract class RoutePathDefinitionContract<T> {
-  T get(String path, RequestHandlerFunc hdler);
-
-  T post(String path, RequestHandlerFunc hdler);
-
-  T put(String path, RequestHandlerFunc hdler);
-
-  T delete(String path, RequestHandlerFunc hdler);
-
-  T head(String path, RequestHandlerFunc hdler);
-
-  T patch(String path, RequestHandlerFunc hdler);
-
-  T options(String path, RequestHandlerFunc hdler);
-
-  T trace(String path, RequestHandlerFunc hdler);
-
-  T use(HandlerFunc mdw);
-
-  T useOnPath(
-    String path,
-    HandlerFunc func, {
-    HTTPMethod method = HTTPMethod.ALL,
-  });
-}
-
-class PharaohRouter extends RoutePathDefinitionContract<PharaohRouter>
+class PharaohRouter extends RouterContract<PharaohRouter>
     with RouteDefinitionMixin<PharaohRouter> {
   PharaohRouter(Spanner spanner) {
     useSpanner(spanner);
