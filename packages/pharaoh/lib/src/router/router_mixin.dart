@@ -72,7 +72,7 @@ mixin RouteDefinitionMixin<T> on RoutePathDefinitionContract<T> {
     HandlerFunc mdw, {
     HTTPMethod method = HTTPMethod.ALL,
   }) {
-    spanner.on(method, path, Middleware(mdw));
+    spanner.on(method, '$path/*', Middleware(mdw));
     return this as T;
   }
 }

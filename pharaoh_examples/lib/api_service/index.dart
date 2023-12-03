@@ -35,7 +35,7 @@ void main([args]) async {
   /// by mounting this middleware to /api
   /// meaning only paths prefixed with "/api"
   /// will cause this middleware to be invoked
-  app.use((req, res, next) {
+  app.useOnPath('/api', (req, res, next) {
     var key = req.query['api-key'];
 
     /// key isn't present
@@ -53,7 +53,7 @@ void main([args]) async {
     req['key'] = key;
 
     next(req);
-  }, Route.path('/api'));
+  });
 
   /// we now can assume the api key is valid,
   /// and simply expose the data
