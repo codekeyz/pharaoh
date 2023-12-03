@@ -43,27 +43,12 @@ class _$PharaohImpl extends RouterContract<Pharaoh>
   }
 
   @override
-  Pharaoh group(final String path, final RouterContract handler) {
-    // final route = Route.path(path);
-
-    // if (handler is PharaohRouter) {
-    //   _router.use((req, res, next) async {
-    //     final result = await drainRouter(handler.prefix(path), (
-    //       req: req,
-    //       res: res,
-    //     ));
-
-    //     if (!result.canNext) {
-    //       next();
-    //       return;
-    //     }
-
-    //     next(result.reqRes.res);
-    //   }, route);
-    //   return this;
-    // }
-
-    // _router.use(handler.handler, route);
+  Pharaoh group(final String path, final RouterContract router) {
+    if (router is! PharaohRouter) {
+      throw PharaohException.value(
+          'Router is not an instance of PharaohRouter');
+    }
+    _router.spanner.prefix(path, router.spanner.root);
     return this;
   }
 

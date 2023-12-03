@@ -15,6 +15,7 @@ import 'router/router_contract.dart';
 import 'router/router_mixin.dart';
 import 'router/router.dart';
 import 'http/request.dart';
+import 'utils/exceptions.dart';
 
 part 'core_impl.dart';
 
@@ -27,7 +28,7 @@ abstract class Pharaoh implements RouterContract<Pharaoh> {
 
   Uri get uri;
 
-  Pharaoh group(String path, RouterContract contract);
+  Pharaoh group(String path, RouterContract router);
 
   Future<Pharaoh> listen({int port = 3000});
 

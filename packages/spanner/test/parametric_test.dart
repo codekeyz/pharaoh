@@ -1,6 +1,7 @@
 import 'package:pharaoh/pharaoh.dart';
 import 'package:spanner/spanner.dart';
 import 'package:spanner/src/parametric/definition.dart';
+import 'package:spanner/src/tree/node.dart';
 import 'package:test/test.dart';
 
 import 'fixtures/handlers.dart';

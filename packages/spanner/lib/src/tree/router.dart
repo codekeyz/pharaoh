@@ -25,10 +25,16 @@ class Spanner {
   final RouterConfig config;
   late final Node _root;
 
+  Node get root => _root;
+
   int _currentIndex = 0;
 
   Spanner({this.config = const RouterConfig()})
       : _root = StaticNode(config.basePath);
+
+  Spanner prefix(String prefix, Node child) {
+    return Spanner();
+  }
 
   void on(HTTPMethod method, String path, RouteHandler handler) {
     _currentIndex++;

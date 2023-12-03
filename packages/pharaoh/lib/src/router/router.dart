@@ -10,7 +10,7 @@ import 'router_mixin.dart';
 import 'router_contract.dart';
 
 class PharaohRouter extends RouterContract<PharaohRouter>
-    with RouteDefinitionMixin<PharaohRouter> {
+    with RouteDefinitionMixin {
   PharaohRouter(Spanner spanner) {
     useSpanner(spanner);
   }

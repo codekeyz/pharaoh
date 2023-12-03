@@ -7,6 +7,8 @@ import 'router_contract.dart';
 mixin RouteDefinitionMixin<T> on RouterContract<T> {
   late final Spanner spanner;
 
+  bool get addToSpanner => true;
+
   void useSpanner(Spanner router) {
     spanner = router;
   }
