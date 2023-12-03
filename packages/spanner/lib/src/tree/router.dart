@@ -76,6 +76,7 @@ class Router {
 
         final paramNode = root.paramNode;
         if (paramNode == null) {
+          print('Param node is null. creating new for $path');
           final defn =
               ParameterDefinition.from(routePart, terminal: isLastPart);
           if (isLastPart) defn.addAction(action);
@@ -86,9 +87,8 @@ class Router {
 
         final defn = ParameterDefinition.from(routePart, terminal: isLastPart);
         if (isLastPart) defn.addAction(action);
-        paramNode.addNewDefinition(defn);
 
-        assignNewRoot(paramNode);
+        assignNewRoot(paramNode..addNewDefinition(defn));
       }
     }
 
@@ -156,8 +156,11 @@ class Router {
         devlog(
             '- Finding Defn for $routePart        -> terminal?    $isLastPart');
 
-        final paramDefn = paramNode.findMatchingDefinition(routePart,
-            shouldBeTerminal: isLastPart);
+        final paramDefn = paramNode.findMatchingDefinition(
+          method,
+          routePart,
+          shouldBeTerminal: isLastPart,
+        );
 
         devlog('    * parametric defn:         ${paramDefn.toString()}');
 
@@ -214,13 +217,16 @@ class Router {
   }
 
   String _cleanPath(String path) {
+    if (!path.startsWith('/')) {
+      throw ArgumentError.value(
+          path, null, 'Route registration must start with `/`');
+    }
     if (config.ignoreDuplicateSlashes) {
       path = path.replaceAll(RegExp(r'/+'), '/');
     }
     if (config.ignoreTrailingSlash) {
       path = path.replaceAll(RegExp(r'/+$'), '');
     }
-
     return path.substring(1);
   }
 }
