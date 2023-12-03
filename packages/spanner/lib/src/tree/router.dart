@@ -1,4 +1,6 @@
 import 'dart:async';
+// ignore: depend_on_referenced_packages
+import 'package:meta/meta.dart';
 
 import 'package:pharaoh/pharaoh.dart';
 import '../route/action.dart';
@@ -204,112 +206,6 @@ class Router {
     return RouteResult(resolvedParams, handlers);
   }
 
-  FutureOr<HandlerResult?> resolve(Request req, Response res) async {
-    Node rootNode = _root;
-    String route = _cleanPath(req.path);
-
-    Map<String, dynamic> resolvedParams = {};
-
-    HandlerResult reqRes = (canNext: true, reqRes: (req: req, res: res));
-    Future<bool> executeAndCheckCanProceed(List<RouteHandler> hdlrs) async {
-      if (hdlrs.isEmpty) return true;
-
-      for (final hdler in hdlrs) {
-        reqRes = await executeHandler(reqRes.reqRes, resolvedParams, hdler);
-        if (!reqRes.canNext) break;
-      }
-
-      return reqRes.canNext;
-    }
-
-    final parts = route.split('/');
-
-    for (int i = 0; i < parts.length; i++) {
-      final String currPart = parts[i];
-
-      var routePart = currPart;
-      if (!config.caseSensitive) routePart = routePart.toLowerCase();
-
-      final hasChild = rootNode.hasChild(routePart);
-      final isEndOfPath = i == (parts.length - 1);
-
-      void useWildcard(WildcardNode wildcard) {
-        resolvedParams['*'] = parts.sublist(i).join('/');
-        rootNode = wildcard;
-      }
-
-      if (hasChild) {
-        final child = rootNode.getChild(routePart) as StaticNode;
-        rootNode = child;
-
-        /// execution block
-        // final canProceed = await executeAndCheckCanProceed(child.handlers);
-        // if (!canProceed) break;
-      } else {
-        final paramNode = rootNode.paramNode;
-        if (paramNode == null) {
-          final wc = rootNode.wildcardNode;
-          if (wc != null) {
-            useWildcard(wc);
-            break;
-          }
-          return null;
-        }
-
-        final hasChild = paramNode.hasChild(routePart);
-        if (hasChild) {
-          rootNode = paramNode.getChild(routePart);
-
-          /// execution block
-          // final canProceed = await executeAndCheckCanProceed(
-          //     (rootNode as StaticNode).handlers);
-          // if (!canProceed) break;
-          continue;
-        }
-
-        final paramDefn = paramNode.findMatchingDefinition(routePart,
-            shouldBeTerminal: isEndOfPath);
-
-        if (paramDefn == null) {
-          final wc = rootNode.wildcardNode;
-          if (wc != null) useWildcard(wc);
-          break;
-        }
-
-        final params = paramDefn.resolveParams(currPart);
-        resolvedParams.addAll(params);
-        rootNode = paramNode;
-
-        /// execution block
-        // final hdler = paramDefn.handler;
-        // if (hdler != null) {
-        //   final canProceed = await executeAndCheckCanProceed([hdler]);
-        //   if (!canProceed) break;
-        // }
-
-        if (paramDefn.terminal) {
-          rootNode.terminal = true;
-          break;
-        }
-      }
-    }
-
-    if (!rootNode.terminal) return null;
-
-    return reqRes;
-  }
-
-  Future<HandlerResult> executeHandler(
-    ReqRes reqRes,
-    Map<String, dynamic> params,
-    RouteHandler handler,
-  ) async {
-    for (final entry in params.entries) {
-      reqRes.req.setParams(entry.key, entry.value);
-    }
-    return handler.execute(reqRes);
-  }
-
   void printTree() {
     _printNode(_root, '${_root.name} ');
   }
@@ -333,9 +229,16 @@ class Router {
   }
 }
 
-class RouteResult {
+class RouteResult<T> {
   final Map<String, dynamic> params;
   final List<RouteHandler> handlers;
 
-  const RouteResult(this.params, this.handlers);
+  @visibleForTesting
+  final T? actual;
+
+  const RouteResult(
+    this.params,
+    this.handlers, {
+    this.actual,
+  });
 }
