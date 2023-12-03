@@ -15,19 +15,19 @@ class RouteAction extends Equatable {
 }
 
 mixin RouteActionMixin {
-  final Map<HTTPMethod, List<RouteHandler>> _methodActionsMap = {};
+  final Map<HTTPMethod, List<RouteHandler>> methodActionsMap = {};
 
-  Iterable<HTTPMethod> get methods => _methodActionsMap.keys;
+  Iterable<HTTPMethod> get methods => methodActionsMap.keys;
 
-  bool hasMethod(HTTPMethod method) => _methodActionsMap.containsKey(method);
+  bool hasMethod(HTTPMethod method) => methodActionsMap.containsKey(method);
 
   List<RouteHandler> getActions(HTTPMethod method) =>
-      _methodActionsMap[method] ?? [];
+      methodActionsMap[method] ?? [];
 
   void addAction(RouteAction action) {
     final method = action.method;
-    final actionsList = _methodActionsMap[method] ?? [];
+    final actionsList = methodActionsMap[method] ?? [];
     actionsList.add(action.handler);
-    _methodActionsMap[method] = actionsList;
+    methodActionsMap[method] = actionsList;
   }
 }
