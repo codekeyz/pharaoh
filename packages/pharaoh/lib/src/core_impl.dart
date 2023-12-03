@@ -10,7 +10,7 @@ class _$PharaohImpl extends RoutePathDefinitionContract<Pharaoh>
   _$PharaohImpl() : _logger = Logger() {
     _router = PharaohRouter(Spanner());
     useSpanner(_router.spanner);
-    // use(bodyParser);
+    use(bodyParser);
   }
 
   @override

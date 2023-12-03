@@ -43,18 +43,18 @@ class PharaohRouter extends RoutePathDefinitionContract<PharaohRouter>
 
   Future<HandlerResult> resolve(Request req, Response res) async {
     ReqRes reqRes = (req: req, res: res);
-    final routeResult = spanner.lookup(req.method, req.path);
-    if (routeResult == null) {
+    final _ = spanner.lookup(req.method, req.path);
+    if (_ == null) {
       return (canNext: true, reqRes: reqRes);
-    } else if (routeResult.handlers.isEmpty) {
-      return (canNext: false, reqRes: reqRes);
+    } else if (_.handlers.isEmpty) {
+      return (canNext: true, reqRes: (req: req, res: res.notFound()));
     }
 
-    routeResult.params.forEach((key, value) => req.setParams(key, value));
+    _.params.forEach((key, value) => req.setParams(key, value));
 
     reqRes = (req: req, res: res);
 
-    for (final hdler in routeResult.handlers) {
+    for (final hdler in _.handlers) {
       final result = await hdler.execute(reqRes);
       reqRes = result.reqRes;
       if (!result.canNext || reqRes.res.ended) break;
