@@ -54,19 +54,16 @@ class PharaohRouter extends RoutePathDefinitionContract<PharaohRouter>
 
     reqRes = (req: req, res: res);
 
-    bool canNext = false;
     for (final hdler in routeResult.handlers) {
-      canNext = false;
       final result = await hdler.execute(reqRes);
       reqRes = result.reqRes;
-      canNext = result.canNext;
-      if (!canNext) break;
+      if (!result.canNext || reqRes.res.ended) break;
     }
 
     for (final job in _preResponseHooks) {
       reqRes = await Future.microtask(() => job(reqRes));
     }
 
-    return (canNext: canNext, reqRes: reqRes);
+    return (canNext: reqRes.res.ended, reqRes: reqRes);
   }
 }

@@ -47,7 +47,7 @@ void main() {
         .test();
   });
 
-  group('should execute middleware and request', () {
+  group('execute middleware and request', () {
     test('of level 1', () async {
       final app = Pharaoh()
         ..use((req, res, next) => next(req..setParams('name', 'Chima')))
@@ -60,20 +60,56 @@ void main() {
           .expectBody('Name: Chima 🚀')
           .test();
     });
+
     test('of level 2', () async {
       final app = Pharaoh()
         ..use((req, res, next) => next(req..setParams('name', 'Chima')))
-        ..use((req, res, next) {
-          print(req.params);
-
-          next(req..setParams('age', '14'));
-        })
+        ..use((req, res, next) => next(req..setParams('age', '14')))
         ..get('/foo/bar', (req, res) => res.json(req.params));
 
       await (await request(app))
           .get('/foo/bar')
           .expectStatus(200)
           .expectBody({'name': 'Chima', 'age': '14'}).test();
+    });
+
+    test('of level 3', () async {
+      final app = Pharaoh()
+        ..use((req, res, next) => next(req..setParams('points', '4000')))
+        ..use((req, res, next) => next(req..setParams('name', 'Chima')))
+        ..use((req, res, next) => next(req..setParams('age', '14')))
+        ..get('/foo/bar', (req, res) => res.json(req.params));
+
+      await (await request(app))
+          .get('/foo/bar')
+          .expectStatus(200)
+          .expectBody({'points': '4000', 'name': 'Chima', 'age': '14'}).test();
+    });
+
+    test('in right order', () async {
+      final app = Pharaoh()
+        ..use((req, res, next) => next(req..setParams('name', 'Chima')))
+        ..use((req, res, next) => next(req..setParams('points', '4000')))
+        ..use((req, res, next) => next(req..setParams('age', '14')))
+        ..get('/foo/bar', (req, res) => res.json(req.params));
+
+      await (await request(app))
+          .get('/foo/bar')
+          .expectStatus(200)
+          .expectBody({'name': 'Chima', 'points': '4000', 'age': '14'}).test();
+    });
+
+    test('if only request not ended', () async {
+      final app = Pharaoh()
+        ..use((req, res, next) => next(req..setParams('name', 'Chima')))
+        ..use((req, res, next) => next(res.ok('Say hello')))
+        ..get('/foo/bar', (req, res) => res.json(req.params));
+
+      await (await request(app))
+          .get('/foo/bar')
+          .expectStatus(200)
+          .expectBody('Say hello')
+          .test();
     });
   });
 }
