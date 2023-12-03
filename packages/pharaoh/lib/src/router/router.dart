@@ -82,14 +82,27 @@ class PharaohRouter implements RoutePathDefinitionContract<PharaohRouter> {
   }
 
   Future<HandlerResult> resolve(Request req, Response res) async {
-    final _ = await _router.resolve(req, res);
-    final canNext = _?.canNext ?? false;
-    var reqRes = _?.reqRes ?? (req: req, res: res);
-    if (_ != null) {
-      for (final job in _preResponseHooks) {
-        reqRes = await Future.microtask(() => job(reqRes));
-      }
+    ReqRes reqRes = (req: req, res: res);
+    final handlers = await _router.find(req, res);
+    if (handlers == null) {
+      return (canNext: true, reqRes: reqRes);
+    } else if (handlers.isEmpty) {
+      return (canNext: false, reqRes: reqRes);
     }
+
+    bool canNext = false;
+    for (final hdler in handlers) {
+      canNext = false;
+      final result = await hdler.execute(reqRes);
+      reqRes = result.reqRes;
+      canNext = result.canNext;
+      if (!canNext) break;
+    }
+
+    for (final job in _preResponseHooks) {
+      reqRes = await Future.microtask(() => job(reqRes));
+    }
+
     return (canNext: canNext, reqRes: reqRes);
   }
 
