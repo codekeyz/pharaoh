@@ -2,6 +2,8 @@ import 'package:collection/collection.dart';
 import 'package:equatable/equatable.dart';
 import 'package:pharaoh/pharaoh.dart';
 
+import '../constraint/constraint.dart';
+
 final parametricRegex = RegExp(r"<[^>]+>");
 
 /// This regex has 3 Groups
@@ -60,7 +62,7 @@ ParameterDefinition? _buildParamDefinition(String part, bool terminal) {
   final subparts = subdefns
       .mapIndexed((i, e) => makeDefn(e, end: i == (subdefns.length - 1)));
 
-  return CompositeParameterDefinition(
+  return CompositeParameterDefinition._(
     parent,
     subparts: UnmodifiableListView(subparts),
   );
@@ -114,6 +116,7 @@ class ParameterDefinition with EquatableMixin {
   final String? suffix;
   final RegExp? regex;
   final bool terminal;
+  final List<RouteConstraint> constraints;
   RouteHandler? handler;
 
   ParameterDefinition._(
@@ -123,6 +126,7 @@ class ParameterDefinition with EquatableMixin {
     this.suffix,
     this.regex,
     this.terminal = false,
+    this.constraints = const [],
   });
 
   String get template {
@@ -159,13 +163,20 @@ class ParameterDefinition with EquatableMixin {
   }
 
   @override
-  List<Object?> get props => [name, prefix, suffix, regex, terminal];
+  List<Object?> get props => [
+        name,
+        prefix,
+        suffix,
+        regex,
+        terminal,
+        constraints,
+      ];
 }
 
 class CompositeParameterDefinition extends ParameterDefinition {
   final UnmodifiableListView<ParameterDefinition> subparts;
 
-  CompositeParameterDefinition(
+  CompositeParameterDefinition._(
     ParameterDefinition parent, {
     required this.subparts,
   }) : super._(
@@ -173,6 +184,8 @@ class CompositeParameterDefinition extends ParameterDefinition {
           regex: parent.regex,
           prefix: parent.prefix,
           suffix: parent.suffix,
+          terminal: false,
+          constraints: [],
         );
 
   @override

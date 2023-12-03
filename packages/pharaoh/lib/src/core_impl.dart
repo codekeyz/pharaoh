@@ -89,8 +89,7 @@ class _$PharaohImpl implements Pharaoh {
   }
 
   @override
-  Pharaoh use(HandlerFunc reqResNext, [route]) {
-    _router.use(reqResNext, route);
+  Pharaoh use(HandlerFunc mdw, {String? onpath}) {
     return this;
   }
 

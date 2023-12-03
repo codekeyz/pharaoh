@@ -23,7 +23,7 @@ abstract interface class RoutePathDefinitionContract<T> {
 
   T trace(String path, RequestHandlerFunc hdler);
 
-  T use(HandlerFunc mdw, [dynamic route]);
+  T use(HandlerFunc mdw, {String? onpath});
 }
 
 class PharaohRouter implements RoutePathDefinitionContract<PharaohRouter> {
@@ -81,11 +81,6 @@ class PharaohRouter implements RoutePathDefinitionContract<PharaohRouter> {
     return this;
   }
 
-  @override
-  PharaohRouter use(HandlerFunc mdw, [route]) {
-    return this;
-  }
-
   Future<HandlerResult> resolve(Request req, Response res) async {
     final _ = await _router.resolve(req, res);
     final canNext = _?.canNext ?? false;
@@ -96,5 +91,10 @@ class PharaohRouter implements RoutePathDefinitionContract<PharaohRouter> {
       }
     }
     return (canNext: canNext, reqRes: reqRes);
+  }
+
+  @override
+  PharaohRouter use(HandlerFunc mdw, {String? onpath}) {
+    return this;
   }
 }

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:pharaoh/pharaoh.dart';
+import '../constraint/constraint.dart';
 import '../helpers/parametric.dart';
 import 'node.dart';
 
@@ -20,17 +21,11 @@ class RouterConfig {
 
 class Router {
   final RouterConfig config;
-  final Map<HTTPMethod, Node> _nodeMap = {};
+  final Node _root = StaticNode('/');
 
   Router({
     this.config = const RouterConfig(),
   });
-
-  Node getMethodNode(HTTPMethod method) {
-    var node = _nodeMap[method];
-    if (node != null) return node;
-    return _nodeMap[method] = StaticNode(config.basePath);
-  }
 
   void on(
     HTTPMethod method,
@@ -38,8 +33,20 @@ class Router {
     RouteHandler handler, {
     bool debug = false,
   }) {
+    final constraints = [httpMethodConstraint(method)];
+
+    return on_(method, path, handler, constraints: constraints);
+  }
+
+  void on_(
+    HTTPMethod method,
+    String path,
+    RouteHandler handler, {
+    List<RouteConstraint> constraints = const [],
+    bool debug = false,
+  }) {
     path = _cleanPath(path);
-    Node root = getMethodNode(method);
+    Node root = _root;
 
     StringBuffer debugLog = StringBuffer();
 
@@ -100,7 +107,6 @@ class Router {
         }
 
         paramNode.addNewDefinition(routePart, terminal: isLastPart);
-        print('I was here with $routePart');
 
         assignNewRoot(paramNode);
       }
@@ -111,6 +117,7 @@ class Router {
     if (root is StaticNode) {
       (root as StaticNode)
         ..addHandler(handler)
+        ..withConstraints(constraints)
         ..terminal = true;
     }
 
@@ -122,7 +129,7 @@ class Router {
     String path, {
     bool debug = false,
   }) async {
-    Node rootNode = getMethodNode(method);
+    Node rootNode = _root;
     String route = _cleanPath(path);
 
     Map<String, dynamic> resolvedParams = {};
@@ -212,7 +219,7 @@ class Router {
   }
 
   FutureOr<HandlerResult?> resolve(Request req, Response res) async {
-    Node rootNode = getMethodNode(req.method);
+    Node rootNode = _root;
     String route = _cleanPath(req.path);
 
     Map<String, dynamic> resolvedParams = {};
@@ -318,9 +325,7 @@ class Router {
   }
 
   void printTree() {
-    _nodeMap.forEach(
-      (key, value) => _printNode(value, '${key.name} '),
-    );
+    _printNode(_root, '${_root.name} ');
   }
 
   void _printNode(Node node, String prefix) {
