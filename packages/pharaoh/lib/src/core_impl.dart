@@ -14,7 +14,7 @@ class _$PharaohImpl implements Pharaoh {
   @override
   Uri get uri {
     if (_server.address.isLoopback) {
-      return Uri(scheme: 'http', host: 'localhost', port: _server.port);
+      return Uri(scheme: 'http', host: '172.20.10.4', port: _server.port);
     }
 
     // IPv6 addresses in URLs need to be enclosed in square brackets to avoid
@@ -124,7 +124,7 @@ class _$PharaohImpl implements Pharaoh {
     final progress = _logger.progress('Starting server');
 
     try {
-      _server = await HttpServer.bind('localhost', port);
+      _server = await HttpServer.bind('172.20.10.4', port);
       _server.listen(handleRequest);
       progress.complete('Server start on PORT: $port -> ${uri.toString()}');
     } catch (e) {

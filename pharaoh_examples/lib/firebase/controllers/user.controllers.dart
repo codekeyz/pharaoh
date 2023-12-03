@@ -1,8 +1,10 @@
-import 'package:dart_firebase_admin/auth.dart';
 import 'package:pharaoh/pharaoh.dart';
-import 'package:pharaoh_examples/firebase/utils.dart';
-import 'package:pharaoh_examples/firebase/locator/locator.dart';
 import 'package:pharaoh_jwt_auth/pharaoh_jwt_auth.dart';
+
+import '../domain/requests/createUser.request.dart';
+import '../services/user.service.dart';
+import '../handlers/response.handler.dart';
+import '../utils.dart';
 
 class UserController {
   /// function to create a user
@@ -15,12 +17,9 @@ class UserController {
       String email = body['email'];
       String password = body['password'];
 
-      /// Create the user using [email] and [password]
-      UserRecord savedUser = await locator.auth.createUser(CreateRequest(
-        displayName: username,
-        email: email,
-        password: password,
-      ));
+      final request = CreateUserRequest(username, email, password);
+
+      final savedUser = await UserService.createUser(request);
 
       final jwtToken = JWT(
         {
@@ -31,19 +30,12 @@ class UserController {
 
       final userJson = ensureEncodable(savedUser.toJson());
 
-      return res.status(201).json({
-        "success": true,
+      return ResponseHandler(res).successWithData({
         "user": userJson,
         "token": jwtToken,
       });
-    } on FirebaseAuthAdminException catch (err) {
-      return res.status(400).json({
-        "success": false,
-        "error": err.code,
-        "message": err.message,
-      });
-    } catch (err) {
-      return res.status(400).makeError(message: err.toString());
+    } on ApiError catch (err) {
+      return ResponseHandler(res).error(err);
     }
   }
 }

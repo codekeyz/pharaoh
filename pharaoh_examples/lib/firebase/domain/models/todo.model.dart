@@ -1,10 +1,10 @@
 class Todo {
-  String? id;
+  String id;
   late String content;
   bool isCompleted;
 
   Todo({
-    this.id,
+    required this.id,
     required this.content,
     this.isCompleted = false,
   });
@@ -17,7 +17,7 @@ class Todo {
     };
   }
 
-  Todo fromJson(Map<String, dynamic> json) {
+  static Todo fromJson(Map<String, dynamic> json) {
     return Todo(
       id: json['id'],
       content: json['content'],

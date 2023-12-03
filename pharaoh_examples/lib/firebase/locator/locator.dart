@@ -1,7 +1,7 @@
 import 'package:dart_firebase_admin/firestore.dart';
 import 'package:dart_firebase_admin/auth.dart';
 
-final locator = Locator._();
+final locator = Locator.instance;
 
 class Locator {
   Locator._();

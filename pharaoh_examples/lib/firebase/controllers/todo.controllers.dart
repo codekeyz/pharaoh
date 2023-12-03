@@ -1,8 +1,10 @@
-import 'package:dart_firebase_admin/firestore.dart';
 import 'package:pharaoh/pharaoh.dart';
-import 'package:pharaoh_examples/firebase/locator/locator.dart';
-import 'package:pharaoh_examples/firebase/models/todo.model.dart';
-import 'package:pharaoh_examples/firebase/utils.dart';
+
+import '../handlers/handler.utils.dart';
+import '../handlers/response.handler.dart';
+import '../domain/models/todo.model.dart';
+import '../services/todo.service.dart';
+import '../utils.dart';
 
 class TodoController {
   TodoController._();
@@ -10,40 +12,22 @@ class TodoController {
   static addTodo($Request req, $Response res) async {
     try {
       if (req.body is! Map) {
-        throw ApiError('Invalid request body', 400);
+        throw ApiError('Invalid request body', HttpStatus.badRequest);
       }
 
       String content = req.body['content'];
 
-      final todo = Todo(content: content);
+      // create a fake id but will later change it to be the document's id
+      final todo = Todo(id: DateTime.now().toIso8601String(), content: content);
 
-      final todoCollection = locator.store.collection('todos');
+      final savedTodo = await TodoService.addTodo(todo);
 
-      final docRef = await todoCollection.add(todo.toJson());
-
-      todo.id = docRef.id;
-
-      await docRef.set(todo.toJson());
-
-      final result = (await docRef.get()).data();
-
-      return res.status(201).json({
-        'success': true,
-        "data": result,
-      });
-    } on FirebaseFirestoreAdminException catch (err) {
-      return res.status(500).json({
-        "success": false,
-        "message": err.message,
-      });
-    } catch (err) {
-      if (err is ApiError) {
-        return res.status(err.statusCode).json({
-          "success": false,
-          "message": err.toString(),
-        });
-      }
-      return res.status(400).makeError(message: err.toString());
+      return ResponseHandler(res).successWithData(
+        savedTodo.toJson(),
+        message: 'Todo addedd successfully',
+      );
+    } on ApiError catch (err) {
+      return ResponseHandler(res).error(err);
     }
   }
 
@@ -53,46 +37,62 @@ class TodoController {
 
       String? content;
 
-      if ((req.body as Map).containsKey('conteent')) {
+      if ((req.body as Map).containsKey('content')) {
         content = req.body['content'];
       }
       bool? isCompleted;
 
       if ((req.body as Map).containsKey('isCompleted')) {
-        content = req.body['isCompleted'];
+        isCompleted = req.body['isCompleted'];
       }
 
-      final docRef = locator.store.doc('todos/$id');
+      final updatedTodo = await TodoService.updateTodo(
+        id: id,
+        content: content,
+        isCompleted: isCompleted,
+      );
 
-      print(docRef);
+      return ResponseHandler(res).successWithData(
+        updatedTodo.toJson(),
+        message: 'Todo has been updated successfully',
+      );
+    } on ApiError catch (err) {
+      return ResponseHandler(res).error(err);
+    }
+  }
 
-      final doc = (await docRef.get()).data();
+  static getSingleTodo($Request req, $Response res) async {
+    try {
+      final id = req.params['id'];
 
-      await docRef.update({
-        "content": content ?? doc!['content'],
-        "isCompleted": isCompleted ?? doc!['isCompleted'],
-      });
+      final savedTodo = await TodoService.getSingleTodo(id);
 
-      final result = (await docRef.get()).data();
+      return ResponseHandler(res).successWithData(savedTodo.toJson());
+    } on ApiError catch (err) {
+      return ResponseHandler(res).error(err);
+    }
+  }
 
-      return res.status(200).json({
-        'success': true,
-        'message': 'Todo updated successfully',
-        "data": result,
-      });
-    } on FirebaseFirestoreAdminException catch (err) {
-      return res.status(500).json({
-        "success": false,
-        "message": err.message,
-      });
-    } catch (err) {
-      if (err is ApiError) {
-        return res.status(err.statusCode).json({
-          "success": false,
-          "message": err.toString(),
-        });
-      }
-      return res.status(400).makeError(message: err.toString());
+  static listTodos($Request req, $Response res) async {
+    try {
+      final todosList = await TodoService.listTodos();
+
+      return ResponseHandler(res).successWithData(
+        List.from(todosList.map((todo) => todo.toJson())),
+      );
+    } on ApiError catch (err) {
+      return ResponseHandler(res).error(err);
+    }
+  }
+
+  static deleteTodo($Request req, $Response res) async {
+    try {
+      final id = req.params['id'];
+      await TodoService.deleteTodo(id);
+
+      return ResponseHandler(res).success('Todo deleted successfully');
+    } on ApiError catch (err) {
+      return ResponseHandler(res).error(err);
     }
   }
 }

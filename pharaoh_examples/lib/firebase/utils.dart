@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:pharaoh/pharaoh.dart';
 
 /// path to where the [serviceAccountKey.json] is stored on the disk
-final publicDir = '${Directory.current.path}/public';
+final publicDir = '${Directory.current.path}/lib/firebase/public';
 
 /// ensure the [object] returned is encodable
 Map<String, Object?> ensureEncodable(Map<String, Object?> object) {
