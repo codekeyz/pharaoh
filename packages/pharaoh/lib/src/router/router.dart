@@ -53,7 +53,6 @@ class PharaohRouter extends RoutePathDefinitionContract<PharaohRouter>
     _.params.forEach((key, value) => req.setParams(key, value));
 
     reqRes = (req: req, res: res);
-
     for (final hdler in _.handlers) {
       final result = await hdler.execute(reqRes);
       reqRes = result.reqRes;
@@ -64,6 +63,13 @@ class PharaohRouter extends RoutePathDefinitionContract<PharaohRouter>
       reqRes = await Future.microtask(() => job(reqRes));
     }
 
-    return (canNext: reqRes.res.ended, reqRes: reqRes);
+    if (!reqRes.res.ended) {
+      return (
+        canNext: true,
+        reqRes: reqRes.merge(res.notFound("Route not found: ${req.path}"))
+      );
+    }
+
+    return (canNext: true, reqRes: reqRes);
   }
 }

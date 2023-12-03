@@ -37,7 +37,7 @@ void main() {
         .get('/something-new-is-here')
         .expectStatus(404)
         .expectBody(
-            '{"path":"/something-new-is-here","method":"GET","message":"No handlers registered for path: /something-new-is-here"}')
+            '{"path":"/something-new-is-here","method":"GET","message":"Route not found: /something-new-is-here"}')
         .test();
 
     await (await request(app))

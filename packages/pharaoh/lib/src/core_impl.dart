@@ -102,7 +102,7 @@ class _$PharaohImpl extends RoutePathDefinitionContract<Pharaoh>
         httpReq,
         res
             .type(ContentType.json)
-            .notFound("No handlers registered for path: ${httpReq.uri.path}"));
+            .notFound());
   }
 
   Future<HandlerResult> resolveRequest(HttpRequest request) async {
