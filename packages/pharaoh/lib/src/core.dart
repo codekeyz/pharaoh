@@ -11,6 +11,7 @@ import './http/request.dart';
 import './http/response.dart';
 import './middleware/body_parser.dart';
 import './shelf_interop/shelf.dart' as shelf;
+import 'router/router_mixin.dart';
 
 part 'core_impl.dart';
 

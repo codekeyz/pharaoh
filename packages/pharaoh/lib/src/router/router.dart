@@ -1,12 +1,10 @@
 import 'dart:async';
 
-import 'package:pharaoh/src/middleware/session_mw.dart';
-import 'package:spanner/spanner.dart';
-import '../http/request.dart';
-import '../http/response.dart';
-import 'handler.dart';
+import 'package:pharaoh/pharaoh.dart';
 
-abstract interface class RoutePathDefinitionContract<T> {
+import 'router_mixin.dart';
+
+abstract class RoutePathDefinitionContract<T> {
   T get(String path, RequestHandlerFunc hdler);
 
   T post(String path, RequestHandlerFunc hdler);
@@ -23,67 +21,24 @@ abstract interface class RoutePathDefinitionContract<T> {
 
   T trace(String path, RequestHandlerFunc hdler);
 
-  T use(HandlerFunc mdw, {String? onpath});
+  T use(HandlerFunc mdw);
+
+  T useOnPath(
+    String path,
+    HandlerFunc func, {
+    HTTPMethod method = HTTPMethod.ALL,
+  });
 }
 
-class PharaohRouter implements RoutePathDefinitionContract<PharaohRouter> {
-  final Router _router = Router();
+class PharaohRouter extends RoutePathDefinitionContract<PharaohRouter>
+    with RouterMixin<PharaohRouter> {
   final List<ReqResHook> _preResponseHooks = [
     sessionPreResponseHook,
   ];
 
-  @override
-  PharaohRouter delete(String path, RequestHandlerFunc hdler) {
-    _router.on(HTTPMethod.DELETE, path, RequestHandler(hdler));
-    return this;
-  }
-
-  @override
-  PharaohRouter get(String path, RequestHandlerFunc hdler) {
-    _router.on(HTTPMethod.GET, path, RequestHandler(hdler));
-    _router.on(HTTPMethod.HEAD, path, RequestHandler(hdler));
-    return this;
-  }
-
-  @override
-  PharaohRouter head(String path, RequestHandlerFunc hdler) {
-    _router.on(HTTPMethod.HEAD, path, RequestHandler(hdler));
-    return this;
-  }
-
-  @override
-  PharaohRouter options(String path, RequestHandlerFunc hdler) {
-    _router.on(HTTPMethod.OPTIONS, path, RequestHandler(hdler));
-    return this;
-  }
-
-  @override
-  PharaohRouter patch(String path, RequestHandlerFunc hdler) {
-    _router.on(HTTPMethod.PATCH, path, RequestHandler(hdler));
-    return this;
-  }
-
-  @override
-  PharaohRouter post(String path, RequestHandlerFunc hdler) {
-    _router.on(HTTPMethod.POST, path, RequestHandler(hdler));
-    return this;
-  }
-
-  @override
-  PharaohRouter put(String path, RequestHandlerFunc hdler) {
-    _router.on(HTTPMethod.PUT, path, RequestHandler(hdler));
-    return this;
-  }
-
-  @override
-  PharaohRouter trace(String path, RequestHandlerFunc hdler) {
-    _router.on(HTTPMethod.TRACE, path, RequestHandler(hdler));
-    return this;
-  }
-
   Future<HandlerResult> resolve(Request req, Response res) async {
     ReqRes reqRes = (req: req, res: res);
-    final routeResult = _router.lookup(req.method, req.path);
+    final routeResult = spanner.lookup(req.method, req.path);
     if (routeResult == null) {
       return (canNext: true, reqRes: reqRes);
     } else if (routeResult.handlers.isEmpty) {
@@ -108,10 +63,5 @@ class PharaohRouter implements RoutePathDefinitionContract<PharaohRouter> {
     }
 
     return (canNext: canNext, reqRes: reqRes);
-  }
-
-  @override
-  PharaohRouter use(HandlerFunc mdw, {String? onpath}) {
-    return this;
   }
 }

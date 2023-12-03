@@ -1,6 +1,8 @@
 part of 'core.dart';
 
-class _$PharaohImpl implements Pharaoh {
+class _$PharaohImpl extends RoutePathDefinitionContract<Pharaoh>
+    with RouterMixin<Pharaoh>
+    implements Pharaoh {
   late final PharaohRouter _router;
   late final HttpServer _server;
   late final Logger _logger;
@@ -10,6 +12,12 @@ class _$PharaohImpl implements Pharaoh {
         _router = PharaohRouter() {
     _router.use(bodyParser);
   }
+
+  @override
+  RoutePathDefinitionContract router() => PharaohRouter();
+
+  @override
+  List<dynamic> get routes => [];
 
   @override
   Uri get uri {
@@ -32,65 +40,6 @@ class _$PharaohImpl implements Pharaoh {
       host: _server.address.address,
       port: _server.port,
     );
-  }
-
-  @override
-  PharaohRouter router() => PharaohRouter();
-
-  @override
-  List<dynamic> get routes => [];
-
-  @override
-  Pharaoh delete(String path, RequestHandlerFunc handler) {
-    _router.delete(path, handler);
-    return this;
-  }
-
-  @override
-  Pharaoh get(String path, RequestHandlerFunc handler) {
-    _router.get(path, handler);
-    return this;
-  }
-
-  @override
-  Pharaoh post(String path, RequestHandlerFunc handler) {
-    _router.post(path, handler);
-    return this;
-  }
-
-  @override
-  Pharaoh put(String path, RequestHandlerFunc handler) {
-    _router.put(path, handler);
-    return this;
-  }
-
-  @override
-  Pharaoh head(String path, RequestHandlerFunc handler) {
-    _router.head(path, handler);
-    return this;
-  }
-
-  @override
-  Pharaoh patch(String path, RequestHandlerFunc handler) {
-    _router.patch(path, handler);
-    return this;
-  }
-
-  @override
-  Pharaoh options(String path, RequestHandlerFunc handler) {
-    _router.options(path, handler);
-    return this;
-  }
-
-  @override
-  Pharaoh trace(String path, RequestHandlerFunc handler) {
-    _router.trace(path, handler);
-    return this;
-  }
-
-  @override
-  Pharaoh use(HandlerFunc mdw, {String? onpath}) {
-    return this;
   }
 
   @override
