@@ -10,7 +10,7 @@ void main() {
   group('parametric route', () {
     group('should reject', () {
       test('inconsistent parameter definitions', () {
-        router() => Router()
+        router() => Spanner()
           ..on(HTTPMethod.GET, '/user/<file>.png/download', okHdler)
           ..on(HTTPMethod.POST, '/user/<heyyou>.png', okHdler)
           ..on(HTTPMethod.GET, '/user/<hello>.png/<user2>/hello', okHdler);
@@ -24,7 +24,7 @@ void main() {
 
       test('close door parameter definitions', () {
         router() =>
-            Router()..on(HTTPMethod.GET, '/user/<userId><keyId>', okHdler);
+            Spanner()..on(HTTPMethod.GET, '/user/<userId><keyId>', okHdler);
 
         final exception = runSyncAndReturnException<ArgumentError>(router);
         expect(
@@ -35,7 +35,7 @@ void main() {
       });
 
       test('invalid parameter definition', () {
-        router() => Router()
+        router() => Spanner()
           ..on(HTTPMethod.GET, '/user/<userId#@#.XDkd@#>>#>', okHdler);
 
         final exception = runSyncAndReturnException<ArgumentError>(router);
@@ -46,14 +46,14 @@ void main() {
     });
 
     test('with request.url contains dash', () {
-      final router = Router()..on(HTTPMethod.GET, '/a/<param>/b', okHdler);
+      final router = Spanner()..on(HTTPMethod.GET, '/a/<param>/b', okHdler);
 
       final result = router.lookup(HTTPMethod.GET, '/a/foo-bar/b');
       expect(result, havingParameters<StaticNode>({'param': 'foo-bar'}));
     });
 
     test('with fixed suffix', () async {
-      final router = Router()
+      final router = Spanner()
         ..on(HTTPMethod.GET, '/user', okHdler)
         ..on(HTTPMethod.GET, '/user/<userId>', okHdler)
         ..on(HTTPMethod.GET, '/user/<userId>/details', okHdler)
@@ -88,7 +88,7 @@ void main() {
     });
 
     test('contain param and wildcard together', () {
-      final router = Router()
+      final router = Spanner()
         ..on(HTTPMethod.GET, '/<lang>/item/<id>', okHdler)
         ..on(HTTPMethod.GET, '/<lang>/item/*', okHdler);
 

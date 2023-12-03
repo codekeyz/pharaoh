@@ -1,20 +1,20 @@
 part of 'core.dart';
 
 class _$PharaohImpl extends RoutePathDefinitionContract<Pharaoh>
-    with RouterMixin<Pharaoh>
+    with RouteDefinitionMixin<Pharaoh>
     implements Pharaoh {
-  late final PharaohRouter _router;
   late final HttpServer _server;
   late final Logger _logger;
+  late final PharaohRouter _router;
 
-  _$PharaohImpl()
-      : _logger = Logger(),
-        _router = PharaohRouter() {
-    _router.use(bodyParser);
+  _$PharaohImpl() : _logger = Logger() {
+    _router = PharaohRouter(Spanner());
+    useSpanner(_router.spanner);
+    // use(bodyParser);
   }
 
   @override
-  RoutePathDefinitionContract router() => PharaohRouter();
+  RoutePathDefinitionContract router() => PharaohRouter(Spanner());
 
   @override
   List<dynamic> get routes => [];
@@ -92,7 +92,7 @@ class _$PharaohImpl extends RoutePathDefinitionContract<Pharaoh>
     httpReq.response.headers.chunkedTransferEncoding = false;
     httpReq.response.headers.clear();
 
-    final result = await resolve(httpReq);
+    final result = await resolveRequest(httpReq);
     if (result.canNext == false) return;
 
     final res = result.reqRes.res;
@@ -105,9 +105,10 @@ class _$PharaohImpl extends RoutePathDefinitionContract<Pharaoh>
             .notFound("No handlers registered for path: ${httpReq.uri.path}"));
   }
 
-  Future<HandlerResult> resolve(HttpRequest request) async {
+  Future<HandlerResult> resolveRequest(HttpRequest request) async {
     final req = Request.from(request);
     final res = Response.from(request);
+
     try {
       return await _router.resolve(req, res);
     } catch (e) {

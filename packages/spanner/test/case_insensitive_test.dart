@@ -9,7 +9,7 @@ import 'helpers/test_utils.dart';
 void main() {
   test('case insensitive static routes of level 1', () {
     final config = const RouterConfig(caseSensitive: false);
-    final router = Router(config: config)..on(HTTPMethod.GET, '/woo', okHdler);
+    final router = Spanner(config: config)..on(HTTPMethod.GET, '/woo', okHdler);
 
     final result = router.lookup(HTTPMethod.GET, '/woo');
     expect(result, isStaticNode('woo'));
@@ -17,7 +17,7 @@ void main() {
 
   test('case insensitive static routes of level 2', () {
     final config = const RouterConfig(caseSensitive: false);
-    final router = Router(config: config)
+    final router = Spanner(config: config)
       ..on(HTTPMethod.GET, '/foo/woo', okHdler);
 
     final result = router.lookup(HTTPMethod.GET, '/foo/woo');
@@ -26,7 +26,7 @@ void main() {
 
   test('case insensitive static routes of level 3', () {
     final config = const RouterConfig(caseSensitive: false);
-    final router = Router(config: config)
+    final router = Spanner(config: config)
       ..on(HTTPMethod.GET, '/foo/bar/woo', okHdler);
 
     final node = router.lookup(HTTPMethod.GET, '/Foo/bAR/WoO');
@@ -35,7 +35,7 @@ void main() {
 
   test('parametric case insensitive', () {
     final config = const RouterConfig(caseSensitive: false);
-    final router = Router(config: config)
+    final router = Spanner(config: config)
       ..on(HTTPMethod.GET, '/foo/<param>', okHdler);
 
     expect(
@@ -46,7 +46,7 @@ void main() {
 
   test('parametric case insensitive with capital letter', () {
     final config = const RouterConfig(caseSensitive: false);
-    final router = Router(config: config)
+    final router = Spanner(config: config)
       ..on(HTTPMethod.GET, '/foo/<Param>', okHdler);
 
     expect(
@@ -57,7 +57,7 @@ void main() {
 
   test('case insensitive with capital letter in static path with param', () {
     final config = const RouterConfig(caseSensitive: false);
-    final router = Router(config: config)
+    final router = Spanner(config: config)
       ..on(HTTPMethod.GET, '/Foo/bar/<param>', okHdler);
 
     expect(
@@ -70,7 +70,7 @@ void main() {
       'case insensitive with multiple paths containing capital letter in static path with param',
       () {
     final config = const RouterConfig(caseSensitive: false);
-    final router = Router(config: config)
+    final router = Spanner(config: config)
       ..on(HTTPMethod.GET, '/Foo/bar/<param>', okHdler)
       ..on(HTTPMethod.GET, '/Foo/baz/<param>', okHdler);
 
@@ -86,7 +86,7 @@ void main() {
 
   test('case insensitive with multiple mixed-case params', () {
     final config = const RouterConfig(caseSensitive: false);
-    final router = Router(config: config)
+    final router = Spanner(config: config)
       ..on(HTTPMethod.GET, '/foo/<param1>/<param2>', okHdler);
 
     expect(
@@ -97,7 +97,7 @@ void main() {
 
   test('parametric case insensitive with multiple routes', () {
     final config = const RouterConfig(caseSensitive: false);
-    final router = Router(config: config)
+    final router = Spanner(config: config)
       ..on(HTTPMethod.POST, '/foo/<param>/Static/<userId>/Save', okHdler)
       ..on(HTTPMethod.POST, '/foo/<param>/Static/<userId>/Update', okHdler)
       ..on(HTTPMethod.POST, '/foo/<param>/Static/<userId>/CANCEL', okHdler);
@@ -122,7 +122,7 @@ void main() {
       'case insensitive with multiple mixed-case params within same slash couple',
       () {
     final config = const RouterConfig(caseSensitive: false);
-    final router = Router(config: config)
+    final router = Spanner(config: config)
       ..on(HTTPMethod.GET, '/users/<userId>', okHdler)
       ..on(HTTPMethod.GET, '/users/user-<userId>.png<roomId>.dmg', okHdler)
       ..on(HTTPMethod.GET, '/foo/<param1>-<param2>', okHdler);
@@ -145,7 +145,7 @@ void main() {
 
   test('parametric case insensitive with a static part', () {
     final config = const RouterConfig(caseSensitive: false);
-    final router = Router(config: config)
+    final router = Spanner(config: config)
       ..on(HTTPMethod.GET, '/foo/my-<param>', okHdler);
 
     expect(

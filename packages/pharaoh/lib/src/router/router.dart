@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:pharaoh/pharaoh.dart';
+import 'package:spanner/spanner.dart';
 
 import 'router_mixin.dart';
 
@@ -31,7 +32,11 @@ abstract class RoutePathDefinitionContract<T> {
 }
 
 class PharaohRouter extends RoutePathDefinitionContract<PharaohRouter>
-    with RouterMixin<PharaohRouter> {
+    with RouteDefinitionMixin<PharaohRouter> {
+  PharaohRouter(Spanner spanner) {
+    useSpanner(spanner);
+  }
+
   final List<ReqResHook> _preResponseHooks = [
     sessionPreResponseHook,
   ];

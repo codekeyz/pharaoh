@@ -4,11 +4,11 @@ import '../http/request.dart';
 import 'handler.dart';
 import 'router.dart';
 
-mixin RouterMixin<T> on RoutePathDefinitionContract<T> {
-  late final Router spanner;
+mixin RouteDefinitionMixin<T> on RoutePathDefinitionContract<T> {
+  late final Spanner spanner;
 
-  void setRouter(Router router) {
-    this.spanner = router;
+  void useSpanner(Spanner router) {
+    spanner = router;
   }
 
   @override

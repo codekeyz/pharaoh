@@ -21,11 +21,11 @@ class RouterConfig {
   });
 }
 
-class Router {
+class Spanner {
   final RouterConfig config;
   final Node _root = StaticNode('/');
 
-  Router({
+  Spanner({
     this.config = const RouterConfig(),
   });
 
