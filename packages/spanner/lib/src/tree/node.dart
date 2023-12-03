@@ -1,11 +1,13 @@
 import 'package:collection/collection.dart';
 import 'package:equatable/equatable.dart';
 import 'package:pharaoh/pharaoh.dart';
+import 'package:spanner/src/constraint/constraint.dart';
 
 import '../helpers/parametric.dart';
 
 abstract class Node with EquatableMixin {
   final Map<String, Node> _children = {};
+  final List<RouteConstraint> _constraints = [];
 
   Map<String, Node> get children => UnmodifiableMapView(_children);
 
@@ -40,6 +42,16 @@ abstract class Node with EquatableMixin {
   Node addChildAndReturn(String key, Node node) {
     _children[key] = node;
     return node;
+  }
+
+  Node withConstraints(List<RouteConstraint> constraints) {
+    final newNames = constraints.map((e) => e.name);
+    final exists = _constraints.any((e) => newNames.contains(e.name));
+    if (exists) {
+      throw ArgumentError('$newNames has come already existing elements');
+    }
+    _constraints.addAll(constraints);
+    return this;
   }
 }
 
