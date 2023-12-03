@@ -77,22 +77,26 @@ class ParameterDefinition with EquatableMixin, RouteActionMixin {
     return _buildParamDefinition(part, terminal)!;
   }
 
-  bool matches(String pattern, {bool shouldbeTerminal = false}) {
+  bool matches(
+    String pattern, {
+    bool shouldbeTerminal = false,
+  }) {
     if (terminal != shouldbeTerminal) return false;
     return template.hasMatch(pattern);
   }
 
   bool isExactExceptName(ParameterDefinition defn) {
+    final hasMethod = defn.methods.any((e) => methods.contains(e));
+    if (!hasMethod) return false;
+
     return prefix == defn.prefix &&
         suffix == defn.suffix &&
         regex == defn.regex &&
-        terminal == defn.terminal &&
-        methods.any((e) => defn.methods.contains(e));
+        terminal == defn.terminal;
   }
 
-  Map<String, dynamic> resolveParams(final String pattern) {
-    return resolveParamsFromPath(template, pattern);
-  }
+  Map<String, dynamic> resolveParams(final String pattern) =>
+      resolveParamsFromPath(template, pattern);
 
   @override
   List<Object?> get props => [name, prefix, suffix, regex, terminal];

@@ -1,5 +1,6 @@
 import 'package:collection/collection.dart';
 import 'package:equatable/equatable.dart';
+import 'package:pharaoh/pharaoh.dart';
 
 import '../route/action.dart';
 import '../parametric/definition.dart';
@@ -69,6 +70,7 @@ class ParametricNode extends Node {
   void addNewDefinition(ParameterDefinition defn) {
     final existing =
         _definitions.firstWhereOrNull((e) => e.isExactExceptName(defn));
+
     if (existing != null) {
       if (existing.name != defn.name) {
         throw ArgumentError(
@@ -103,12 +105,16 @@ class ParametricNode extends Node {
   List<Object?> get props => [name, _definitions, children];
 
   ParameterDefinition? findMatchingDefinition(
+    HTTPMethod method,
     String part, {
     bool shouldBeTerminal = false,
-  }) =>
-      definitions.firstWhereOrNull(
-        (e) => e.matches(part, shouldbeTerminal: shouldBeTerminal),
-      );
+  }) {
+    return definitions.firstWhereOrNull(
+      (e) =>
+          e.hasMethod(method) &&
+          e.matches(part, shouldbeTerminal: shouldBeTerminal),
+    );
+  }
 }
 
 class WildcardNode extends StaticNode {
