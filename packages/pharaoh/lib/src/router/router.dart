@@ -83,7 +83,7 @@ class PharaohRouter implements RoutePathDefinitionContract<PharaohRouter> {
 
   Future<HandlerResult> resolve(Request req, Response res) async {
     ReqRes reqRes = (req: req, res: res);
-    final routeResult = await _router.find(req, res);
+    final routeResult = _router.lookup(req.method, req.path);
     if (routeResult == null) {
       return (canNext: true, reqRes: reqRes);
     } else if (routeResult.handlers.isEmpty) {

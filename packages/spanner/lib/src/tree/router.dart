@@ -1,4 +1,3 @@
-import 'dart:async';
 // ignore: depend_on_referenced_packages
 import 'package:meta/meta.dart';
 
@@ -101,14 +100,6 @@ class Router {
     }
   }
 
-  Future<RouteResult?> find(
-    Request req,
-    Response res, {
-    bool debug = false,
-  }) async {
-    return lookup(req.method, req.path);
-  }
-
   RouteResult? lookup(HTTPMethod method, String path, {bool debug = false}) {
     Node rootNode = _root;
     String route = _cleanPath(path);
@@ -149,11 +140,10 @@ class Router {
           devlog('x Route is not registered             ->         $route');
 
           final wc = rootNode.wildcardNode;
-          if (wc != null) {
-            useWildcard(wc);
-            break;
-          }
-          return null;
+          if (wc == null) return null;
+
+          useWildcard(wc);
+          break;
         }
 
         final hasChild = paramNode.hasChild(routePart);
@@ -176,7 +166,9 @@ class Router {
           devlog('x Route is not registered             ->         $route');
 
           final wc = rootNode.wildcardNode;
-          if (wc != null) useWildcard(wc);
+          if (wc == null) return null;
+
+          useWildcard(wc);
           break;
         }
 

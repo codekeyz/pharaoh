@@ -17,7 +17,7 @@ part 'core_impl.dart';
 abstract class Pharaoh implements RoutePathDefinitionContract<Pharaoh> {
   factory Pharaoh() => _$PharaohImpl();
 
-  PharaohRouter router();
+  RoutePathDefinitionContract router();
 
   List<dynamic> get routes;
 
