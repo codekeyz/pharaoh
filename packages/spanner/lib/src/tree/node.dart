@@ -1,13 +1,11 @@
 import 'package:collection/collection.dart';
 import 'package:equatable/equatable.dart';
-import 'package:pharaoh/pharaoh.dart';
-import 'package:spanner/src/constraint/constraint.dart';
 
+import '../constraint/constraint.dart';
 import '../helpers/parametric.dart';
 
 abstract class Node with EquatableMixin {
   final Map<String, Node> _children = {};
-  final List<RouteConstraint> _constraints = [];
 
   Map<String, Node> get children => UnmodifiableMapView(_children);
 
@@ -43,24 +41,14 @@ abstract class Node with EquatableMixin {
     _children[key] = node;
     return node;
   }
-
-  Node withConstraints(List<RouteConstraint> constraints) {
-    final newNames = constraints.map((e) => e.name);
-    final exists = _constraints.any((e) => newNames.contains(e.name));
-    if (exists) {
-      throw ArgumentError('$newNames has come already existing elements');
-    }
-    _constraints.addAll(constraints);
-    return this;
-  }
 }
 
 class StaticNode extends Node {
-  final List<RouteHandler> _handlers = [];
+  final List<RouteAction> _actions = [];
 
   final String _name;
 
-  List<RouteHandler> get handlers => UnmodifiableListView(_handlers);
+  List<RouteAction> get actions => UnmodifiableListView(_actions);
 
   @override
   String get name => 'static($_name)';
@@ -70,8 +58,8 @@ class StaticNode extends Node {
   @override
   List<Object?> get props => [name, children];
 
-  void addHandler(RouteHandler handler) {
-    _handlers.add(handler);
+  void addAction(RouteAction action) {
+    _actions.add(action);
   }
 }
 
@@ -94,8 +82,8 @@ class ParametricNode extends Node {
       if (existing.name != defn.name) {
         throw ArgumentError(
           'Route has inconsistent naming in parameter definition\n${[
-            ' - ${existing.template}',
-            ' - ${defn.template}',
+            ' - ${existing.templateStr}',
+            ' - ${defn.templateStr}',
           ].join('\n')}',
         );
       }
@@ -103,8 +91,8 @@ class ParametricNode extends Node {
       if (existing.terminal && defn.terminal) {
         throw ArgumentError(
           'Route already exists.${[
-            ' - ${existing.template}',
-            ' - ${defn.template}',
+            ' - ${existing.templateStr}',
+            ' - ${defn.templateStr}',
           ].join('\n')}',
         );
       }
