@@ -17,7 +17,7 @@ extension StringExtension on String {
   bool get isStatic => !isParametric && !isWildCard;
 
   bool get isParametric => parametricRegex.hasMatch(this);
-  // *
+
   bool get isWildCard => codeUnitAt(0) == 42;
 
   String? get nullIfEmpty => isEmpty ? null : this;
