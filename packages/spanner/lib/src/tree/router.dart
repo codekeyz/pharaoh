@@ -76,7 +76,6 @@ class Router {
 
         final paramNode = root.paramNode;
         if (paramNode == null) {
-          print('Param node is null. creating new for $path');
           final defn =
               ParameterDefinition.from(routePart, terminal: isLastPart);
           if (isLastPart) defn.addAction(action);
@@ -109,7 +108,9 @@ class Router {
     final debugLog = StringBuffer("\n");
 
     void devlog(String message) {
-      if (debug) debugLog.writeln(message.toLowerCase());
+      if (!debug) return;
+      debugLog.writeln(message.toLowerCase());
+      print(debugLog);
     }
 
     devlog('Finding node for ---------  ${method.name} $route ------------\n');
@@ -191,8 +192,6 @@ class Router {
         }
       }
     }
-
-    if (debug) print(debugLog);
 
     if (!rootNode.terminal) return null;
 

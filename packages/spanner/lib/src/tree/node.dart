@@ -110,9 +110,13 @@ class ParametricNode extends Node {
     bool shouldBeTerminal = false,
   }) {
     return definitions.firstWhereOrNull(
-      (e) =>
-          e.hasMethod(method) &&
-          e.matches(part, shouldbeTerminal: shouldBeTerminal),
+      (e) {
+        final definitionCanHandleMethod =
+            e.methods.isEmpty || e.hasMethod(method);
+
+        return definitionCanHandleMethod &&
+            e.matches(part, shouldbeTerminal: shouldBeTerminal);
+      },
     );
   }
 }

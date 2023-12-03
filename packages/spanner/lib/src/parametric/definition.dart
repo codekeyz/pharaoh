@@ -39,10 +39,8 @@ ParameterDefinition? _buildParamDefinition(String part, bool terminal) {
   final subparts = subdefns
       .mapIndexed((i, e) => makeDefn(e, end: i == (subdefns.length - 1)));
 
-  return CompositeParameterDefinition._(
-    parent,
-    subparts: UnmodifiableListView(subparts),
-  );
+  return CompositeParameterDefinition._(parent,
+      subparts: UnmodifiableListView(subparts));
 }
 
 class ParameterDefinition with EquatableMixin, RouteActionMixin {
@@ -86,8 +84,10 @@ class ParameterDefinition with EquatableMixin, RouteActionMixin {
   }
 
   bool isExactExceptName(ParameterDefinition defn) {
-    final hasMethod = defn.methods.any((e) => methods.contains(e));
-    if (!hasMethod) return false;
+    if (methods.isNotEmpty) {
+      final hasMethod = defn.methods.any((e) => methods.contains(e));
+      if (!hasMethod) return false;
+    }
 
     return prefix == defn.prefix &&
         suffix == defn.suffix &&
