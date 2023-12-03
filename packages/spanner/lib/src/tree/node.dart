@@ -1,8 +1,9 @@
 import 'package:collection/collection.dart';
 import 'package:equatable/equatable.dart';
 
-import '../constraint/constraint.dart';
-import '../helpers/parametric.dart';
+import '../route/action.dart';
+import '../parametric/definition.dart';
+import '../parametric/utils.dart';
 
 abstract class Node with EquatableMixin {
   final Map<String, Node> _children = {};
@@ -43,12 +44,8 @@ abstract class Node with EquatableMixin {
   }
 }
 
-class StaticNode extends Node {
-  final List<RouteAction> _actions = [];
-
+class StaticNode extends Node with RouteActionMixin {
   final String _name;
-
-  List<RouteAction> get actions => UnmodifiableListView(_actions);
 
   @override
   String get name => 'static($_name)';
@@ -57,10 +54,6 @@ class StaticNode extends Node {
 
   @override
   List<Object?> get props => [name, children];
-
-  void addAction(RouteAction action) {
-    _actions.add(action);
-  }
 }
 
 class ParametricNode extends Node {
@@ -73,9 +66,7 @@ class ParametricNode extends Node {
     _definitions.add(defn);
   }
 
-  /// This will return false if the definition is known
-  void addNewDefinition(String part, {bool terminal = false}) {
-    final defn = ParameterDefinition.from(part, terminal: terminal);
+  void addNewDefinition(ParameterDefinition defn) {
     final existing =
         _definitions.firstWhereOrNull((e) => e.isExactExceptName(defn));
     if (existing != null) {

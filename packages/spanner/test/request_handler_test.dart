@@ -6,7 +6,7 @@ void main() {
     final app = Pharaoh()
       ..get('/users/<userId>', (req, res) => res.json(req.params))
       ..get('/home/chima', (req, res) => res.ok('Okay 🚀'))
-      ..use((req, res, next) => next());
+      ..post('/home/strange', (req, res) => res.ok('Post something 🚀'));
 
     await (await request(app))
         .get('/users/234')
@@ -18,6 +18,19 @@ void main() {
         .get('/home/chima')
         .expectStatus(200)
         .expectBody('Okay 🚀')
+        .test();
+
+    await (await request(app))
+        .post('/home/strange', {})
+        .expectStatus(200)
+        .expectBody('Post something 🚀')
+        .test();
+
+    await (await request(app))
+        .get('/something-new-is-here')
+        .expectStatus(404)
+        .expectBody(
+            '{"path":"/something-new-is-here","method":"GET","message":"No handlers registered for path: /something-new-is-here"}')
         .test();
   });
 }

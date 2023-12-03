@@ -1,8 +1,9 @@
 import 'dart:async';
 
 import 'package:pharaoh/pharaoh.dart';
-import '../constraint/constraint.dart';
-import '../helpers/parametric.dart';
+import '../route/action.dart';
+import '../parametric/definition.dart';
+import '../parametric/utils.dart';
 import 'node.dart';
 
 class RouterConfig {
@@ -27,35 +28,13 @@ class Router {
     this.config = const RouterConfig(),
   });
 
-  void on(
-    HTTPMethod method,
-    String path,
-    RouteHandler handler, {
-    bool debug = false,
-  }) {
-    return on_(
-      method,
-      path,
-      RouteAction(handler, constraints: [httpMethodConstraint(method)]),
-    );
+  void on(HTTPMethod method, String path, RouteHandler handler) {
+    return on_(path, RouteAction(handler, method: method));
   }
 
-  void on_(
-    HTTPMethod method,
-    String path,
-    RouteAction action, {
-    bool debug = false,
-  }) {
+  void on_(String path, RouteAction action) {
     path = _cleanPath(path);
     Node root = _root;
-
-    StringBuffer debugLog = StringBuffer();
-
-    void devlog(String message) {
-      if (debug) debugLog.writeln(message.toLowerCase());
-    }
-
-    devlog('Building node tree for --------- $path --------------');
 
     final parts = path.split('/');
     for (int i = 0; i < parts.length; i++) {
@@ -73,12 +52,10 @@ class Router {
 
       void assignNewRoot(Node node) {
         root = root.addChildAndReturn(key, node);
-        devlog('- Root node is now ${node.name}');
       }
 
       var child = root.children[part];
       if (child != null) {
-        devlog('- Found static node for $part');
         assignNewRoot(child);
       } else {
         if (part.isStatic) {
@@ -98,48 +75,39 @@ class Router {
 
         final paramNode = root.paramNode;
         if (paramNode == null) {
-          devlog('- No existing parametric on ${root.name} so we create one');
-
-          final defn = ParameterDefinition.from(part, terminal: isLastPart);
-          if (isLastPart) defn.action = action;
+          final defn =
+              ParameterDefinition.from(routePart, terminal: isLastPart);
+          if (isLastPart) defn.addAction(action);
 
           assignNewRoot(ParametricNode(defn));
           continue;
         }
 
-        paramNode.addNewDefinition(routePart, terminal: isLastPart);
+        final defn = ParameterDefinition.from(routePart, terminal: isLastPart);
+        if (isLastPart) defn.addAction(action);
+        paramNode.addNewDefinition(defn);
 
         assignNewRoot(paramNode);
       }
     }
 
-    /// parametric nodes being terminal is determined
-    /// by the exact definition that matched
-    if (root is StaticNode) {
+    /// parametric nodes being terminal is determined its definitions
+    if (root is StaticNode || root is WildcardNode) {
       (root as StaticNode)
         ..addAction(action)
         ..terminal = true;
     }
-
-    if (debug) print(debugLog);
   }
 
-  Future<Iterable<RouteHandler>?> find(
+  Future<RouteResult?> find(
     Request req,
     Response res, {
     bool debug = false,
   }) async {
-    final node = lookup(req.method, req.path);
-    if (node is! StaticNode) return null;
-
-    return node.actions
-        .where((e) => e.matches(req))
-        .toList()
-        .map((e) => e.handler)
-        .toList();
+    return lookup(req.method, req.path);
   }
 
-  Node? lookup(HTTPMethod method, String path, {bool debug = false}) {
+  RouteResult? lookup(HTTPMethod method, String path, {bool debug = false}) {
     Node rootNode = _root;
     String route = _cleanPath(path);
 
@@ -162,7 +130,7 @@ class Router {
       if (!config.caseSensitive) routePart = routePart.toLowerCase();
 
       final hasChild = rootNode.hasChild(routePart);
-      final isEndOfPath = i == (parts.length - 1);
+      final isLastPart = i == (parts.length - 1);
 
       void useWildcard(WildcardNode wildcard) {
         resolvedParams['*'] = parts.sublist(i).join('/');
@@ -194,10 +162,10 @@ class Router {
         }
 
         devlog(
-            '- Finding Defn for $routePart        -> terminal?    $isEndOfPath');
+            '- Finding Defn for $routePart        -> terminal?    $isLastPart');
 
         final paramDefn = paramNode.findMatchingDefinition(routePart,
-            shouldBeTerminal: isEndOfPath);
+            shouldBeTerminal: isLastPart);
 
         devlog('    * parametric defn:         ${paramDefn.toString()}');
 
@@ -216,9 +184,9 @@ class Router {
         resolvedParams.addAll(params);
         rootNode = paramNode;
 
-        if (paramDefn.terminal) {
+        if (isLastPart && paramDefn.terminal) {
           rootNode.terminal = true;
-          break;
+          return RouteResult(resolvedParams, paramDefn.getActions(method));
         }
       }
     }
@@ -226,7 +194,14 @@ class Router {
     if (debug) print(debugLog);
 
     if (!rootNode.terminal) return null;
-    return rootNode..params = resolvedParams;
+
+    final List<RouteHandler> handlers = switch (rootNode.runtimeType) {
+      StaticNode => (rootNode as StaticNode).getActions(method),
+      WildcardNode => (rootNode as WildcardNode).getActions(method),
+      _ => [],
+    };
+
+    return RouteResult(resolvedParams, handlers);
   }
 
   FutureOr<HandlerResult?> resolve(Request req, Response res) async {
@@ -356,4 +331,11 @@ class Router {
 
     return path.substring(1);
   }
+}
+
+class RouteResult {
+  final Map<String, dynamic> params;
+  final List<RouteHandler> handlers;
+
+  const RouteResult(this.params, this.handlers);
 }
