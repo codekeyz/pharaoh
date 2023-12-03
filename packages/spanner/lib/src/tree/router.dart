@@ -25,12 +25,19 @@ class Spanner {
   final RouterConfig config;
   final Node _root = StaticNode('/');
 
+  int _currentIndex = 0;
+
   Spanner({
     this.config = const RouterConfig(),
   });
 
   void on(HTTPMethod method, String path, RouteHandler handler) {
-    return on_(path, RouteAction(handler, method: method));
+    _currentIndex++;
+
+    return on_(
+      path,
+      RouteAction(handler, method: method, index: _currentIndex),
+    );
   }
 
   void on_(String path, RouteAction action) {
@@ -100,7 +107,15 @@ class Spanner {
     String route = _cleanPath(path);
 
     Map<String, dynamic> resolvedParams = {};
-    List<RouteHandler> wildcardHandlers = [];
+    List<IndexedHandler> wildcardHandlers = [];
+
+    List<RouteHandler> getResults(List<IndexedHandler> handlers) {
+      final resultingHandlers = [
+        ...handlers,
+        ...wildcardHandlers,
+      ]..sort((a, b) => a.index.compareTo(b.index));
+      return resultingHandlers.map((e) => e.value).toList();
+    }
 
     final debugLog = StringBuffer("\n");
 
@@ -187,9 +202,11 @@ class Spanner {
 
         if (isLastPart && paramDefn.terminal) {
           rootNode.terminal = true;
+          final hdlrs = paramDefn.getActions(method);
+
           return RouteResult(
             resolvedParams,
-            paramDefn.getActions(method),
+            getResults(hdlrs),
             actual: paramDefn,
           );
         }
@@ -198,17 +215,13 @@ class Spanner {
 
     if (!rootNode.terminal) return null;
 
-    final List<RouteHandler> handlers = switch (rootNode.runtimeType) {
+    final List<IndexedHandler> handlers = switch (rootNode.runtimeType) {
       StaticNode => (rootNode as StaticNode).getActions(method),
       WildcardNode => (rootNode as WildcardNode).getActions(method),
       _ => [],
     };
 
-    return RouteResult(
-      resolvedParams,
-      [...wildcardHandlers, ...handlers],
-      actual: rootNode,
-    );
+    return RouteResult(resolvedParams, getResults(handlers), actual: rootNode);
   }
 
   void printTree() {

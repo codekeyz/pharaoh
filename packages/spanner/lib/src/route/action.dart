@@ -1,17 +1,24 @@
 import 'package:equatable/equatable.dart';
 import 'package:pharaoh/pharaoh.dart';
 
+typedef Indexed<T> = ({int index, T value});
+
+typedef IndexedHandler = Indexed<RouteHandler>;
+
 class RouteAction extends Equatable {
   final HTTPMethod method;
   final RouteHandler handler;
+  final int index;
 
-  const RouteAction(this.handler, {required this.method});
+  const RouteAction(
+    this.handler, {
+    required this.method,
+    required this.index,
+  });
 
   @override
   List<Object?> get props => [method];
 }
-
-typedef IndexedHandler = ({int index, RouteHandler hdler});
 
 mixin RouteActionMixin {
   final Map<HTTPMethod, List<IndexedHandler>> methodActionsMap = {};
@@ -20,9 +27,7 @@ mixin RouteActionMixin {
 
   bool hasMethod(HTTPMethod method) => methodActionsMap.containsKey(method);
 
-  int _currentIndex = 0;
-
-  List<RouteHandler> getActions(HTTPMethod method) {
+  List<IndexedHandler> getActions(HTTPMethod method) {
     if (methodActionsMap.isEmpty) return [];
 
     final hdlersForMethod = methodActionsMap[method] ?? [];
@@ -30,18 +35,17 @@ mixin RouteActionMixin {
 
     /// sorting is done to ensure we maintain the order in-which handlers
     /// where added.
-    final result = [
+    return [
       if (allHandlers.isNotEmpty) ...allHandlers,
       if (hdlersForMethod.isNotEmpty) ...hdlersForMethod,
     ]..sort((a, b) => a.index.compareTo(b.index));
-
-    return result.map((e) => e.hdler).toList();
   }
 
   void addAction(RouteAction action) {
     final method = action.method;
-    final actionsList = methodActionsMap[method] ?? [];
-    actionsList.add((index: _currentIndex++, hdler: action.handler));
+    final List<IndexedHandler> actionsList = methodActionsMap[method] ?? [];
+
+    actionsList.add((index: action.index, value: action.handler));
     methodActionsMap[method] = actionsList;
   }
 }
