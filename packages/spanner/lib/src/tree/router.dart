@@ -33,16 +33,17 @@ class Router {
     RouteHandler handler, {
     bool debug = false,
   }) {
-    final constraints = [httpMethodConstraint(method)];
-
-    return on_(method, path, handler, constraints: constraints);
+    return on_(
+      method,
+      path,
+      RouteAction(handler, constraints: [httpMethodConstraint(method)]),
+    );
   }
 
   void on_(
     HTTPMethod method,
     String path,
-    RouteHandler handler, {
-    List<RouteConstraint> constraints = const [],
+    RouteAction action, {
     bool debug = false,
   }) {
     path = _cleanPath(path);
@@ -100,7 +101,7 @@ class Router {
           devlog('- No existing parametric on ${root.name} so we create one');
 
           final defn = ParameterDefinition.from(part, terminal: isLastPart);
-          if (isLastPart) defn.handler = handler;
+          if (isLastPart) defn.action = action;
 
           assignNewRoot(ParametricNode(defn));
           continue;
@@ -116,19 +117,29 @@ class Router {
     /// by the exact definition that matched
     if (root is StaticNode) {
       (root as StaticNode)
-        ..addHandler(handler)
-        ..withConstraints(constraints)
+        ..addAction(action)
         ..terminal = true;
     }
 
     if (debug) print(debugLog);
   }
 
-  FutureOr<Node?> lookup(
-    HTTPMethod method,
-    String path, {
+  Future<Iterable<RouteHandler>?> find(
+    Request req,
+    Response res, {
     bool debug = false,
   }) async {
+    final node = lookup(req.method, req.path);
+    if (node is! StaticNode) return null;
+
+    return node.actions
+        .where((e) => e.matches(req))
+        .toList()
+        .map((e) => e.handler)
+        .toList();
+  }
+
+  Node? lookup(HTTPMethod method, String path, {bool debug = false}) {
     Node rootNode = _root;
     String route = _cleanPath(path);
 
@@ -257,8 +268,8 @@ class Router {
         rootNode = child;
 
         /// execution block
-        final canProceed = await executeAndCheckCanProceed(child.handlers);
-        if (!canProceed) break;
+        // final canProceed = await executeAndCheckCanProceed(child.handlers);
+        // if (!canProceed) break;
       } else {
         final paramNode = rootNode.paramNode;
         if (paramNode == null) {
@@ -275,9 +286,9 @@ class Router {
           rootNode = paramNode.getChild(routePart);
 
           /// execution block
-          final canProceed = await executeAndCheckCanProceed(
-              (rootNode as StaticNode).handlers);
-          if (!canProceed) break;
+          // final canProceed = await executeAndCheckCanProceed(
+          //     (rootNode as StaticNode).handlers);
+          // if (!canProceed) break;
           continue;
         }
 
@@ -295,11 +306,11 @@ class Router {
         rootNode = paramNode;
 
         /// execution block
-        final hdler = paramDefn.handler;
-        if (hdler != null) {
-          final canProceed = await executeAndCheckCanProceed([hdler]);
-          if (!canProceed) break;
-        }
+        // final hdler = paramDefn.handler;
+        // if (hdler != null) {
+        //   final canProceed = await executeAndCheckCanProceed([hdler]);
+        //   if (!canProceed) break;
+        // }
 
         if (paramDefn.terminal) {
           rootNode.terminal = true;
