@@ -1,11 +1,11 @@
 // ignore: depend_on_referenced_packages
 import 'package:meta/meta.dart';
-
 import 'package:pharaoh/pharaoh.dart';
+
+import 'node.dart';
 import '../route/action.dart';
 import '../parametric/definition.dart';
 import '../parametric/utils.dart';
-import 'node.dart';
 
 class RouterConfig {
   final bool caseSensitive;
@@ -23,75 +23,94 @@ class RouterConfig {
 
 class Spanner {
   final RouterConfig config;
-  final Node _root = StaticNode('/');
+  late final Node _root;
 
   int _currentIndex = 0;
 
-  Spanner({
-    this.config = const RouterConfig(),
-  });
+  Spanner({this.config = const RouterConfig()})
+      : _root = StaticNode(config.basePath);
 
   void on(HTTPMethod method, String path, RouteHandler handler) {
     _currentIndex++;
 
-    return on_(
+    return _on(
       path,
       RouteAction(handler, method: method, index: _currentIndex),
     );
   }
 
-  void on_(String path, RouteAction action) {
+  /// Given the current segment in a route, this method figures
+  /// out which node to create as a child to the current root node [root]
+  ///
+  /// TLDR -> we figure out which node to create and when we find or create that node,
+  /// it then becomes our root node.
+  /// - eg1: when given `users` in `/users`
+  /// we will attempt searching for a child, if not found, will create
+  /// a new [StaticNode] on the current root [root] and then return that.
+  ///
+  ///- eg2: when given `<userId>` in `/users/<userId>`
+  ///we will find a static child `users` or create one, then proceed to search
+  ///for a [ParametricNode] on the current root [root]. If found, we fill add a new
+  ///definition, or create a new [ParametricNode] with this definition.
+  Node _computeNode(
+    Node root,
+    String routePart, {
+    bool isLastSegment = false,
+    required String fullPath,
+    required RouteAction action,
+  }) {
+    String part = routePart;
+    if (!config.caseSensitive) part = part.toLowerCase();
+
+    final key = part.isParametric ? '<:>' : part;
+
+    var child = root.children[part];
+    if (child != null) {
+      return root.addChildAndReturn(key, child);
+    } else {
+      if (part.isStatic) {
+        return root.addChildAndReturn(key, StaticNode(key));
+      } else if (part.isWildCard) {
+        if (!isLastSegment) {
+          throw ArgumentError.value(fullPath, null,
+              'Route definition is not valid. Wildcard must be the end of the route');
+        }
+
+        return root.addChildAndReturn(key, WildcardNode());
+      }
+
+      final paramNode = root.paramNode;
+      if (paramNode == null) {
+        final defn =
+            ParameterDefinition.from(routePart, terminal: isLastSegment);
+        if (isLastSegment) defn.addAction(action);
+
+        return root.addChildAndReturn(key, ParametricNode(defn));
+      }
+
+      final defn = ParameterDefinition.from(routePart, terminal: isLastSegment);
+      if (isLastSegment) defn.addAction(action);
+
+      return root.addChildAndReturn(key, paramNode..addNewDefinition(defn));
+    }
+  }
+
+  void _on(String path, RouteAction action) {
     path = _cleanPath(path);
     Node root = _root;
 
-    final parts = path.split('/');
-    for (int i = 0; i < parts.length; i++) {
-      final String routePart = parts[i];
+    final pathSegments = path == '/' ? ['/'] : path.split('/');
 
-      String part = routePart;
-      if (!config.caseSensitive) part = part.toLowerCase();
+    for (int i = 0; i < pathSegments.length; i++) {
+      final segment = pathSegments[i];
 
-      final key = part.isParametric ? '<:>' : part;
-      final isLastPart = i == (parts.length - 1);
-
-      void assignNewRoot(Node node) {
-        root = root.addChildAndReturn(key, node);
-      }
-
-      var child = root.children[part];
-      if (child != null) {
-        assignNewRoot(child);
-      } else {
-        if (part.isStatic) {
-          child = StaticNode(key);
-          assignNewRoot(child);
-          continue;
-        } else if (part.isWildCard) {
-          if (!isLastPart) {
-            throw ArgumentError.value(path, null,
-                'Route definition is not valid. Wildcard must be the end of the route');
-          }
-
-          child = WildcardNode();
-          assignNewRoot(child);
-          continue;
-        }
-
-        final paramNode = root.paramNode;
-        if (paramNode == null) {
-          final defn =
-              ParameterDefinition.from(routePart, terminal: isLastPart);
-          if (isLastPart) defn.addAction(action);
-
-          assignNewRoot(ParametricNode(defn));
-          continue;
-        }
-
-        final defn = ParameterDefinition.from(routePart, terminal: isLastPart);
-        if (isLastPart) defn.addAction(action);
-
-        assignNewRoot(paramNode..addNewDefinition(defn));
-      }
+      root = _computeNode(
+        root,
+        segment,
+        fullPath: path,
+        action: action,
+        isLastSegment: i == (pathSegments.length - 1),
+      );
     }
 
     /// parametric nodes being terminal is determined its definitions
@@ -127,16 +146,16 @@ class Spanner {
 
     devlog('Finding node for ---------  ${method.name} $route ------------\n');
 
-    final parts = route.split('/');
+    final routeSegments = route == '/' ? ['/'] : route.split('/');
 
-    for (int i = 0; i < parts.length; i++) {
-      final String currPart = parts[i];
+    for (int i = 0; i < routeSegments.length; i++) {
+      final String currPart = routeSegments[i];
 
       var routePart = currPart;
       if (!config.caseSensitive) routePart = routePart.toLowerCase();
 
       final hasChild = rootNode.hasChild(routePart);
-      final isLastPart = i == (parts.length - 1);
+      final isLastPart = i == (routeSegments.length - 1);
 
       final wildcard = rootNode.wildcardNode;
       if (wildcard != null) {
@@ -145,7 +164,7 @@ class Spanner {
       }
 
       void useWildcard(WildcardNode wildcard) {
-        resolvedParams['*'] = parts.sublist(i).join('/');
+        resolvedParams['*'] = routeSegments.sublist(i).join('/');
         rootNode = wildcard;
       }
 
@@ -240,6 +259,8 @@ class Spanner {
       throw ArgumentError.value(
           path, null, 'Route registration must start with `/`');
     }
+    if (path.length == 1) return path;
+
     if (config.ignoreDuplicateSlashes) {
       path = path.replaceAll(RegExp(r'/+'), '/');
     }

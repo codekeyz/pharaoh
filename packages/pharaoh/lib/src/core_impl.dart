@@ -43,7 +43,7 @@ class _$PharaohImpl extends RoutePathDefinitionContract<Pharaoh>
   }
 
   @override
-  Pharaoh group(final String path, final RouteHandler handler) {
+  Pharaoh group(final String path, final RoutePathDefinitionContract handler) {
     // final route = Route.path(path);
 
     // if (handler is PharaohRouter) {
@@ -96,13 +96,12 @@ class _$PharaohImpl extends RoutePathDefinitionContract<Pharaoh>
     if (result.canNext == false) return;
 
     final res = result.reqRes.res;
-    if (res.ended) return forward(httpReq, res);
+    if (res.ended) {
+      return forward(httpReq, res);
+    }
 
-    return forward(
-        httpReq,
-        res
-            .type(ContentType.json)
-            .notFound());
+    /// TODO(codekeyz) If we get here, then it means the response was never ended.
+    /// we should alert the developer
   }
 
   Future<HandlerResult> resolveRequest(HttpRequest request) async {
