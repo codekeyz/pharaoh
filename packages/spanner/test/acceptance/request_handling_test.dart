@@ -46,4 +46,34 @@ void main() {
         .expectBody('Item deleted')
         .test();
   });
+
+  group('should execute middleware and request', () {
+    test('of level 1', () async {
+      final app = Pharaoh()
+        ..use((req, res, next) => next(req..setParams('name', 'Chima')))
+        ..get(
+            '/foo/bar', (req, res) => res.ok('Name: ${req.params['name']} 🚀'));
+
+      await (await request(app))
+          .get('/foo/bar')
+          .expectStatus(200)
+          .expectBody('Name: Chima 🚀')
+          .test();
+    });
+    test('of level 2', () async {
+      final app = Pharaoh()
+        ..use((req, res, next) => next(req..setParams('name', 'Chima')))
+        ..use((req, res, next) {
+          print(req.params);
+
+          next(req..setParams('age', '14'));
+        })
+        ..get('/foo/bar', (req, res) => res.json(req.params));
+
+      await (await request(app))
+          .get('/foo/bar')
+          .expectStatus(200)
+          .expectBody({'name': 'Chima', 'age': '14'}).test();
+    });
+  });
 }

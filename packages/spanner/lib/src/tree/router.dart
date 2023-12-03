@@ -44,11 +44,7 @@ class Spanner {
       String part = routePart;
       if (!config.caseSensitive) part = part.toLowerCase();
 
-      final key = part.isParametric
-          ? '<:>'
-          : part.isWildCard
-              ? '<*>'
-              : part;
+      final key = part.isParametric ? '<:>' : part;
       final isLastPart = i == (parts.length - 1);
 
       void assignNewRoot(Node node) {
@@ -104,6 +100,7 @@ class Spanner {
     String route = _cleanPath(path);
 
     Map<String, dynamic> resolvedParams = {};
+    List<RouteHandler> wildcardHandlers = [];
 
     final debugLog = StringBuffer("\n");
 
@@ -125,6 +122,12 @@ class Spanner {
 
       final hasChild = rootNode.hasChild(routePart);
       final isLastPart = i == (parts.length - 1);
+
+      final wildcard = rootNode.wildcardNode;
+      if (wildcard != null) {
+        final handlers = wildcard.getActions(method);
+        wildcardHandlers.addAll(handlers);
+      }
 
       void useWildcard(WildcardNode wildcard) {
         resolvedParams['*'] = parts.sublist(i).join('/');
@@ -201,7 +204,11 @@ class Spanner {
       _ => [],
     };
 
-    return RouteResult(resolvedParams, handlers, actual: rootNode);
+    return RouteResult(
+      resolvedParams,
+      [...wildcardHandlers, ...handlers],
+      actual: rootNode,
+    );
   }
 
   void printTree() {

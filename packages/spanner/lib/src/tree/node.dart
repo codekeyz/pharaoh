@@ -121,11 +121,14 @@ class ParametricNode extends Node {
   }
 }
 
+// ignore: constant_identifier_names
+const String WILDCARD_SYMBOL = '*';
+
 class WildcardNode extends StaticNode {
-  WildcardNode() : super('*');
+  WildcardNode() : super(WILDCARD_SYMBOL);
 
   @override
-  String get name => 'wildcard(*)';
+  String get name => 'wildcard($WILDCARD_SYMBOL)';
 
   @override
   List<Object?> get props => [name];
