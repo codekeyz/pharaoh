@@ -231,12 +231,12 @@ class Router {
   }
 }
 
-class RouteResult<T> {
+class RouteResult {
   final Map<String, dynamic> params;
   final List<RouteHandler> handlers;
 
   @visibleForTesting
-  final T? actual;
+  final dynamic actual;
 
   const RouteResult(
     this.params,
