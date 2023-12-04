@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:dart_firebase_admin/firestore.dart';
 import 'package:pharaoh_examples/firebase/handlers/handler.utils.dart';
 import 'package:pharaoh_examples/firebase/handlers/pagination.dart';
