@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:test/test.dart';
@@ -49,6 +50,10 @@ class HttpResponseExpection
   }
 
   HttpResponseExpection expectBody(dynamic matcher) {
+    if (matcher is! Matcher && matcher is! String) {
+      matcher = jsonEncode(matcher);
+    }
+
     final MatchCase value = (value: (resp) => resp.body, matcher: matcher);
     _matchcases.add(value);
     return this;

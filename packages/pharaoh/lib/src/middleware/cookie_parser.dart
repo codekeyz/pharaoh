@@ -4,7 +4,7 @@ import 'package:pharaoh/src/utils/utils.dart';
 
 import '../http/cookie.dart';
 import '../http/request.dart';
-import '../router/handler.dart';
+import '../router/router_handler.dart';
 
 HandlerFunc cookieParser({CookieOpts opts = const CookieOpts()}) {
   opts.validate();

@@ -4,27 +4,32 @@ import 'package:collection/collection.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:mason_logger/mason_logger.dart';
 import 'package:meta/meta.dart';
+import 'package:spanner/spanner.dart';
 
-import './router/router.dart';
-import './router/route.dart';
-import './router/handler.dart';
-import './http/request.dart';
+import 'router/router_contract.dart';
+import 'router/router_group.dart';
+import 'router/router_handler.dart';
 import './http/response.dart';
 import './middleware/body_parser.dart';
 import './shelf_interop/shelf.dart' as shelf;
 
+import 'router/router_mixin.dart';
+import 'router/router.dart';
+import 'http/request.dart';
+import 'utils/exceptions.dart';
+
 part 'core_impl.dart';
 
-abstract class Pharaoh implements RoutePathDefinitionContract<Pharaoh> {
+abstract class Pharaoh implements RouterContract<Pharaoh> {
   factory Pharaoh() => _$PharaohImpl();
 
-  PharaohRouter router();
+  RouterContract router();
 
-  List<Route> get routes;
+  List<dynamic> get routes;
 
   Uri get uri;
 
-  Pharaoh group(String path, RouteHandler handler);
+  Pharaoh group(String path, RouterContract router);
 
   Future<Pharaoh> listen({int port = 3000});
 
