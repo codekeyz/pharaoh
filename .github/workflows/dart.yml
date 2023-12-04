@@ -21,14 +21,13 @@ jobs:
       - uses: bluefireteam/melos-action@v3
         with:
           run-bootstrap: false
-          melos-version: '3.0.1'
+          melos-version: "3.0.1"
 
-      - name: 'Bootstrap workspace'
+      - name: "Bootstrap workspace"
         run: melos bootstrap
 
       - name: Analyze project source
-        run: melos run analyze 
+        run: melos run analyze
 
       - name: Run tests
         run: melos run tests
-

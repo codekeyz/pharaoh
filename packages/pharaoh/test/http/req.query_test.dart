@@ -11,20 +11,18 @@ void main() {
       await (await request<Pharaoh>(app))
           .get('/?value1=1&value2=2')
           .expectStatus(200)
-          .expectBody('{"value1":"1","value2":"2"}')
-          .test();
+          .expectBody({"value1": "1", "value2": "2"}).test();
     });
   });
 
   test('should pass a param', () async {
-    final app = Pharaoh().get('/:username', (req, res) {
+    final app = Pharaoh().get('/<username>', (req, res) {
       return res.json(req.params);
     });
 
     await (await request<Pharaoh>(app))
         .get('/heyOnuoha')
         .expectStatus(200)
-        .expectBody('{"username":"heyOnuoha"}')
-        .test();
+        .expectBody({"username": "heyOnuoha"}).test();
   });
 }

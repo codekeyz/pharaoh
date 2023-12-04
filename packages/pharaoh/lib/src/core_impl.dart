@@ -1,15 +1,24 @@
 part of 'core.dart';
 
-class _$PharaohImpl implements Pharaoh {
-  late final PharaohRouter _router;
+class _$PharaohImpl extends RouterContract<Pharaoh>
+    with RouteDefinitionMixin<Pharaoh>
+    implements Pharaoh {
   late final HttpServer _server;
   late final Logger _logger;
+  late final PharaohRouter _router;
 
-  _$PharaohImpl()
-      : _logger = Logger(),
-        _router = PharaohRouter() {
-    _router.use(bodyParser);
+  _$PharaohImpl() : _logger = Logger() {
+    final _spanner = Spanner();
+    _router = PharaohRouter(_spanner);
+    useSpanner(_spanner);
+    use(bodyParser);
   }
+
+  @override
+  RouterContract router() => GroupRouter();
+
+  @override
+  List<dynamic> get routes => [];
 
   @override
   Uri get uri {
@@ -35,87 +44,11 @@ class _$PharaohImpl implements Pharaoh {
   }
 
   @override
-  PharaohRouter router() => PharaohRouter();
-
-  @override
-  List<Route> get routes => _router.routes;
-
-  @override
-  Pharaoh delete(String path, RequestHandlerFunc handler) {
-    _router.delete(path, handler);
-    return this;
-  }
-
-  @override
-  Pharaoh get(String path, RequestHandlerFunc handler) {
-    _router.get(path, handler);
-    return this;
-  }
-
-  @override
-  Pharaoh post(String path, RequestHandlerFunc handler) {
-    _router.post(path, handler);
-    return this;
-  }
-
-  @override
-  Pharaoh put(String path, RequestHandlerFunc handler) {
-    _router.put(path, handler);
-    return this;
-  }
-
-  @override
-  Pharaoh head(String path, RequestHandlerFunc handler) {
-    _router.head(path, handler);
-    return this;
-  }
-
-  @override
-  Pharaoh patch(String path, RequestHandlerFunc handler) {
-    _router.patch(path, handler);
-    return this;
-  }
-
-  @override
-  Pharaoh options(String path, RequestHandlerFunc handler) {
-    _router.options(path, handler);
-    return this;
-  }
-
-  @override
-  Pharaoh trace(String path, RequestHandlerFunc handler) {
-    _router.trace(path, handler);
-    return this;
-  }
-
-  @override
-  Pharaoh use(HandlerFunc reqResNext, [Route? route]) {
-    _router.use(reqResNext, route);
-    return this;
-  }
-
-  @override
-  Pharaoh group(final String path, final RouteHandler handler) {
-    final route = Route.path(path);
-
-    if (handler is PharaohRouter) {
-      _router.use((req, res, next) async {
-        final result = await drainRouter(handler.prefix(path), (
-          req: req,
-          res: res,
-        ));
-
-        if (!result.canNext) {
-          next();
-          return;
-        }
-
-        next(result.reqRes.res);
-      }, route);
-      return this;
+  Pharaoh group(final String path, final RouterContract router) {
+    if (router is! GroupRouter) {
+      throw PharaohException.value('Router is not an instance of GroupRouter');
     }
-
-    _router.use(handler.handler, route);
+    _router.spanner.prefix(path, router.spanner.root);
     return this;
   }
 
@@ -144,32 +77,28 @@ class _$PharaohImpl implements Pharaoh {
     httpReq.response.headers.chunkedTransferEncoding = false;
     httpReq.response.headers.clear();
 
-    final req = Request.from(httpReq);
-    final result =
-        await drainRouter(_router, (req: req, res: Response.from(httpReq)));
+    final result = await resolveRequest(httpReq);
     if (result.canNext == false) return;
 
     final res = result.reqRes.res;
-    if (res.ended) return forward(httpReq, res);
+    if (res.ended) {
+      return forward(httpReq, res);
+    }
 
-    return forward(
-        httpReq,
-        res
-            .type(ContentType.json)
-            .notFound("No handlers registered for path: ${req.path}"));
+    /// TODO(codekeyz) If we get here, then it means the response was never ended.
+    /// we should alert the developer
   }
 
-  Future<HandlerResult> drainRouter(
-    PharaohRouter routerX,
-    ReqRes reqRes,
-  ) async {
+  Future<HandlerResult> resolveRequest(HttpRequest request) async {
+    final req = Request.from(request);
+    final res = Response.from(request);
+
     try {
-      return await routerX.execute(reqRes);
+      return await _router.resolve(req, res);
     } catch (e) {
-      final res = reqRes.res.internalServerError(e.toString());
       return (
         canNext: true,
-        reqRes: (req: reqRes.req, res: res),
+        reqRes: (req: req, res: res.internalServerError(e.toString())),
       );
     }
   }

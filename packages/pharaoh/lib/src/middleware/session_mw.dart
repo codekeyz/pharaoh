@@ -7,7 +7,7 @@ import 'package:uuid/uuid.dart';
 
 import '../http/cookie.dart';
 import '../http/request.dart';
-import '../router/handler.dart';
+import '../router/router_handler.dart';
 import '../utils/utils.dart';
 
 part '../http/session.dart';
@@ -91,3 +91,15 @@ HandlerFunc session({
     return nextWithSession(session);
   };
 }
+
+final ReqResHook sessionPreResponseHook = (ReqRes reqRes) async {
+  var req = reqRes.req, res = reqRes.res;
+  final session = req.session;
+  if (session != null &&
+      (session.saveUninitialized || session.resave || session.modified)) {
+    await session.save();
+    res = res.withCookie(session.cookie!);
+  }
+
+  return (req: req, res: res);
+};
