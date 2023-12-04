@@ -20,8 +20,7 @@ extension ReqResExtension on ReqRes {
         Response => (req: this.req, res: val),
         ReqRes => val,
         Null => this,
-        _ => throw PharaohException.value(
-            'Next Function result can only be Request, Response or ReqRes', val)
+        _ => throw PharaohException.value('Invalid Type used on merge', val)
       };
 }
 
