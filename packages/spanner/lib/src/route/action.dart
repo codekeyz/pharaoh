@@ -40,8 +40,7 @@ mixin RouteActionMixin {
     final hdlersForMethod = store[method] ?? [];
     final allHandlers = store[HTTPMethod.ALL] ?? [];
 
-    /// sorting is done to ensure we maintain the order in-which handlers
-    /// where added.
+    /// sorting is done to ensure we maintain the order in-which handlers were added.
     return [
       if (allHandlers.isNotEmpty) ...allHandlers,
       if (hdlersForMethod.isNotEmpty) ...hdlersForMethod,
