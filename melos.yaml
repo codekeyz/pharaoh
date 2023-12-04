@@ -20,10 +20,6 @@ command:
     runPubGetInParallel: false
 
 scripts:
-  lint:all:
-    run: melos run analyze && melos run format
-    description: Run all static analysis checks.
-
   tests:
     run: |
       melos exec -c 1  -- "dart test ." --fail-fast
@@ -38,10 +34,3 @@ scripts:
     description: |
       Run `dart analyze` in all packages.
        - Note: you can also rely on your IDEs Dart Analysis / Issues window.
-
-  format:
-    run: |
-      dart pub global run flutter_plugin_tools format
-    description: |
-      Formats the code of all packages (Dart).
-       - Requires `flutter_plugin_tools` (`pub global activate flutter_plugin_tools`).
