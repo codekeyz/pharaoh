@@ -46,12 +46,16 @@ abstract class Node with EquatableMixin {
 }
 
 class StaticNode extends Node with RouteActionMixin {
-  final String _name;
+  String _key;
 
   @override
-  String get name => 'static($_name)';
+  String get name => 'static($_key)';
 
-  StaticNode(this._name);
+  StaticNode(this._key);
+
+  void changeKey(String key) {
+    _key = key;
+  }
 
   @override
   List<Object?> get props => [name, children];

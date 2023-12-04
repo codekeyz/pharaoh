@@ -5,9 +5,9 @@ import 'package:spanner/spanner.dart';
 import '../http/request.dart';
 import '../http/response.dart';
 import '../middleware/session_mw.dart';
-import 'handler.dart';
-import 'router_mixin.dart';
 import 'router_contract.dart';
+import 'router_handler.dart';
+import 'router_mixin.dart';
 
 class PharaohRouter extends RouterContract<PharaohRouter>
     with RouteDefinitionMixin {

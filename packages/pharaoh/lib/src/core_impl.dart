@@ -8,13 +8,14 @@ class _$PharaohImpl extends RouterContract<Pharaoh>
   late final PharaohRouter _router;
 
   _$PharaohImpl() : _logger = Logger() {
-    _router = PharaohRouter(Spanner());
-    useSpanner(_router.spanner);
+    final _spanner = Spanner();
+    _router = PharaohRouter(_spanner);
+    useSpanner(_spanner);
     use(bodyParser);
   }
 
   @override
-  RouterContract router() => PharaohRouter(Spanner());
+  RouterContract router() => GroupRouter();
 
   @override
   List<dynamic> get routes => [];
@@ -44,9 +45,8 @@ class _$PharaohImpl extends RouterContract<Pharaoh>
 
   @override
   Pharaoh group(final String path, final RouterContract router) {
-    if (router is! PharaohRouter) {
-      throw PharaohException.value(
-          'Router is not an instance of PharaohRouter');
+    if (router is! GroupRouter) {
+      throw PharaohException.value('Router is not an instance of GroupRouter');
     }
     _router.spanner.prefix(path, router.spanner.root);
     return this;

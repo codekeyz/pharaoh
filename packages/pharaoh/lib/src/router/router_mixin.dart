@@ -1,8 +1,8 @@
 import 'package:spanner/spanner.dart';
 
 import '../http/request.dart';
-import 'handler.dart';
 import 'router_contract.dart';
+import 'router_handler.dart';
 
 mixin RouteDefinitionMixin<T> on RouterContract<T> {
   late final Spanner spanner;

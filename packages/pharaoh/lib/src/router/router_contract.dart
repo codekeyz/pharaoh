@@ -1,5 +1,5 @@
 import '../http/request.dart';
-import 'handler.dart';
+import 'router_handler.dart';
 
 abstract class RouterContract<T> {
   T get(String path, RequestHandlerFunc hdler);

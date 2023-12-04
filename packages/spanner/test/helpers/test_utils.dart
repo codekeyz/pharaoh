@@ -1,4 +1,5 @@
 import 'package:spanner/spanner.dart';
+import 'package:spanner/src/tree/node.dart';
 import 'package:test/expect.dart';
 
 Matcher havingParameters<T>(Map<String, dynamic> params) {

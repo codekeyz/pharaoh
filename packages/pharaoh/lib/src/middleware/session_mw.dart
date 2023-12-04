@@ -7,7 +7,7 @@ import 'package:uuid/uuid.dart';
 
 import '../http/cookie.dart';
 import '../http/request.dart';
-import '../router/handler.dart';
+import '../router/router_handler.dart';
 import '../utils/utils.dart';
 
 part '../http/session.dart';

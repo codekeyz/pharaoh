@@ -3,7 +3,7 @@ import 'package:pharaoh/pharaoh.dart';
 
 typedef Indexed<T> = ({int index, T value});
 
-typedef IndexedHandler = Indexed<RouteHandler>;
+typedef IndexedHandler = Indexed<RouteHandler?>;
 
 class RouteAction extends Equatable {
   final HTTPMethod method;
@@ -20,18 +20,25 @@ class RouteAction extends Equatable {
   List<Object?> get props => [method];
 }
 
+typedef MethodAndHandlerStore = Map<HTTPMethod, List<IndexedHandler>>;
+
 mixin RouteActionMixin {
-  final Map<HTTPMethod, List<IndexedHandler>> methodActionsMap = {};
+  final MethodAndHandlerStore store = {};
 
-  Iterable<HTTPMethod> get methods => methodActionsMap.keys;
+  Iterable<HTTPMethod> get methods => store.keys;
 
-  bool hasMethod(HTTPMethod method) => methodActionsMap.containsKey(method);
+  bool hasMethod(HTTPMethod method) => store.containsKey(method);
+
+  void copyStore(MethodAndHandlerStore newstore) {
+    store.clear();
+    store.addAll(newstore);
+  }
 
   List<IndexedHandler> getActions(HTTPMethod method) {
-    if (methodActionsMap.isEmpty) return [];
+    if (store.isEmpty) return [];
 
-    final hdlersForMethod = methodActionsMap[method] ?? [];
-    final allHandlers = methodActionsMap[HTTPMethod.ALL] ?? [];
+    final hdlersForMethod = store[method] ?? [];
+    final allHandlers = store[HTTPMethod.ALL] ?? [];
 
     /// sorting is done to ensure we maintain the order in-which handlers
     /// where added.
@@ -41,11 +48,10 @@ mixin RouteActionMixin {
     ]..sort((a, b) => a.index.compareTo(b.index));
   }
 
-  void addAction(RouteAction action) {
-    final method = action.method;
-    final List<IndexedHandler> actionsList = methodActionsMap[method] ?? [];
+  void addHandler(HTTPMethod method, IndexedHandler hdlr) {
+    final List<IndexedHandler> actionsList = store[method] ?? [];
 
-    actionsList.add((index: action.index, value: action.handler));
-    methodActionsMap[method] = actionsList;
+    actionsList.add((index: hdlr.index, value: hdlr.value));
+    store[method] = actionsList;
   }
 }
