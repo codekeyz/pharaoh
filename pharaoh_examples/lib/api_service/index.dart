@@ -64,7 +64,7 @@ void main([args]) async {
   app.get('/api/repos', (req, res) => res.json(repos));
 
   /// example: http://localhost:3000/api/user/tobi/repos/?api-key=foo
-  app.get('/api/user/:name/repos', (req, res) {
+  app.get('/api/user/<name>/repos', (req, res) {
     var name = req.params['name'];
     var user = userRepos[name];
 

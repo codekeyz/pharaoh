@@ -170,7 +170,6 @@ class Spanner {
 
   RouteResult? lookup(HTTPMethod method, String path, {bool debug = false}) {
     Node rootNode = _root;
-    String route = _cleanPath(path);
 
     Map<String, dynamic> resolvedParams = {};
     List<IndexedHandler> wildcardHandlers = [];
@@ -187,6 +186,16 @@ class Spanner {
           .toList();
     }
 
+    if (path == BASE_PATH) {
+      rootNode as StaticNode;
+      final wc = rootNode.wildcardNode;
+      if (wc != null) wildcardHandlers.addAll(wc.getActions(method));
+      return RouteResult(
+        resolvedParams,
+        getResults(rootNode.getActions(method)),
+      );
+    }
+
     final debugLog = StringBuffer("\n");
 
     void devlog(String message) {
@@ -194,6 +203,8 @@ class Spanner {
       debugLog.writeln(message.toLowerCase());
       print(debugLog);
     }
+
+    String route = _cleanPath(path);
 
     devlog('Finding node for ---------  ${method.name} $route ------------\n');
 

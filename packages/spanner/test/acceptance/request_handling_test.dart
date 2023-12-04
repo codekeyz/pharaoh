@@ -48,6 +48,18 @@ void main() {
   });
 
   group('execute middleware and request', () {
+    test('on base path /', () async {
+      final app = Pharaoh()
+        ..use((req, res, next) => next(req..setParams('foo', 'bar')))
+        ..get('/',
+            (req, res) => res.json({...req.params, "name": 'Hello World'}));
+
+      await (await request(app))
+          .get('/')
+          .expectStatus(200)
+          .expectBody({'foo': 'bar', 'name': 'Hello World'}).test();
+    });
+
     test('of level 1', () async {
       final app = Pharaoh()
         ..use((req, res, next) => next(req..setParams('name', 'Chima')))
