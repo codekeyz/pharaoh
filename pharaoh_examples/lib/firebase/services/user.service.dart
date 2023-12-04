@@ -1,5 +1,4 @@
 import 'package:dart_firebase_admin/auth.dart';
-import 'package:dart_firebase_admin/firestore.dart';
 
 import '../domain/requests/createUser.request.dart';
 import '../handlers/handler.utils.dart';
@@ -19,8 +18,8 @@ class UserService {
       ));
 
       return savedUser;
-    } on FirebaseFirestoreAdminException catch (err) {
-      throw ApiError(err.code, HttpStatus.internalServerError);
+    } on FirebaseAuthAdminException catch (err) {
+      throw ApiError(err.errorCode.message, HttpStatus.internalServerError);
     }
   }
 }

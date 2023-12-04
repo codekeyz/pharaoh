@@ -1,8 +1,8 @@
 import 'package:pharaoh/pharaoh.dart';
 
+import '../domain/requests/createTodo.request.dart';
 import '../handlers/handler.utils.dart';
 import '../handlers/response.handler.dart';
-import '../domain/models/todo.model.dart';
 import '../services/todo.service.dart';
 import '../utils.dart';
 
@@ -12,13 +12,17 @@ class TodoController {
   static addTodo($Request req, $Response res) async {
     try {
       if (req.body is! Map) {
-        throw ApiError('Invalid request body', HttpStatus.badRequest);
+        throw ApiError('Bad request body', HttpStatus.badRequest);
+      }
+
+      if (!req.body.containsKey('content')) {
+        throw ApiError('Bad request body', HttpStatus.badRequest);
       }
 
       String content = req.body['content'];
 
       // create a fake id but will later change it to be the document's id
-      final todo = Todo(id: DateTime.now().toIso8601String(), content: content);
+      final todo = CreateTodoRequest(content, false);
 
       final savedTodo = await TodoService.addTodo(todo);
 
@@ -54,7 +58,7 @@ class TodoController {
 
       return ResponseHandler(res).successWithData(
         updatedTodo.toJson(),
-        message: 'Todo has been updated successfully',
+        message: 'Todo updated successfully',
       );
     } on ApiError catch (err) {
       return ResponseHandler(res).error(err);
@@ -75,11 +79,23 @@ class TodoController {
 
   static listTodos($Request req, $Response res) async {
     try {
-      final todosList = await TodoService.listTodos();
+      int page = 1;
+      int limit = 2;
 
-      return ResponseHandler(res).successWithData(
-        List.from(todosList.map((todo) => todo.toJson())),
+      if (req.query.containsKey('page')) {
+        page = int.parse(req.query['page']);
+      }
+
+      if (req.query.containsKey('limit')) {
+        limit = int.parse(req.query['limit']);
+      }
+
+      final todosList = await TodoService.listTodos(
+        page: page,
+        limit: limit,
       );
+
+      return ResponseHandler(res).successWithData(todosList.toJson());
     } on ApiError catch (err) {
       return ResponseHandler(res).error(err);
     }

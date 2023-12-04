@@ -15,7 +15,7 @@ class ResponseHandler {
 
   error(ApiError error) {
     return res.status(error.statusCode).json({
-      "success": true,
+      "success": false,
       "message": error.message,
     });
   }

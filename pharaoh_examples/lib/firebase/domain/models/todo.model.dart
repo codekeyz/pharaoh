@@ -1,12 +1,16 @@
 class Todo {
   String id;
-  late String content;
+  String content;
   bool isCompleted;
+  DateTime createdAt;
+  DateTime updatedAt;
 
   Todo({
     required this.id,
     required this.content,
-    this.isCompleted = false,
+    required this.isCompleted,
+    required this.createdAt,
+    required this.updatedAt,
   });
 
   Map<String, dynamic> toJson() {
@@ -14,6 +18,8 @@ class Todo {
       'id': id,
       "content": content,
       "isCompleted": isCompleted,
+      "createdAt": createdAt.toUtc().toIso8601String(),
+      "updatedAt": updatedAt.toUtc().toIso8601String(),
     };
   }
 
@@ -22,6 +28,8 @@ class Todo {
       id: json['id'],
       content: json['content'],
       isCompleted: json['isCompleted'],
+      createdAt: DateTime.parse(json["createdAt"]),
+      updatedAt: DateTime.parse(json['updatedAt']),
     );
   }
 }

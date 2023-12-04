@@ -1,27 +1,44 @@
+import 'dart:math';
+
 import 'package:dart_firebase_admin/firestore.dart';
 import 'package:pharaoh_examples/firebase/handlers/handler.utils.dart';
+import 'package:pharaoh_examples/firebase/handlers/pagination.dart';
 
 import '../domain/models/todo.model.dart';
+import '../domain/requests/createTodo.request.dart';
 import '../utils.dart';
 import '../locator/locator.dart';
 
 class TodoService {
   TodoService._();
 
-  static Future<Todo> addTodo(Todo todo) async {
+  static Future<Todo> addTodo(CreateTodoRequest request) async {
     try {
       final todoCollection = locator.store.collection('todos');
 
-      final docRef = await todoCollection.add(todo.toJson());
+      final docRef = await todoCollection.add(request.toJson());
 
-      // change the id to the document id
-      todo.id = docRef.id;
+      final snapshot = await docRef.get();
+
+      final result = snapshot.data();
+
+      final todo = Todo(
+        id: snapshot.id,
+        content: result!['content'] as String,
+        isCompleted: result['isCompleted'] as bool,
+        createdAt: DateTime.fromMillisecondsSinceEpoch(
+          snapshot.createTime!.seconds * 1000,
+        ),
+        updatedAt: DateTime.fromMillisecondsSinceEpoch(
+          snapshot.updateTime!.seconds * 1000,
+        ),
+      );
 
       await docRef.set(todo.toJson());
 
-      final result = (await docRef.get()).data();
+      final finalResult = (await docRef.get()).data();
 
-      return Todo.fromJson(result!);
+      return Todo.fromJson(finalResult!);
     } on FirebaseFirestoreAdminException catch (err) {
       throw ApiError(err.code, HttpStatus.internalServerError);
     }
@@ -44,6 +61,7 @@ class TodoService {
       await docRef.update({
         "content": content ?? doc['content'],
         "isCompleted": isCompleted ?? doc['isCompleted'],
+        "updatedAt": DateTime.now().toUtc().toIso8601String(),
       });
 
       final result = (await docRef.get()).data();
@@ -74,11 +92,18 @@ class TodoService {
     }
   }
 
-  static Future<List<Todo>> listTodos() async {
+  static Future<Pagination> listTodos(
+      {required int page, required int limit}) async {
     try {
       final collectionRef = locator.store.collection('todos');
 
-      final todosSnapshot = await collectionRef.get();
+      final totalCount = (await collectionRef.listDocuments()).length;
+
+      final todosSnapshot = await collectionRef
+          .limit(limit)
+          .offset((page - 1) * limit)
+          .orderBy('createdAt', descending: false)
+          .get();
 
       List<Todo> todos = [];
 
@@ -86,7 +111,11 @@ class TodoService {
         todos.add(Todo.fromJson(todo.data()));
       }
 
-      return todos;
+      return Pagination(
+        data: List.from(todos.map((e) => e.toJson())),
+        count: totalCount,
+        page: page,
+      );
     } on FirebaseFirestoreAdminException catch (err) {
       throw ApiError(err.code, HttpStatus.internalServerError);
     }
