@@ -124,7 +124,7 @@ class _$PharaohImpl implements Pharaoh {
     final progress = _logger.progress('Starting server');
 
     try {
-      _server = await HttpServer.bind('172.20.10.4', port);
+      _server = await HttpServer.bind('localhost', port);
       _server.listen(handleRequest);
       progress.complete('Server start on PORT: $port -> ${uri.toString()}');
     } catch (e) {
