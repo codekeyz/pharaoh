@@ -7,7 +7,7 @@ import '../utils.dart';
 final todoRoutes = app.router()
   ..use(jwtAuth(secret: () => SecretKey(envVariables['JWT_SECRET'])))
   ..put('/add', TodoController.addTodo)
-  ..patch('/update/:id', TodoController.updateTodo)
-  ..get('/retrieve/:id', TodoController.getSingleTodo)
+  ..patch("/update/<id>", TodoController.updateTodo)
+  ..get('/retrieve/<id>', TodoController.getSingleTodo)
   ..get('/list', TodoController.listTodos)
-  ..delete('/delete/:id', TodoController.deleteTodo);
+  ..delete('/delete/<id>', TodoController.deleteTodo);
