@@ -30,45 +30,18 @@ class Spanner {
 
   int _currentIndex = 0;
 
-  int get _newIndex => _currentIndex + 1;
+  int get _nextIndex => _currentIndex + 1;
 
   Spanner({this.config = const RouterConfig()}) : _root = StaticNode(BASE_PATH);
 
-  void prefix(String prefix, Node child) {
-    prefix = _cleanPath(prefix);
-    if (child is! StaticNode) {
-      throw ArgumentError.value(
-          child, null, 'Only Static Nodes are supported as prefixes');
-    }
-
-    final prefixSegments = _getRouteSegments(prefix);
-
-    Node prefixNode = _root;
-    for (int i = 0; i < prefixSegments.length; i++) {
-      final segment = prefixSegments[i];
-
-      prefixNode = _computeNode(
-        prefixNode,
-        segment,
-        HTTPMethod.ALL,
-        (index: _newIndex, value: null),
-        fullPath: prefix,
-        insertAtEndNode: child,
-        isLastSegment: i == (prefixSegments.length - 1),
-      );
-    }
-
-    _currentIndex = _newIndex;
-  }
-
-  void on(HTTPMethod method, String path, RouteHandler handler) {
+  void on(HTTPMethod method, String path, HandlerFunc handler) {
     _on(
       path,
       method,
-      (index: _newIndex, value: handler),
+      (index: _nextIndex, value: handler),
     );
 
-    _currentIndex = _newIndex;
+    _currentIndex = _nextIndex;
   }
 
   /// Given the current segment in a route, this method figures
@@ -91,7 +64,6 @@ class Spanner {
     HTTPMethod method,
     IndexedHandler handler, {
     bool isLastSegment = false,
-    StaticNode? insertAtEndNode,
     required String fullPath,
   }) {
     String part = routePart;
@@ -104,12 +76,7 @@ class Spanner {
       return node.addChildAndReturn(key, child);
     } else {
       if (part.isStatic) {
-        var newNode = StaticNode(key);
-        if (isLastSegment && insertAtEndNode != null) {
-          newNode = insertAtEndNode..changeKey(key);
-        }
-
-        return node.addChildAndReturn(key, newNode);
+        return node.addChildAndReturn(key, StaticNode(key));
       } else if (part.isWildCard) {
         if (!isLastSegment) {
           throw ArgumentError.value(fullPath, null,
@@ -121,8 +88,7 @@ class Spanner {
 
       final paramNode = node.paramNode;
       if (paramNode == null) {
-        final defn =
-            ParameterDefinition.from(routePart, terminal: isLastSegment);
+        final defn = ParameterDefinition.from(routePart, terminal: isLastSegment);
         if (isLastSegment) defn.addHandler(method, handler);
 
         return node.addChildAndReturn(key, ParametricNode(defn));
@@ -174,7 +140,7 @@ class Spanner {
     Map<String, dynamic> resolvedParams = {};
     List<IndexedHandler> wildcardHandlers = [];
 
-    List<RouteHandler> getResults(List<IndexedHandler> handlers) {
+    List<HandlerFunc> getResults(List<IndexedHandler> handlers) {
       final resultingHandlers = [
         ...handlers,
         ...wildcardHandlers,
@@ -253,8 +219,7 @@ class Spanner {
           continue;
         }
 
-        devlog(
-            '- Finding Defn for $routePart        -> terminal?    $isLastPart');
+        devlog('- Finding Defn for $routePart        -> terminal?    $isLastPart');
 
         final paramDefn = paramNode.findMatchingDefinition(
           method,
@@ -322,8 +287,7 @@ class Spanner {
 
   String _cleanPath(String path) {
     if (!path.startsWith(BASE_PATH)) {
-      throw ArgumentError.value(
-          path, null, 'Route registration must start with `/`');
+      throw ArgumentError.value(path, null, 'Route registration must start with `/`');
     }
     if (path.length == 1) return path;
 
@@ -343,7 +307,7 @@ class Spanner {
 
 class RouteResult {
   final Map<String, dynamic> params;
-  final List<RouteHandler> handlers;
+  final List<HandlerFunc> handlers;
 
   @visibleForTesting
   final dynamic actual;

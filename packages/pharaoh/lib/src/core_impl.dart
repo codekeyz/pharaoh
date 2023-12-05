@@ -8,14 +8,13 @@ class _$PharaohImpl extends RouterContract<Pharaoh>
   late final PharaohRouter _router;
 
   _$PharaohImpl() : _logger = Logger() {
-    final _spanner = Spanner();
-    _router = PharaohRouter(_spanner);
-    useSpanner(_spanner);
+    useSpanner(Spanner());
     use(bodyParser);
+    _router = PharaohRouter(spanner);
   }
 
   @override
-  RouterContract router() => GroupRouter();
+  RouterContract<GroupRouter> router() => GroupRouter();
 
   @override
   List<dynamic> get routes => [];
@@ -48,7 +47,7 @@ class _$PharaohImpl extends RouterContract<Pharaoh>
     if (router is! GroupRouter) {
       throw PharaohException.value('Router is not an instance of GroupRouter');
     }
-    _router.spanner.prefix(path, router.spanner.root);
+    router.commit(path, spanner);
     return this;
   }
 
@@ -59,10 +58,9 @@ class _$PharaohImpl extends RouterContract<Pharaoh>
     try {
       _server = await HttpServer.bind('localhost', port);
       _server.listen(handleRequest);
-      progress.complete('Server start on PORT: $port -> ${uri.toString()}');
+      progress.complete('Server start on PORT: ${_server.port} -> ${uri.toString()}');
     } catch (e) {
-      final errMsg =
-          (e as dynamic).message ?? 'An occurred while starting server';
+      final errMsg = (e as dynamic).message ?? 'An occurred while starting server';
       progress.fail(errMsg);
     }
 
@@ -103,9 +101,6 @@ class _$PharaohImpl extends RouterContract<Pharaoh>
     }
   }
 
-  bool hasNoRequestHandlers(List<RouteHandler> handlers) =>
-      !handlers.any((e) => e is RequestHandler);
-
   Future<void> forward(HttpRequest request, Response res_) async {
     var coding = res_.headers['transfer-encoding'];
 
@@ -125,8 +120,7 @@ class _$PharaohImpl extends RouterContract<Pharaoh>
         res_.mimeType != 'multipart/byteranges') {
       // If the response isn't chunked yet and there's no other way to tell its
       // length, enable `dart:io`'s chunked encoding.
-      request.response.headers
-          .set(HttpHeaders.transferEncodingHeader, 'chunked');
+      request.response.headers.set(HttpHeaders.transferEncodingHeader, 'chunked');
     }
 
     // headers to write to the response
@@ -138,14 +132,12 @@ class _$PharaohImpl extends RouterContract<Pharaoh>
       request.response.headers.add(_XPoweredByHeader, 'Pharaoh');
     }
     if (!hders.containsKey(HttpHeaders.dateHeader)) {
-      request.response.headers
-          .add(HttpHeaders.dateHeader, DateTime.now().toUtc());
+      request.response.headers.add(HttpHeaders.dateHeader, DateTime.now().toUtc());
     }
     if (!hders.containsKey(HttpHeaders.contentLengthHeader)) {
       final contentLength = res_.contentLength;
       if (contentLength != null) {
-        request.response.headers
-            .add(HttpHeaders.contentLengthHeader, contentLength);
+        request.response.headers.add(HttpHeaders.contentLengthHeader, contentLength);
       }
     }
 
