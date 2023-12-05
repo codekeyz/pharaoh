@@ -56,11 +56,13 @@ class _$PharaohImpl extends RouterContract<Pharaoh>
     final progress = _logger.progress('Starting server');
 
     try {
-      _server = await HttpServer.bind('localhost', port);
+      _server = await HttpServer.bind('0.0.0.0', port);
       _server.listen(handleRequest);
-      progress.complete('Server start on PORT: ${_server.port} -> ${uri.toString()}');
+      progress.complete(
+          'Server start on PORT: ${_server.port} -> ${uri.toString()}');
     } catch (e) {
-      final errMsg = (e as dynamic).message ?? 'An occurred while starting server';
+      final errMsg =
+          (e as dynamic).message ?? 'An occurred while starting server';
       progress.fail(errMsg);
     }
 
@@ -120,7 +122,8 @@ class _$PharaohImpl extends RouterContract<Pharaoh>
         res_.mimeType != 'multipart/byteranges') {
       // If the response isn't chunked yet and there's no other way to tell its
       // length, enable `dart:io`'s chunked encoding.
-      request.response.headers.set(HttpHeaders.transferEncodingHeader, 'chunked');
+      request.response.headers
+          .set(HttpHeaders.transferEncodingHeader, 'chunked');
     }
 
     // headers to write to the response
@@ -132,12 +135,14 @@ class _$PharaohImpl extends RouterContract<Pharaoh>
       request.response.headers.add(_XPoweredByHeader, 'Pharaoh');
     }
     if (!hders.containsKey(HttpHeaders.dateHeader)) {
-      request.response.headers.add(HttpHeaders.dateHeader, DateTime.now().toUtc());
+      request.response.headers
+          .add(HttpHeaders.dateHeader, DateTime.now().toUtc());
     }
     if (!hders.containsKey(HttpHeaders.contentLengthHeader)) {
       final contentLength = res_.contentLength;
       if (contentLength != null) {
-        request.response.headers.add(HttpHeaders.contentLengthHeader, contentLength);
+        request.response.headers
+            .add(HttpHeaders.contentLengthHeader, contentLength);
       }
     }
 
