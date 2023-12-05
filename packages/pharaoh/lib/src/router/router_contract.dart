@@ -18,7 +18,7 @@ abstract class RouterContract<T> {
 
   T trace(String path, RequestHandlerFunc hdler);
 
-  T use(HandlerFunc mdw);
+  T use(HandlerFunc middleware);
 
   T useOnPath(
     String path,

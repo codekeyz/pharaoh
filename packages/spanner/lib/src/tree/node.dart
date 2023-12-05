@@ -46,16 +46,12 @@ abstract class Node with EquatableMixin {
 }
 
 class StaticNode extends Node with RouteActionMixin {
-  String _key;
+  final String _name;
+
+  StaticNode(this._name);
 
   @override
-  String get name => 'static($_key)';
-
-  StaticNode(this._key);
-
-  void changeKey(String key) {
-    _key = key;
-  }
+  String get name => 'static($_name)';
 
   @override
   List<Object?> get props => [name, children];
@@ -64,16 +60,14 @@ class StaticNode extends Node with RouteActionMixin {
 class ParametricNode extends Node {
   final List<ParameterDefinition> _definitions = [];
 
-  List<ParameterDefinition> get definitions =>
-      UnmodifiableListView(_definitions);
+  List<ParameterDefinition> get definitions => UnmodifiableListView(_definitions);
 
   ParametricNode(ParameterDefinition defn) {
     _definitions.add(defn);
   }
 
   void addNewDefinition(ParameterDefinition defn) {
-    final existing =
-        _definitions.firstWhereOrNull((e) => e.isExactExceptName(defn));
+    final existing = _definitions.firstWhereOrNull((e) => e.isExactExceptName(defn));
 
     if (existing != null) {
       if (existing.name != defn.name) {
@@ -115,8 +109,7 @@ class ParametricNode extends Node {
   }) {
     return definitions.firstWhereOrNull(
       (e) {
-        final definitionCanHandleMethod =
-            e.methods.isEmpty || e.hasMethod(method);
+        final definitionCanHandleMethod = e.methods.isEmpty || e.hasMethod(method);
 
         return definitionCanHandleMethod &&
             e.matches(part, shouldbeTerminal: shouldBeTerminal);

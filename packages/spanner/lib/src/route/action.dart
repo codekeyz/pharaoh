@@ -3,11 +3,11 @@ import 'package:pharaoh/pharaoh.dart';
 
 typedef Indexed<T> = ({int index, T value});
 
-typedef IndexedHandler = Indexed<RouteHandler?>;
+typedef IndexedHandler = Indexed<HandlerFunc?>;
 
 class RouteAction extends Equatable {
   final HTTPMethod method;
-  final RouteHandler handler;
+  final HandlerFunc handler;
   final int index;
 
   const RouteAction(
@@ -28,11 +28,6 @@ mixin RouteActionMixin {
   Iterable<HTTPMethod> get methods => store.keys;
 
   bool hasMethod(HTTPMethod method) => store.containsKey(method);
-
-  void copyStore(MethodAndHandlerStore newstore) {
-    store.clear();
-    store.addAll(newstore);
-  }
 
   List<IndexedHandler> getActions(HTTPMethod method) {
     if (store.isEmpty) return [];
