@@ -135,8 +135,7 @@ class Request extends Message<dynamic> implements $Request<dynamic> {
   List<Cookie> get cookies => _context[RequestContext.cookies] ?? [];
 
   @override
-  List<Cookie> get signedCookies =>
-      _context[RequestContext.signedCookies] ?? [];
+  List<Cookie> get signedCookies => _context[RequestContext.signedCookies] ?? [];
 
   @override
   Session? get session => _context[RequestContext.session];
