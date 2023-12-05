@@ -9,8 +9,7 @@ import 'router_contract.dart';
 import 'router_handler.dart';
 import 'router_mixin.dart';
 
-class PharaohRouter extends RouterContract<PharaohRouter>
-    with RouteDefinitionMixin {
+class PharaohRouter extends RouterContract<PharaohRouter> with RouteDefinitionMixin {
   PharaohRouter(Spanner spanner) {
     useSpanner(spanner);
   }
@@ -32,7 +31,7 @@ class PharaohRouter extends RouterContract<PharaohRouter>
 
     reqRes = (req: req, res: res);
     for (final hdler in _.handlers) {
-      final result = await hdler.execute(reqRes);
+      final result = await HandlerExecutor(hdler).execute(reqRes);
       reqRes = result.reqRes;
       if (!result.canNext || reqRes.res.ended) break;
     }

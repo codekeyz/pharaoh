@@ -13,66 +13,65 @@ mixin RouteDefinitionMixin<T> on RouterContract<T> {
 
   @override
   T delete(String path, RequestHandlerFunc hdler) {
-    spanner.on(HTTPMethod.DELETE, path, RequestHandler(hdler));
+    spanner.on(HTTPMethod.DELETE, path, useRequestHandler(hdler));
     return this as T;
   }
 
   @override
   T get(String path, RequestHandlerFunc hdler) {
-    spanner.on(HTTPMethod.GET, path, RequestHandler(hdler));
-    spanner.on(HTTPMethod.HEAD, path, RequestHandler(hdler));
+    spanner.on(HTTPMethod.GET, path, useRequestHandler(hdler));
     return this as T;
   }
 
   @override
   T head(String path, RequestHandlerFunc hdler) {
-    spanner.on(HTTPMethod.HEAD, path, RequestHandler(hdler));
+    spanner.on(HTTPMethod.HEAD, path, useRequestHandler(hdler));
     return this as T;
   }
 
   @override
   T options(String path, RequestHandlerFunc hdler) {
-    spanner.on(HTTPMethod.OPTIONS, path, RequestHandler(hdler));
+    spanner.on(HTTPMethod.OPTIONS, path, useRequestHandler(hdler));
     return this as T;
   }
 
   @override
   T patch(String path, RequestHandlerFunc hdler) {
-    spanner.on(HTTPMethod.PATCH, path, RequestHandler(hdler));
+    spanner.on(HTTPMethod.PATCH, path, useRequestHandler(hdler));
     return this as T;
   }
 
   @override
   T post(String path, RequestHandlerFunc hdler) {
-    spanner.on(HTTPMethod.POST, path, RequestHandler(hdler));
+    spanner.on(HTTPMethod.POST, path, useRequestHandler(hdler));
     return this as T;
   }
 
   @override
   T put(String path, RequestHandlerFunc hdler) {
-    spanner.on(HTTPMethod.PUT, path, RequestHandler(hdler));
+    spanner.on(HTTPMethod.PUT, path, useRequestHandler(hdler));
     return this as T;
   }
 
   @override
   T trace(String path, RequestHandlerFunc hdler) {
-    spanner.on(HTTPMethod.TRACE, path, RequestHandler(hdler));
+    spanner.on(HTTPMethod.TRACE, path, useRequestHandler(hdler));
     return this as T;
   }
 
   @override
-  T use(HandlerFunc mdw) {
-    spanner.on(HTTPMethod.ALL, '/*', Middleware(mdw));
+  T use(HandlerFunc middleware) {
+    spanner.on(HTTPMethod.ALL, '/*', middleware);
     return this as T;
   }
 
   @override
   T useOnPath(
     String path,
-    HandlerFunc mdw, {
+    HandlerFunc middleware, {
     HTTPMethod method = HTTPMethod.ALL,
   }) {
-    spanner.on(method, '$path/*', Middleware(mdw));
+    spanner.on(method, '$path/*', middleware);
     return this as T;
   }
 }

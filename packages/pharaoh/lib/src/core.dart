@@ -24,13 +24,13 @@ part 'core_impl.dart';
 abstract class Pharaoh implements RouterContract<Pharaoh> {
   factory Pharaoh() => _$PharaohImpl();
 
-  RouterContract router();
+  RouterContract<GroupRouter> router();
 
   List<dynamic> get routes;
 
   Uri get uri;
 
-  Pharaoh group(String path, RouterContract router);
+  Pharaoh group(String path, RouterContract<GroupRouter> router);
 
   Future<Pharaoh> listen({int port = 3000});
 

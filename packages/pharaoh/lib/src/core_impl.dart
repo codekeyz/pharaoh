@@ -8,14 +8,13 @@ class _$PharaohImpl extends RouterContract<Pharaoh>
   late final PharaohRouter _router;
 
   _$PharaohImpl() : _logger = Logger() {
-    final _spanner = Spanner();
-    _router = PharaohRouter(_spanner);
-    useSpanner(_spanner);
+    useSpanner(Spanner());
     use(bodyParser);
+    _router = PharaohRouter(spanner);
   }
 
   @override
-  RouterContract router() => GroupRouter();
+  RouterContract<GroupRouter> router() => GroupRouter();
 
   @override
   List<dynamic> get routes => [];
@@ -48,7 +47,7 @@ class _$PharaohImpl extends RouterContract<Pharaoh>
     if (router is! GroupRouter) {
       throw PharaohException.value('Router is not an instance of GroupRouter');
     }
-    _router.spanner.prefix(path, router.spanner.root);
+    router.commit(path, spanner);
     return this;
   }
 
@@ -101,9 +100,6 @@ class _$PharaohImpl extends RouterContract<Pharaoh>
       );
     }
   }
-
-  bool hasNoRequestHandlers(List<RouteHandler> handlers) =>
-      !handlers.any((e) => e is RequestHandler);
 
   Future<void> forward(HttpRequest request, Response res_) async {
     var coding = res_.headers['transfer-encoding'];
