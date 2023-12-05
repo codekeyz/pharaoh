@@ -17,11 +17,7 @@ abstract interface class $Response {
   ///
   /// [name] and [value] must be composed of valid characters according to RFC
   /// 6265.
-  Response cookie(
-    String name,
-    Object? value, [
-    CookieOpts opts = const CookieOpts(),
-  ]);
+  Response cookie(String name, Object? value, [CookieOpts opts = const CookieOpts()]);
 
   Response withCookie(Cookie cookie);
 
@@ -111,8 +107,7 @@ class Response extends Message<shelf.Body?> implements $Response {
     }
   }
 
-  factory Response.from(HttpRequest request, {shelf.Body? body}) =>
-      Response(request);
+  factory Response.from(HttpRequest request, {shelf.Body? body}) => Response(request);
 
   @override
   Response header(String headerKey, String headerValue) => Response(
@@ -171,8 +166,7 @@ class Response extends Message<shelf.Body?> implements $Response {
       headers.forEach((key, val) => existingHeaders[key] = val);
     }
 
-    existingHeaders
-        .removeWhere((name, _) => name.toLowerCase() == 'content-length');
+    existingHeaders.removeWhere((name, _) => name.toLowerCase() == 'content-length');
     existingHeaders[HttpHeaders.dateHeader] = formatHttpDate(DateTime.now());
 
     return Response(
