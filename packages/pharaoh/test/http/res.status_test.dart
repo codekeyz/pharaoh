@@ -42,8 +42,8 @@ void main() {
         try {
           await (await request<Pharaoh>(app)).get('/').test();
         } catch (e) {
-          expect((e as StateError).message,
-              'Response has no Location header for redirect');
+          expect(
+              (e as StateError).message, 'Response has no Location header for redirect');
         }
       });
     });
