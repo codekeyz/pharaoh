@@ -24,10 +24,38 @@ extension ReqResExtension on ReqRes {
       };
 }
 
-abstract interface class RouteHandler {
+typedef RequestHandlerFunc = FutureOr<dynamic> Function($Request req, $Response res);
+
+extension HandlerChainExtension on HandlerFunc {
+  /// Chains the current middleware with a new one.
+  HandlerFunc chain(HandlerFunc newChain) => (req, res, done) => this(
+        req,
+        res,
+        ([nr, chain]) {
+          // Use the existing chain if available, otherwise use the new chain
+          HandlerFunc nextFunc = chain ?? newChain;
+
+          // If there's an existing chain, recursively chain the new handler
+          if (chain != null) {
+            nextFunc = nextFunc.chain(newChain);
+          }
+
+          done(nr, nextFunc);
+        },
+      );
+}
+
+HandlerFunc useRequestHandler(RequestHandlerFunc _func) => (req, res, next_) async {
+      final result = await _func(req, res);
+      next_(result);
+    };
+
+HandlerFunc useMiddleware(HandlerFunc _func) => _func;
+
+class HandlerExecutor {
   final HandlerFunc _handler;
 
-  RouteHandler._(this._handler);
+  HandlerExecutor(this._handler);
 
   StreamController<HandlerFunc>? _streamCtrl;
 
@@ -60,45 +88,10 @@ abstract interface class RouteHandler {
   }
 
   Future<void> _resetStream() async {
-    void newStream() =>
-        _streamCtrl = StreamController<HandlerFunc>()..add(_handler);
+    void newStream() => _streamCtrl = StreamController<HandlerFunc>()..add(_handler);
     final ctrl = _streamCtrl;
     if (ctrl == null) return newStream();
     if (ctrl.hasListener && ctrl.isClosed) await ctrl.close();
     return newStream();
   }
-}
-
-typedef RequestHandlerFunc = FutureOr<dynamic> Function(
-    $Request req, $Response res);
-
-extension HandlerChainExtension on HandlerFunc {
-  /// Chains the current middleware with a new one.
-  HandlerFunc chain(HandlerFunc newChain) => (req, res, done) => this(
-        req,
-        res,
-        ([nr, chain]) {
-          // Use the existing chain if available, otherwise use the new chain
-          HandlerFunc nextFunc = chain ?? newChain;
-
-          // If there's an existing chain, recursively chain the new handler
-          if (chain != null) {
-            nextFunc = nextFunc.chain(newChain);
-          }
-
-          done(nr, nextFunc);
-        },
-      );
-}
-
-class RequestHandler extends RouteHandler {
-  RequestHandler(final RequestHandlerFunc _func)
-      : super._((req, res, next_) async {
-          final result = await _func(req, res);
-          next_(result);
-        });
-}
-
-class Middleware extends RouteHandler {
-  Middleware(final HandlerFunc _func) : super._(_func);
 }
