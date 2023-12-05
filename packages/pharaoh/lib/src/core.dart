@@ -6,6 +6,7 @@ import 'package:mason_logger/mason_logger.dart';
 import 'package:meta/meta.dart';
 import 'package:spanner/spanner.dart';
 
+import 'middleware/session_mw.dart';
 import 'router/router_contract.dart';
 import 'router/router_handler.dart';
 import 'router/router_mixin.dart';

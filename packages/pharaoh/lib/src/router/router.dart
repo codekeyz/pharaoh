@@ -1,51 +1,8 @@
-import 'dart:async';
-
 import 'package:spanner/spanner.dart';
 
 import '../http/request.dart';
-import '../http/response.dart';
-import '../middleware/session_mw.dart';
 import 'router_contract.dart';
 import 'router_handler.dart';
-import 'router_mixin.dart';
-
-class PharaohRouter extends RouterContract<PharaohRouter> with RouteDefinitionMixin {
-  PharaohRouter(Spanner spanner) {
-    useSpanner(spanner);
-  }
-
-  final List<ReqResHook> _preResponseHooks = [
-    sessionPreResponseHook,
-  ];
-
-  Future<HandlerResult> resolve(Request req, Response res) async {
-    Response notFound() => res.notFound("Route not found: ${req.path}");
-
-    ReqRes reqRes = (req: req, res: res);
-    final _ = spanner.lookup(req.method, req.path);
-    if (_ == null) {
-      return (canNext: true, reqRes: reqRes);
-    } else if (_.handlers.isEmpty) {
-      return (canNext: true, reqRes: reqRes.merge(notFound()));
-    }
-
-    _.params.forEach((key, value) => req.setParams(key, value));
-
-    final composed = _.handlers.reduce((val, e) => val.chain(e));
-    final result = await HandlerExecutor(composed).execute(reqRes);
-    reqRes = result.reqRes;
-
-    for (final job in _preResponseHooks) {
-      reqRes = await Future.microtask(() => job(reqRes));
-    }
-
-    if (!reqRes.res.ended) {
-      return (canNext: true, reqRes: reqRes.merge(notFound()));
-    }
-
-    return (canNext: true, reqRes: reqRes);
-  }
-}
 
 typedef _PendingRouteIntent = (HTTPMethod method, ({String path, HandlerFunc handler}));
 
