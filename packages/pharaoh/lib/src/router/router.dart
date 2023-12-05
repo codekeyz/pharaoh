@@ -19,32 +19,28 @@ class PharaohRouter extends RouterContract<PharaohRouter> with RouteDefinitionMi
   ];
 
   Future<HandlerResult> resolve(Request req, Response res) async {
+    Response notFound() => res.notFound("Route not found: ${req.path}");
+
     ReqRes reqRes = (req: req, res: res);
     final _ = spanner.lookup(req.method, req.path);
     if (_ == null) {
       return (canNext: true, reqRes: reqRes);
     } else if (_.handlers.isEmpty) {
-      return (canNext: true, reqRes: (req: req, res: res.notFound()));
+      return (canNext: true, reqRes: reqRes.merge(notFound()));
     }
 
     _.params.forEach((key, value) => req.setParams(key, value));
 
-    reqRes = (req: req, res: res);
-    for (final hdler in _.handlers) {
-      final result = await HandlerExecutor(hdler).execute(reqRes);
-      reqRes = result.reqRes;
-      if (!result.canNext || reqRes.res.ended) break;
-    }
+    final composed = _.handlers.reduce((val, e) => val.chain(e));
+    final result = await HandlerExecutor(composed).execute(reqRes);
+    reqRes = result.reqRes;
 
     for (final job in _preResponseHooks) {
       reqRes = await Future.microtask(() => job(reqRes));
     }
 
     if (!reqRes.res.ended) {
-      return (
-        canNext: true,
-        reqRes: reqRes.merge(res.notFound("Route not found: ${req.path}"))
-      );
+      return (canNext: true, reqRes: reqRes.merge(notFound()));
     }
 
     return (canNext: true, reqRes: reqRes);
