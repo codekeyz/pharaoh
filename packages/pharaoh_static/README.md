@@ -1,6 +1,6 @@
 # pharaoh_static 🗃
 
-PHaraoh Middleware that serves static files such as images, CSS files, and JavaScript files. It takes a root directory as an argument, which is the directory from which to serve static files.
+Pharaoh Middleware that serves static files such as images, CSS files, and JavaScript files. It takes a root directory as an argument, which is the directory from which to serve static files.
 
 ## Installing:
 
@@ -8,7 +8,7 @@ In your pubspec.yaml
 
 ```yaml
 dependencies:
-  pharaoh: ^0.0.2
+  pharaoh: ^0.0.5
   pharaoh_static:
 ```
 
