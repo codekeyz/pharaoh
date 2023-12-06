@@ -3,7 +3,6 @@
 * Added new router implementation
 * Added cookie-parser & session management
 * Added content negotiation -> `res.format`
-* Added jwt middleware for Pharaoh
 * Separated query parameters from route parameters  
 
 # 0.0.4
