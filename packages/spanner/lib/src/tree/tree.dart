@@ -200,8 +200,8 @@ class Spanner {
         rootNode = rootNode.getChild(routePart);
         devlog('- Found Static for             ->              $routePart');
       } else {
-        final paramNode = rootNode.paramNode;
-        if (paramNode == null) {
+        final parametricNode = rootNode.paramNode;
+        if (parametricNode == null) {
           devlog('x Found no static node for part       ->         $routePart');
           devlog('x Route is not registered             ->         $route');
 
@@ -212,48 +212,55 @@ class Spanner {
           break;
         }
 
-        final hasChild = paramNode.hasChild(routePart);
+        final hasChild = parametricNode.hasChild(routePart);
         if (hasChild) {
           devlog('- Found Static for             ->              $routePart');
-          rootNode = paramNode.getChild(routePart);
+          rootNode = parametricNode.getChild(routePart);
           continue;
         }
 
         devlog('- Finding Defn for $routePart        -> terminal?    $isLastPart');
 
-        final paramDefn = paramNode.findMatchingDefinition(
+        print('Finding matching for $routePart');
+
+        final definition = parametricNode.findMatchingDefinition(
           method,
           routePart,
           shouldBeTerminal: isLastPart,
         );
 
-        devlog('    * parametric defn:         ${paramDefn.toString()}');
+        devlog('    * parametric defn:         ${definition.toString()}');
 
-        if (paramDefn == null) {
-          devlog('x Found no defn for route part      ->         $routePart');
-          devlog('x Route is not registered             ->         $route');
-
+        if (definition == null) {
           final wc = rootNode.wildcardNode;
-          if (wc == null) return null;
+          if (wc != null) {
+            useWildcard(wc);
+          } else if (parametricNode.definitions.length == 1) {
+            final definition = parametricNode.definitions.first;
+            if (definition is CompositeParameterDefinition) break;
 
-          useWildcard(wc);
+            final remainingPath = routeSegments.sublist(i).join('/');
+            final name = parametricNode.definitions.first.name;
+            resolvedParams[name] = remainingPath;
+
+            final handlers = definition.getActions(method);
+            return RouteResult(resolvedParams, getResults(handlers), actual: definition);
+          }
           break;
         }
 
         devlog('- Found defn for route part    ->              $routePart');
 
-        final params = paramDefn.resolveParams(currPart);
+        final params = definition.resolveParams(currPart);
         resolvedParams.addAll(params);
-        rootNode = paramNode;
+        rootNode = parametricNode;
 
-        if (isLastPart && paramDefn.terminal) {
-          rootNode.terminal = true;
-          final hdlrs = paramDefn.getActions(method);
-
+        if (isLastPart && definition.terminal) {
+          final handlers = definition.getActions(method);
           return RouteResult(
             resolvedParams,
-            getResults(hdlrs),
-            actual: paramDefn,
+            getResults(handlers),
+            actual: definition,
           );
         }
       }
