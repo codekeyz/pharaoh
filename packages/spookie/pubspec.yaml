@@ -11,4 +11,4 @@ dependencies:
   test: ^1.24.9
 
 dev_dependencies:
-  pharaoh:
+  pharaoh: ^0.0.5
