@@ -58,7 +58,7 @@ class _$PharaohImpl extends RouterContract<Pharaoh>
     final progress = _logger.progress('Starting server');
 
     try {
-      _server = await HttpServer.bind('localhost', port);
+      _server = await HttpServer.bind('0.0.0.0', port);
       _server.listen(handleRequest);
       progress.complete('Server start on PORT: ${_server.port} -> ${uri.toString()}');
     } catch (e) {
@@ -166,9 +166,7 @@ class _$PharaohImpl extends RouterContract<Pharaoh>
   }
 
   @override
-  Future<void> shutdown() async {
-    await _server.close();
-  }
+  Future<void> shutdown() async => _server.close();
 }
 
 // ignore: constant_identifier_names
