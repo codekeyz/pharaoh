@@ -19,9 +19,8 @@ void main() async {
 
   /// /files/* is accessed via req.params[0]
   /// but here we name it :file
-  app.get('/files/:file(.*)', (req, res) async {
+  app.get('/files/<file>', (req, res) async {
     final pathToFile = req.params['file'];
-
     final file = File('$publicDir/files/$pathToFile');
     final exists = await file.exists();
     if (!exists) {
