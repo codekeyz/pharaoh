@@ -77,9 +77,6 @@ void main() async {
       });
 
       test('should return repos', () async {
-        final serverUrl = apisvc.app.uri.toString();
-        final path = Uri.parse('$serverUrl');
-
         const result = [
           {'name': 'express', 'url': "https://github.com/expressjs/express"},
           {'name': 'stylus', 'url': "https://github.com/learnboost/stylus"},
