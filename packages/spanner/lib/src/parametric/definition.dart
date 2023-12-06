@@ -2,59 +2,74 @@ import 'package:collection/collection.dart';
 import 'package:equatable/equatable.dart';
 
 import '../route/action.dart';
+import 'descriptor.dart';
 import 'utils.dart';
+
+final _knownDescriptors = {'number': numParser};
 
 /// build a parametric definition from a route part
 ParameterDefinition? _buildParamDefinition(String part, bool terminal) {
   if (closeDoorParametricRegex.hasMatch(part)) {
     throw ArgumentError.value(
-        part, null, 'Parameter definition is not valid. Close door neighbors');
+        part, null, 'Parameter definition is invalid. Close door neighbors');
   }
 
-  ParameterDefinition makeDefn(RegExpMatch m, {bool end = false}) {
-    final sourceParts = m.group(2)!.split('|');
+  ParameterDefinition makeDefinition(RegExpMatch m, {bool end = false}) {
+    final parts = m.group(2)!.split('|');
 
-    /// TODO(codekeyz) complete support for regex and parsers
-    /// in the remaining parts of [sourceParts]
+    List<ParameterTransformer> transformers = [];
+    if (parts.length > 1) {
+      final result = parts.sublist(1).map((e) {
+        final value = _knownDescriptors[e];
+        if (value == null) {
+          throw ArgumentError.value(
+              e, null, 'Parameter definition has invalid descriptor');
+        }
+        return value;
+      });
+
+      transformers.addAll(result.cast<ParameterTransformer>());
+    }
 
     return ParameterDefinition._(
-      sourceParts.first,
+      parts.first,
       prefix: m.group(1)?.nullIfEmpty,
       suffix: m.group(3)?.nullIfEmpty,
       terminal: end,
+      transformers: transformers,
     );
   }
 
   final matches = parametricDefnsRegex.allMatches(part);
   if (matches.isEmpty) {
-    throw ArgumentError.value(part, null, 'Parameter definition is not valid');
+    throw ArgumentError.value(part, null, 'Parameter definition is invalid');
   }
 
   if (matches.length == 1) {
-    return makeDefn(matches.first, end: terminal);
+    return makeDefinition(matches.first, end: terminal);
   }
 
-  final parent = makeDefn(matches.first, end: false);
+  final parent = makeDefinition(matches.first, end: false);
   final subdefns = matches.skip(1);
-  final subparts = subdefns
-      .mapIndexed((i, e) => makeDefn(e, end: i == (subdefns.length - 1)));
+  final subparts =
+      subdefns.mapIndexed((i, e) => makeDefinition(e, end: i == (subdefns.length - 1)));
 
-  return CompositeParameterDefinition._(parent,
-      subparts: UnmodifiableListView(subparts));
+  return CompositeParameterDefinition._(parent, subparts: UnmodifiableListView(subparts));
 }
 
 class ParameterDefinition with EquatableMixin, RouteActionMixin {
   final String name;
   final String? prefix;
   final String? suffix;
-  final RegExp? regex;
   final bool terminal;
+
+  final List<ParameterTransformer> transformers;
 
   ParameterDefinition._(
     this.name, {
+    this.transformers = const [],
     this.prefix,
     this.suffix,
-    this.regex,
     this.terminal = false,
   });
 
@@ -89,17 +104,20 @@ class ParameterDefinition with EquatableMixin, RouteActionMixin {
       if (!hasMethod) return false;
     }
 
-    return prefix == defn.prefix &&
-        suffix == defn.suffix &&
-        regex == defn.regex &&
-        terminal == defn.terminal;
+    return prefix == defn.prefix && suffix == defn.suffix && terminal == defn.terminal;
   }
 
-  Map<String, dynamic> resolveParams(final String pattern) =>
-      resolveParamsFromPath(template, pattern);
+  Map<String, dynamic> resolveParams(final String pattern) {
+    final resolvedParams = resolveParamsFromPath(template, pattern);
+    resolvedParams[name] = transformers.fold<dynamic>(
+      resolvedParams[name],
+      (preV, transformer) => transformer.transform!.call(preV),
+    );
+    return resolvedParams;
+  }
 
   @override
-  List<Object?> get props => [name, prefix, suffix, regex, terminal];
+  List<Object?> get props => [prefix, name, suffix, terminal];
 }
 
 class CompositeParameterDefinition extends ParameterDefinition {
@@ -110,7 +128,6 @@ class CompositeParameterDefinition extends ParameterDefinition {
     required this.subparts,
   }) : super._(
           parent.name,
-          regex: parent.regex,
           prefix: parent.prefix,
           suffix: parent.suffix,
           terminal: false,

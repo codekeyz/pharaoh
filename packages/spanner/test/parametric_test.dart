@@ -28,7 +28,7 @@ void main() {
 
         final exception = runSyncAndReturnException<ArgumentError>(router);
         expect(exception.message,
-            contains('Parameter definition is not valid. Close door neighbors'));
+            contains('Parameter definition is invalid. Close door neighbors'));
         expect(exception.invalidValue, '<userId><keyId>');
       });
 
@@ -36,7 +36,7 @@ void main() {
         router() => Spanner()..on(HTTPMethod.GET, '/user/<userId#@#.XDkd@#>>#>', okHdler);
 
         final exception = runSyncAndReturnException<ArgumentError>(router);
-        expect(exception.message, contains('Parameter definition is not valid'));
+        expect(exception.message, contains('Parameter definition is invalid'));
         expect(exception.invalidValue, '<userId#@#.XDkd@#>>#>');
       });
     });

@@ -56,14 +56,13 @@ extension ParametricDefinitionsExtension on List<ParameterDefinition> {
     final Map<int, int> nullCount = {};
     for (final def in this) {
       int count = 0;
+      if (def.prefix == null) count += 1;
       if (def.suffix == null) count += 1;
-      if (def.regex == null) count += 1;
       nullCount[def.hashCode] = count;
     }
 
     sort((a, b) => nullCount[a.hashCode]!.compareTo(nullCount[b.hashCode]!));
   }
 
-  Iterable get methods =>
-      map((e) => e.methods).reduce((val, e) => {...val, ...e});
+  Iterable get methods => map((e) => e.methods).reduce((val, e) => {...val, ...e});
 }
