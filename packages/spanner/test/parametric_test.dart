@@ -24,24 +24,19 @@ void main() {
       });
 
       test('close door parameter definitions', () {
-        router() =>
-            Spanner()..on(HTTPMethod.GET, '/user/<userId><keyId>', okHdler);
+        router() => Spanner()..on(HTTPMethod.GET, '/user/<userId><keyId>', okHdler);
 
         final exception = runSyncAndReturnException<ArgumentError>(router);
-        expect(
-            exception.message,
-            contains(
-                'Parameter definition is not valid. Close door neighbors'));
+        expect(exception.message,
+            contains('Parameter definition is not valid. Close door neighbors'));
         expect(exception.invalidValue, '<userId><keyId>');
       });
 
       test('invalid parameter definition', () {
-        router() => Spanner()
-          ..on(HTTPMethod.GET, '/user/<userId#@#.XDkd@#>>#>', okHdler);
+        router() => Spanner()..on(HTTPMethod.GET, '/user/<userId#@#.XDkd@#>>#>', okHdler);
 
         final exception = runSyncAndReturnException<ArgumentError>(router);
-        expect(
-            exception.message, contains('Parameter definition is not valid'));
+        expect(exception.message, contains('Parameter definition is not valid'));
         expect(exception.invalidValue, '<userId#@#.XDkd@#>>#>');
       });
     });
@@ -77,9 +72,7 @@ void main() {
 
       node = router.lookup(HTTPMethod.GET, '/user/aws-image.png/A29384/hello');
       expect(
-          node,
-          havingParameters<StaticNode>(
-              {'file': 'aws-image', 'user2': 'A29384'}));
+          node, havingParameters<StaticNode>({'file': 'aws-image', 'user2': 'A29384'}));
 
       node = router.lookup(HTTPMethod.GET, '/a/param-static');
       expect(node, havingParameters<ParameterDefinition>({'param': 'param'}));
@@ -101,6 +94,20 @@ void main() {
       expect(
         router.lookup(HTTPMethod.GET, '/fr/item/12345/edit'),
         havingParameters({'lang': 'fr', '*': '12345/edit'}),
+      );
+    });
+
+    test('should capture remaining parts as parameter when no wildcard', () {
+      final router = Spanner()..on(HTTPMethod.GET, '/<lang>/item/<id>', okHdler);
+
+      expect(
+        router.lookup(HTTPMethod.GET, '/fr/item/12345'),
+        havingParameters({'lang': 'fr', 'id': '12345'}),
+      );
+
+      expect(
+        router.lookup(HTTPMethod.GET, '/fr/item/12345/edit'),
+        havingParameters({'lang': 'fr', 'id': '12345/edit'}),
       );
     });
   });
