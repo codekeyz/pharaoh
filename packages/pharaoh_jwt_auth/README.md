@@ -1,4 +1,4 @@
-# pharaoh_jwt_auth 🗃
+# pharaoh_jwt_auth 🪭
 
 This module provides Pharaoh middleware for validating JWTs (JSON Web Tokens) through the [dart_jsonwebtoken](https://pub.dev/packages/dart_jsonwebtoken)
 package.
