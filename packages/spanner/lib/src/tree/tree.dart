@@ -221,8 +221,6 @@ class Spanner {
 
         devlog('- Finding Defn for $routePart        -> terminal?    $isLastPart');
 
-        print('Finding matching for $routePart');
-
         final definition = parametricNode.findMatchingDefinition(
           method,
           routePart,
