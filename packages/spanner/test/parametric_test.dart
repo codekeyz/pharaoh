@@ -111,22 +111,33 @@ void main() {
       );
     });
 
-    test('contains descriptors', () {
-      final router = Spanner()
-        ..on(HTTPMethod.GET, '/users/<userId|(^\\w+)|number>/detail', okHdler)
-        ..on(HTTPMethod.GET, '/<userId|(^\\w+)>', (req, res, next) => okHdler);
+    group('when descriptors', () {
+      test('in single parametric definition', () {
+        final router = Spanner()
+          ..on(HTTPMethod.GET, '/users/<userId|(^\\w+)|number>/detail', okHdler)
+          ..on(HTTPMethod.GET, '/<userId|(^\\w+)>', (req, res, next) => okHdler);
 
-      var result = router.lookup(HTTPMethod.GET, '/users/24/detail');
-      expect(result, havingParameters({'userId': 24}));
+        var result = router.lookup(HTTPMethod.GET, '/users/24/detail');
+        expect(result, havingParameters({'userId': 24}));
 
-      result = router.lookup(HTTPMethod.GET, '/hello-world');
-      expect(result, havingParameters({'userId': 'hello-world'}));
+        result = router.lookup(HTTPMethod.GET, '/hello-world');
+        expect(result, havingParameters({'userId': 'hello-world'}));
 
-      expect(
-        runSyncAndReturnException(() => router.lookup(HTTPMethod.GET, '/@388>)#(***)')),
-        isA<PharaohValidationError>()
-            .having((p0) => p0.message, 'with message', 'Invalid parameter value'),
-      );
+        expect(
+          runSyncAndReturnException(() => router.lookup(HTTPMethod.GET, '/@388>)#(***)')),
+          isA<PharaohValidationError>()
+              .having((p0) => p0.message, 'with message', 'Invalid parameter value'),
+        );
+      });
+
+      test('in composite parametric definition', () async {
+        final router = Spanner()
+          ..on(HTTPMethod.GET, '/users/<userId|number>HELLO<paramId|number>/detail',
+              okHdler);
+
+        var result = router.lookup(HTTPMethod.GET, '/users/334HELLO387/detail');
+        expect(result, havingParameters({'userId': 334, 'paramId': 387}));
+      });
     });
   });
 }
