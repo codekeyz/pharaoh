@@ -19,7 +19,7 @@ class _$PharaohImpl extends RouterContract<Pharaoh>
   RouterContract<GroupRouter> router() => GroupRouter();
 
   @override
-  List<dynamic> get routes => [];
+  List<RouteEntry> get routes => spanner.routes;
 
   @override
   Uri get uri {

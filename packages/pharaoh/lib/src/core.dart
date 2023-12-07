@@ -26,7 +26,7 @@ abstract class Pharaoh implements RouterContract<Pharaoh> {
 
   RouterContract<GroupRouter> router();
 
-  List<dynamic> get routes;
+  List<RouteEntry> get routes;
 
   Uri get uri;
 
