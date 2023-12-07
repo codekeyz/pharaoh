@@ -5,7 +5,7 @@ import '../route/action.dart';
 import 'descriptor.dart';
 import 'utils.dart';
 
-final _knownDescriptors = {'number': numParser};
+final _knownDescriptors = {'number': numDescriptor};
 
 /// build a parametric definition from a route part
 ParameterDefinition? _buildParamDefinition(String part, bool terminal) {
@@ -17,18 +17,17 @@ ParameterDefinition? _buildParamDefinition(String part, bool terminal) {
   ParameterDefinition makeDefinition(RegExpMatch m, {bool end = false}) {
     final parts = m.group(2)!.split('|');
 
-    List<ParameterTransformer> transformers = [];
+    List<ParameterDescriptor> descriptors = [];
     if (parts.length > 1) {
       final result = parts.sublist(1).map((e) {
-        final value = _knownDescriptors[e];
+        final value = e.isRegex ? regexDescriptor : _knownDescriptors[e];
         if (value == null) {
           throw ArgumentError.value(
               e, null, 'Parameter definition has invalid descriptor');
         }
         return value;
       });
-
-      transformers.addAll(result.cast<ParameterTransformer>());
+      descriptors.addAll(result.cast<ParameterDescriptor>());
     }
 
     return ParameterDefinition._(
@@ -36,7 +35,7 @@ ParameterDefinition? _buildParamDefinition(String part, bool terminal) {
       prefix: m.group(1)?.nullIfEmpty,
       suffix: m.group(3)?.nullIfEmpty,
       terminal: end,
-      transformers: transformers,
+      descriptors: descriptors,
     );
   }
 
@@ -63,11 +62,11 @@ class ParameterDefinition with EquatableMixin, RouteActionMixin {
   final String? suffix;
   final bool terminal;
 
-  final List<ParameterTransformer> transformers;
+  final List<ParameterDescriptor> descriptors;
 
   ParameterDefinition._(
     this.name, {
-    this.transformers = const [],
+    this.descriptors = const [],
     this.prefix,
     this.suffix,
     this.terminal = false,
@@ -108,12 +107,12 @@ class ParameterDefinition with EquatableMixin, RouteActionMixin {
   }
 
   Map<String, dynamic> resolveParams(final String pattern) {
-    final resolvedParams = resolveParamsFromPath(template, pattern);
-    resolvedParams[name] = transformers.fold<dynamic>(
-      resolvedParams[name],
-      (preV, transformer) => transformer.transform!.call(preV),
+    final params = resolveParamsFromPath(template, pattern);
+    params[name] = descriptors.fold<dynamic>(
+      params[name],
+      (value, descriptor) => descriptor(value),
     );
-    return resolvedParams;
+    return params;
   }
 
   @override
