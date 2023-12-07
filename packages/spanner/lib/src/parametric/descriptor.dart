@@ -6,10 +6,9 @@ typedef ParameterDescriptor<T> = T Function(dynamic value);
 
 ParameterDescriptor<num> numDescriptor = (input) {
   input = input.toString();
-  if (num.tryParse(input) == null) {
-    throw PharaohValidationError('Invalid parameter value', input);
-  }
-  return num.parse(input);
+  final value = num.tryParse(input);
+  if (value != null) return value;
+  throw PharaohValidationError('Invalid parameter value', input);
 };
 
 ParameterDescriptor regexDescriptor = (input) {
