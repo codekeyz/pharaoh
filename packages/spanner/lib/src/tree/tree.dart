@@ -223,7 +223,7 @@ class Spanner {
         final definition = parametricNode.findMatchingDefinition(
           method,
           routePart,
-          shouldBeTerminal: isLastPart,
+          terminal: isLastPart,
         );
 
         devlog('    * parametric defn:         ${definition.toString()}');

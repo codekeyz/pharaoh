@@ -50,8 +50,9 @@ ParameterDefinition? _buildParamDefinition(String part, bool terminal) {
 
   final parent = makeDefinition(matches.first, end: false);
   final subdefns = matches.skip(1);
-  final subparts =
-      subdefns.mapIndexed((i, e) => makeDefinition(e, end: i == (subdefns.length - 1)));
+  final subparts = subdefns.mapIndexed(
+    (i, e) => makeDefinition(e, end: i == (subdefns.length - 1) && terminal),
+  );
 
   return CompositeParameterDefinition._(parent, subparts: UnmodifiableListView(subparts));
 }
@@ -89,13 +90,7 @@ class ParameterDefinition with EquatableMixin, RouteActionMixin {
     return _buildParamDefinition(part, terminal)!;
   }
 
-  bool matches(
-    String pattern, {
-    bool shouldbeTerminal = false,
-  }) {
-    if (terminal != shouldbeTerminal) return false;
-    return template.hasMatch(pattern);
-  }
+  bool matches(String pattern) => template.hasMatch(pattern);
 
   bool isExactExceptName(ParameterDefinition defn) {
     if (methods.isNotEmpty) {
@@ -130,6 +125,7 @@ class CompositeParameterDefinition extends ParameterDefinition {
           prefix: parent.prefix,
           suffix: parent.suffix,
           terminal: false,
+          descriptors: parent.descriptors,
         );
 
   @override
@@ -151,13 +147,16 @@ class CompositeParameterDefinition extends ParameterDefinition {
 
   @override
   Map<String, dynamic> resolveParams(String pattern) {
-    return resolveParamsFromPath(template, pattern);
-  }
-
-  @override
-  bool matches(String pattern, {bool shouldbeTerminal = false}) {
-    final match = template.hasMatch(pattern);
-    if (!match) return false;
-    return shouldbeTerminal && terminal;
+    final params = resolveParamsFromPath(template, pattern);
+    final definitions = [this, ...subparts].where((e) => e.descriptors.isNotEmpty);
+    if (definitions.isNotEmpty) {
+      for (final defn in definitions) {
+        params[defn.name] = defn.descriptors.fold<dynamic>(
+          params[defn.name],
+          (value, descriptor) => descriptor(value),
+        );
+      }
+    }
+    return params;
   }
 }
