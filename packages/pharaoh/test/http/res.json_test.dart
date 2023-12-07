@@ -20,6 +20,21 @@ void main() {
           .test();
     });
 
+    test('should catch object serialization errors', () async {
+      final app = Pharaoh().get('/', (req, res) => res.json(Never));
+
+      await (await request<Pharaoh>(app))
+          .get('/')
+          .expectStatus(500)
+          .expectBody({
+            'path': '/',
+            'method': 'GET',
+            'message': "Converting object to an encodable object failed: Never"
+          })
+          .expectContentType('application/json; charset=utf-8')
+          .test();
+    });
+
     group('when given primitives', () {
       test('should respond with json for <null>', () async {
         final app = Pharaoh().use((req, res, next) {

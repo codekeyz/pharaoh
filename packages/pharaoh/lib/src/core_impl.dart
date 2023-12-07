@@ -83,6 +83,11 @@ class _$PharaohImpl extends RouterContract<Pharaoh>
     try {
       final result = await resolveAndExecuteHandlers(req, res);
       await forward(httpReq, result.res);
+    } on PharaohValidationError catch (e) {
+      await forward(
+        httpReq,
+        res.status(422).json(res.makeError(message: e.toString())),
+      );
     } catch (e) {
       await forward(httpReq, res.internalServerError(e.toString()));
     }
