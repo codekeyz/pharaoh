@@ -58,7 +58,8 @@ class _$PharaohImpl extends RouterContract<Pharaoh>
     final progress = _logger.progress('Starting server');
 
     try {
-      _server = await HttpServer.bind('0.0.0.0', port);
+      _server = await HttpServer.bind('0.0.0.0', port, shared: true)
+        ..autoCompress = true;
       _server.listen(handleRequest);
       progress.complete('Server start on PORT: ${_server.port} -> ${uri.toString()}');
     } catch (e) {
