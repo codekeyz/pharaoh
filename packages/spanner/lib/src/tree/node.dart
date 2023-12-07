@@ -105,14 +105,13 @@ class ParametricNode extends Node {
   ParameterDefinition? findMatchingDefinition(
     HTTPMethod method,
     String part, {
-    bool shouldBeTerminal = false,
+    bool terminal = false,
   }) {
     return definitions.firstWhereOrNull(
       (e) {
-        final definitionCanHandleMethod = e.methods.isEmpty || e.hasMethod(method);
-
-        return definitionCanHandleMethod &&
-            e.matches(part, shouldbeTerminal: shouldBeTerminal);
+        final supportsMethod = e.methods.isEmpty || e.hasMethod(method);
+        if (terminal != e.terminal || !supportsMethod) return false;
+        return e.matches(part);
       },
     );
   }

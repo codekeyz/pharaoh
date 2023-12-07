@@ -184,13 +184,8 @@ class Response extends Message<shelf.Body?> implements $Response {
       if (data is Set) data = data.toList();
       result = jsonEncode(data);
     } catch (_) {
-      final errStr = jsonEncode(makeError(message: _.toString()).toJson);
-      return Response(
-        _httpReq,
-        statusCode: 500,
-        body: shelf.Body(errStr),
-        headers: headers,
-      ).type(ContentType.json).end();
+      final errStr = jsonEncode(makeError(message: _.toString()));
+      return type(ContentType.json).status(500).send(errStr);
     }
 
     final res = Response(
@@ -206,19 +201,18 @@ class Response extends Message<shelf.Body?> implements $Response {
 
   @override
   Response notFound([String? message]) {
-    return status(404).json(makeError(message: message ?? 'Not found').toJson);
+    return status(404).json(makeError(message: message ?? 'Not found'));
   }
 
   @override
   Response unauthorized({Object? data}) {
-    final error = data ?? makeError(message: 'Unauthorized').toJson;
+    final error = data ?? makeError(message: 'Unauthorized');
     return status(401).json(error);
   }
 
   @override
   Response internalServerError([String? message]) {
-    return status(500)
-        .json(makeError(message: message ?? 'Internal Server Error').toJson);
+    return status(500).json(makeError(message: message ?? 'Internal Server Error'));
   }
 
   @override
@@ -255,8 +249,11 @@ class Response extends Message<shelf.Body?> implements $Response {
     );
   }
 
-  PharaohErrorBody makeError({required String message}) =>
-      PharaohErrorBody(message, _reqInfo.path, method: _reqInfo.method);
+  PharaohErrorBody makeError({required String message}) => PharaohErrorBody(
+        message,
+        _reqInfo.path,
+        method: _reqInfo.method,
+      );
 
   ContentType _getContentType(
     Object data, {
@@ -284,8 +281,7 @@ class Response extends Message<shelf.Body?> implements $Response {
     final handler = options[reqAcceptType] ?? options['_'];
 
     if (handler == null) {
-      return status(HttpStatus.notAcceptable)
-          .json(makeError(message: 'Not Acceptable').toJson);
+      return status(HttpStatus.notAcceptable).json(makeError(message: 'Not Acceptable'));
     }
 
     return handler.call(this);
