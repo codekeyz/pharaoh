@@ -110,5 +110,23 @@ void main() {
         havingParameters({'lang': 'fr', 'id': '12345/edit'}),
       );
     });
+
+    test('contains descriptors', () {
+      final router = Spanner()
+        ..on(HTTPMethod.GET, '/users/<userId|(^\\w+)|number>/detail', okHdler)
+        ..on(HTTPMethod.GET, '/<userId|(^\\w+)>', (req, res, next) => okHdler);
+
+      var result = router.lookup(HTTPMethod.GET, '/users/24/detail');
+      expect(result, havingParameters({'userId': 24}));
+
+      result = router.lookup(HTTPMethod.GET, '/hello-world');
+      expect(result, havingParameters({'userId': 'hello-world'}));
+
+      expect(
+        runSyncAndReturnException(() => router.lookup(HTTPMethod.GET, '/@388>)#(***)')),
+        isA<PharaohValidationError>()
+            .having((p0) => p0.message, 'with message', 'Invalid parameter value'),
+      );
+    });
   });
 }
