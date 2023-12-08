@@ -71,7 +71,6 @@ mixin RouteDefinitionMixin<T> on RouterContract<T> {
     HandlerFunc middleware, {
     HTTPMethod method = HTTPMethod.ALL,
   }) {
-    if (method == HTTPMethod.ALL) path = '$path/*';
     spanner.on(method, '$path', middleware);
     return this as T;
   }

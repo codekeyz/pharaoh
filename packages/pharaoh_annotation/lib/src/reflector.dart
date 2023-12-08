@@ -40,6 +40,11 @@ Future<void> setupControllers(Pharaoh app, BaseController ctrl) async {
     final methods = definition.$1.methods;
     final path = controller.path + definition.$1.path;
 
+    if (methods.contains(HTTPMethod.ALL)) {
+      app.on(path, useRequestHandler(definition.$2), method: HTTPMethod.ALL);
+      continue;
+    }
+
     for (final method in methods) {
       app.on(path, useRequestHandler(definition.$2), method: method);
     }

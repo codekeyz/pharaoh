@@ -22,6 +22,12 @@ class UserController extends BaseController {
       'nationality': 'Lagosian',
     });
   }
+
+  @RouteMapping([HTTPMethod.ALL], '/hello/<userId>')
+  Future<Response> sayHello(Request request, Response response) async {
+    final userId = request.params['userId'];
+    return response.ok('${request.method} called just now 🚀 with $userId');
+  }
 }
 
 void main() async {
@@ -32,6 +38,8 @@ void main() async {
     custom: app,
     controllers: [UserController()],
   ).build();
+
+  print(app.routeStr);
 
   await app.listen();
 }
