@@ -5,4 +5,4 @@ melos_pharaoh.iml
 **/pubspec.lock
 
 **/melos_**
-pharaoh_examples/lib/firebase/public
+pharaoh_examples/lib/firebase/public/
