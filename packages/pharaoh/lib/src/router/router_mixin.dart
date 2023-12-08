@@ -61,7 +61,7 @@ mixin RouteDefinitionMixin<T> on RouterContract<T> {
 
   @override
   T use(HandlerFunc middleware) {
-    spanner.on(HTTPMethod.ALL, '/*', middleware);
+    spanner.on(HTTPMethod.ALL, '*', middleware);
     return this as T;
   }
 

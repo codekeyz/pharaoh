@@ -106,12 +106,21 @@ class Spanner {
 
   void _on(String path, HTTPMethod method, IndexedHandler handler) {
     path = _cleanPath(path);
+
     Node rootNode = _root;
 
     if (path == BASE_PATH) {
       (rootNode as StaticNode)
         ..addHandler(method, handler)
         ..terminal = true;
+      return;
+    } else if (path == WildcardNode.key) {
+      final wildcardNode = (rootNode.wildcardNode ?? WildcardNode())
+        ..addHandler(method, handler);
+      (rootNode as StaticNode).addChildAndReturn(
+        WildcardNode.key,
+        wildcardNode,
+      );
       return;
     }
 
@@ -283,11 +292,10 @@ class Spanner {
   }
 
   String _cleanPath(String path) {
+    if ([BASE_PATH, WildcardNode.key].contains(path)) return path;
     if (!path.startsWith(BASE_PATH)) {
       throw ArgumentError.value(path, null, 'Route registration must start with `/`');
     }
-    if (path.length == 1) return path;
-
     if (config.ignoreDuplicateSlashes) {
       path = path.replaceAll(RegExp(r'/+'), '/');
     }
