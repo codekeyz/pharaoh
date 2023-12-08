@@ -1,24 +1,24 @@
 import '../http/request.dart';
 import 'router_handler.dart';
 
-abstract class RouterContract<T> {
-  T get(String path, RequestHandlerFunc hdler);
+abstract class RouterContract {
+  void get(String path, RequestHandlerFunc hdler);
 
-  T post(String path, RequestHandlerFunc hdler);
+  void post(String path, RequestHandlerFunc hdler);
 
-  T put(String path, RequestHandlerFunc hdler);
+  void put(String path, RequestHandlerFunc hdler);
 
-  T delete(String path, RequestHandlerFunc hdler);
+  void delete(String path, RequestHandlerFunc hdler);
 
-  T head(String path, RequestHandlerFunc hdler);
+  void head(String path, RequestHandlerFunc hdler);
 
-  T patch(String path, RequestHandlerFunc hdler);
+  void patch(String path, RequestHandlerFunc hdler);
 
-  T options(String path, RequestHandlerFunc hdler);
+  void options(String path, RequestHandlerFunc hdler);
 
-  T trace(String path, RequestHandlerFunc hdler);
+  void trace(String path, RequestHandlerFunc hdler);
 
-  T use(HandlerFunc middleware);
+  void use(HandlerFunc middleware);
 
-  T on(String path, HandlerFunc hdler, {HTTPMethod method = HTTPMethod.ALL});
+  void on(String path, HandlerFunc hdler, {HTTPMethod method = HTTPMethod.ALL});
 }

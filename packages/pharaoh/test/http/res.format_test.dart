@@ -6,13 +6,14 @@ import 'package:spookie/spookie.dart';
 void main() {
   group('res.format(Map<String, Function(Response)> options)', () {
     test('should respond using :accept provided', () async {
-      final app = Pharaoh().get(
-        '/',
-        (req, res) => res.format({
-          ContentType.text.toString(): (res) => res.ok('Hello World'),
-          ContentType.html.toString(): (res) => res.send('<p>Hello World</p>'),
-        }),
-      );
+      final app = Pharaoh()
+        ..get(
+          '/',
+          (req, res) => res.format({
+            ContentType.text.toString(): (res) => res.ok('Hello World'),
+            ContentType.html.toString(): (res) => res.send('<p>Hello World</p>'),
+          }),
+        );
 
       await (await request<Pharaoh>(app))
           .get(
@@ -36,14 +37,15 @@ void main() {
     });
 
     test('should respond using default when :accept not provided', () async {
-      final app = Pharaoh().get(
-        '/',
-        (req, res) => res.format({
-          ContentType.text.toString(): (res) => res.ok('Hello World'),
-          ContentType.html.toString(): (res) => res.send('<p>Hello World</p>'),
-          '_': (res) => res.json({'message': 'Hello World'})
-        }),
-      );
+      final app = Pharaoh()
+        ..get(
+          '/',
+          (req, res) => res.format({
+            ContentType.text.toString(): (res) => res.ok('Hello World'),
+            ContentType.html.toString(): (res) => res.send('<p>Hello World</p>'),
+            '_': (res) => res.json({'message': 'Hello World'})
+          }),
+        );
 
       await (await request<Pharaoh>(app))
           .get('/')
@@ -54,13 +56,14 @@ void main() {
     });
 
     test('should send error when :accept not supported', () async {
-      final app = Pharaoh().get(
-        '/',
-        (req, res) => res.format({
-          ContentType.text.toString(): (res) => res.ok('Hello World'),
-          ContentType.html.toString(): (res) => res.send('<p>Hello World</p>'),
-        }),
-      );
+      final app = Pharaoh()
+        ..get(
+          '/',
+          (req, res) => res.format({
+            ContentType.text.toString(): (res) => res.ok('Hello World'),
+            ContentType.html.toString(): (res) => res.send('<p>Hello World</p>'),
+          }),
+        );
 
       await (await request<Pharaoh>(app))
           .get(

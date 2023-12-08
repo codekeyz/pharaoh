@@ -6,7 +6,7 @@ import 'router_handler.dart';
 
 typedef _PendingRouteIntent = (HTTPMethod method, ({String path, HandlerFunc handler}));
 
-class GroupRouter extends RouterContract<GroupRouter> {
+class GroupRouter extends RouterContract {
   final List<_PendingRouteIntent> _pendingRouteIntents = [];
 
   List<_PendingRouteIntent> get routes => _pendingRouteIntents;

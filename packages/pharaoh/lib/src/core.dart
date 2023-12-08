@@ -21,10 +21,10 @@ import 'shelf_interop/shelf.dart' as shelf;
 
 part 'core_impl.dart';
 
-abstract class Pharaoh implements RouterContract<Pharaoh> {
+abstract class Pharaoh implements RouterContract {
   factory Pharaoh() => _$PharaohImpl();
 
-  RouterContract<GroupRouter> router();
+  RouterContract router();
 
   List<RouteEntry> get routes;
 
@@ -32,7 +32,7 @@ abstract class Pharaoh implements RouterContract<Pharaoh> {
 
   Uri get uri;
 
-  Pharaoh group(String path, RouterContract<GroupRouter> router);
+  Pharaoh group(String path, RouterContract router);
 
   Future<Pharaoh> listen({int port = 3000});
 

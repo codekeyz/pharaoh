@@ -4,14 +4,14 @@ import 'package:spookie/spookie.dart';
 void main() {
   group('route_handler', () {
     test('should deliver :req', () async {
-      final app = Pharaoh().use(
-        (req, res, next) {
+      final app = Pharaoh()
+        ..use((req, res, next) {
           req[RequestContext.auth] = 'some-token';
           return next(req);
-        },
-      ).get('/', (req, res) => res.send(req.auth));
+        })
+        ..get('/', (req, res) => res.send(req.auth));
 
-      await (await request(app))
+      await (await request<Pharaoh>(app))
           .get('/')
           .expectStatus(200)
           .expectBody('some-token')
@@ -19,14 +19,13 @@ void main() {
     });
 
     test('should deliver res', () async {
-      final app = Pharaoh().use(
-        (req, res, next) {
+      final app = Pharaoh()
+        ..use((req, res, next) {
           req[RequestContext.auth] = 'some-token';
           return next(res.ok('Hello World'));
-        },
-      );
+        });
 
-      await (await request(app))
+      await (await request<Pharaoh>(app))
           .get('/')
           .expectStatus(200)
           .expectBody('Hello World')
@@ -34,14 +33,14 @@ void main() {
     });
 
     test('should deliver both :res and res', () async {
-      final app = Pharaoh().use(
-        (req, res, next) {
+      final app = Pharaoh()
+        ..use((req, res, next) {
           req[RequestContext.auth] = 'World';
           return next((req: req, res: res.cookie('name', 'tobi')));
-        },
-      ).get('/', (req, res) => res.ok('Hello ${req.auth}'));
+        })
+        ..get('/', (req, res) => res.ok('Hello ${req.auth}'));
 
-      await (await request(app))
+      await (await request<Pharaoh>(app))
           .get('/')
           .expectHeader('set-cookie', 'name=tobi; Path=/')
           .expectStatus(200)
@@ -50,12 +49,12 @@ void main() {
     });
 
     test('should deliver both :res and res', () async {
-      final app = Pharaoh().use(
-        (req, res, next) {
+      final app = Pharaoh()
+        ..use((req, res, next) {
           req[RequestContext.auth] = 'World';
           return next((req: req, res: res.cookie('name', 'tobi')));
-        },
-      ).get('/', (req, res) => res.ok('Hello ${req.auth}'));
+        })
+        ..get('/', (req, res) => res.ok('Hello ${req.auth}'));
 
       await (await request(app))
           .get('/')
@@ -85,7 +84,9 @@ void main() {
 
       Pharaoh getApp(HandlerFunc chain) {
         final app = Pharaoh();
-        return app.use(chain).get('/test', (req, res) => res.ok());
+        return app
+          ..use(chain)
+          ..get('/test', (req, res) => res.ok());
       }
 
       final testChain1 = mdw1.chain(mdw2).chain(mdw3);
@@ -112,9 +113,8 @@ void main() {
 
       listResultList.clear();
 
-      final shortLivedChain = testChain3
-          .chain((req, res, next) => next(res.end()))
-          .chain(testChain2);
+      final shortLivedChain =
+          testChain3.chain((req, res, next) => next(res.end())).chain(testChain2);
 
       await (await request(getApp(shortLivedChain))).get('/test').test();
       expect(listResultList, [3, 1, 3, 2, 1]);

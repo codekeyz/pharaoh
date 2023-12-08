@@ -1,8 +1,6 @@
 part of 'core.dart';
 
-class _$PharaohImpl extends RouterContract<Pharaoh>
-    with RouteDefinitionMixin<Pharaoh>
-    implements Pharaoh {
+class _$PharaohImpl extends RouterContract with RouteDefinitionMixin implements Pharaoh {
   late final HttpServer _server;
   late final Logger _logger;
 
@@ -16,7 +14,7 @@ class _$PharaohImpl extends RouterContract<Pharaoh>
   }
 
   @override
-  RouterContract<GroupRouter> router() => GroupRouter();
+  RouterContract router() => GroupRouter();
 
   @override
   List<RouteEntry> get routes => spanner.routes;
