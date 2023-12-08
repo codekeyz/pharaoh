@@ -11,8 +11,8 @@ void main() {
 
     setUpAll(() {
       app = Pharaoh()
-          .use(jwtAuth(secret: () => secretKey))
-          .get('/users/me', (req, res) => res.json(req.auth));
+        ..use(jwtAuth(secret: () => secretKey))
+        ..get('/users/me', (req, res) => res.json(req.auth));
     });
 
     test(
