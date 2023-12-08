@@ -51,13 +51,15 @@ class StaticNode extends Node with RouteActionMixin {
   StaticNode(this._name);
 
   @override
-  String get name => 'static($_name)';
+  String get name => _name;
 
   @override
   List<Object?> get props => [name, children];
 }
 
 class ParametricNode extends Node {
+  static final String key = '<:>';
+
   final List<ParameterDefinition> _definitions = [];
 
   List<ParameterDefinition> get definitions => UnmodifiableListView(_definitions);
@@ -65,6 +67,8 @@ class ParametricNode extends Node {
   ParametricNode(ParameterDefinition defn) {
     _definitions.add(defn);
   }
+
+  bool get hasTerminal => _definitions.any((e) => e.terminal);
 
   void addNewDefinition(ParameterDefinition defn) {
     final existing = _definitions.firstWhereOrNull((e) => e.isExactExceptName(defn));
@@ -97,7 +101,7 @@ class ParametricNode extends Node {
   }
 
   @override
-  String get name => 'parametric(${_definitions.length}-defns)';
+  String get name => ParametricNode.key;
 
   @override
   List<Object?> get props => [name, _definitions, children];
@@ -105,27 +109,22 @@ class ParametricNode extends Node {
   ParameterDefinition? findMatchingDefinition(
     HTTPMethod method,
     String part, {
-    bool shouldBeTerminal = false,
+    bool terminal = false,
   }) {
     return definitions.firstWhereOrNull(
       (e) {
-        final definitionCanHandleMethod = e.methods.isEmpty || e.hasMethod(method);
-
-        return definitionCanHandleMethod &&
-            e.matches(part, shouldbeTerminal: shouldBeTerminal);
+        final supportsMethod = e.methods.isEmpty || e.hasMethod(method);
+        if (terminal != e.terminal || !supportsMethod) return false;
+        return e.matches(part);
       },
     );
   }
 }
 
-// ignore: constant_identifier_names
-const String WILDCARD_SYMBOL = '*';
-
 class WildcardNode extends StaticNode {
-  WildcardNode() : super(WILDCARD_SYMBOL);
+  static final String key = '*';
 
-  @override
-  String get name => 'wildcard($WILDCARD_SYMBOL)';
+  WildcardNode() : super(WildcardNode.key);
 
   @override
   List<Object?> get props => [name];

@@ -9,7 +9,7 @@ import '../utils.dart';
 class TodoController {
   TodoController._();
 
-  static addTodo($Request req, $Response res) async {
+  static addTodo(Request req, Response res) async {
     try {
       if (req.body is! Map) {
         throw ApiError('Bad request body', HttpStatus.badRequest);
@@ -35,7 +35,7 @@ class TodoController {
     }
   }
 
-  static updateTodo($Request req, $Response res) async {
+  static updateTodo(Request req, Response res) async {
     try {
       final id = req.params['id'];
 
@@ -65,7 +65,7 @@ class TodoController {
     }
   }
 
-  static getSingleTodo($Request req, $Response res) async {
+  static getSingleTodo(Request req, Response res) async {
     try {
       final id = req.params['id'];
 
@@ -77,7 +77,7 @@ class TodoController {
     }
   }
 
-  static listTodos($Request req, $Response res) async {
+  static listTodos(Request req, Response res) async {
     try {
       int page = 1;
       int limit = 2;
@@ -101,7 +101,7 @@ class TodoController {
     }
   }
 
-  static deleteTodo($Request req, $Response res) async {
+  static deleteTodo(Request req, Response res) async {
     try {
       final id = req.params['id'];
       await TodoService.deleteTodo(id);

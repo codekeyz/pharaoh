@@ -1,108 +1,95 @@
 import 'dart:io';
 
 import 'package:pharaoh_examples/api_service/index.dart' as apisvc;
-import 'package:http/http.dart' as http;
-import 'package:test/test.dart';
+import 'package:spookie/spookie.dart';
 
 void main() async {
   group('api_service_example', () {
-    setUpAll(() => Future.sync(() => apisvc.main({'port': 0})));
+    setUpAll(() => Future.sync(() => apisvc.main([0])));
 
     tearDownAll(() => apisvc.app.shutdown());
 
     group('should return json error message', () {
       test('when `api-key` not provided', () async {
-        final serverUrl = apisvc.app.uri.toString();
-        final path = Uri.parse('$serverUrl/api/users');
-
-        final result = await http.get(path);
-        expect(result.statusCode, 400);
-        expect(
-          result.headers[HttpHeaders.contentTypeHeader],
-          'application/json; charset=utf-8',
-        );
-        expect(result.body, '"API key required"');
+        await (await request(apisvc.app))
+            .get('/api/users')
+            .expectStatus(400)
+            .expectHeader(
+                HttpHeaders.contentTypeHeader, 'application/json; charset=utf-8')
+            .expectBody('"API key required"')
+            .test();
       });
 
       test('when `api-key` is invalid', () async {
-        final serverUrl = apisvc.app.uri.toString();
-        final path = Uri.parse('$serverUrl/api/users?api-key=asfas');
-
-        final result = await http.get(path);
-        expect(result.statusCode, 401);
-        expect(
-          result.headers[HttpHeaders.contentTypeHeader],
-          'application/json; charset=utf-8',
-        );
-        expect(result.body, '"Invalid API key"');
+        await (await request(apisvc.app))
+            .get('/api/users?api-key=asfas')
+            .expectStatus(401)
+            .expectHeader(
+                HttpHeaders.contentTypeHeader, 'application/json; charset=utf-8')
+            .expectBody('"Invalid API key"')
+            .test();
       });
     });
 
     group('when `api-key` is provided and valid', () {
       test('should return users', () async {
-        final serverUrl = apisvc.app.uri.toString();
-        final path = Uri.parse('$serverUrl/api/users?api-key=foo');
+        final result = [
+          {'name': 'tobi'},
+          {'name': 'loki'},
+          {'name': 'jane'}
+        ];
 
-        final result = await http.get(path);
-        expect(result.statusCode, 200);
-        expect(
-          result.headers[HttpHeaders.contentTypeHeader],
-          'application/json; charset=utf-8',
-        );
-        expect(
-          result.body,
-          '[{"name":"tobi"},{"name":"loki"},{"name":"jane"}]',
-        );
+        await (await request(apisvc.app))
+            .get('/api/users?api-key=foo')
+            .expectStatus(200)
+            .expectHeader(
+                HttpHeaders.contentTypeHeader, 'application/json; charset=utf-8')
+            .expectBody(result)
+            .test();
       });
 
       group('and route is get repos for :name', () {
         test('should return repos when found', () async {
-          final serverUrl = apisvc.app.uri.toString();
-          final path = Uri.parse('$serverUrl/api/user/tobi/repos?api-key=foo');
+          const result = [
+            {'name': 'express', 'url': "https://github.com/expressjs/express"},
+            {'name': 'stylus', 'url': "https://github.com/learnboost/stylus"},
+          ];
 
-          final result = await http.get(path);
-          expect(result.statusCode, 200);
-          expect(
-            result.headers[HttpHeaders.contentTypeHeader],
-            'application/json; charset=utf-8',
-          );
-          expect(
-            result.body,
-            '[{"name":"express","url":"https://github.com/expressjs/express"},{"name":"stylus","url":"https://github.com/learnboost/stylus"}]',
-          );
+          await (await request(apisvc.app))
+              .get('/api/user/tobi/repos?api-key=foo')
+              .expectStatus(200)
+              .expectHeader(
+                  HttpHeaders.contentTypeHeader, 'application/json; charset=utf-8')
+              .expectBody(result)
+              .test();
         });
 
         test('should return notFound when :name not found', () async {
-          final serverUrl = apisvc.app.uri.toString();
-          final path = Uri.parse('$serverUrl/api/user/chima/repos?api-key=foo');
-
-          final result = await http.get(path);
-          expect(result.statusCode, 404);
-          expect(
-            result.headers[HttpHeaders.contentTypeHeader],
-            'application/json; charset=utf-8',
-          );
-          expect(
-            result.body,
-            '{"path":"/api/user/chima/repos","method":"GET","message":"Not found"}',
-          );
+          await (await request(apisvc.app))
+              .get('/api/user/chima/repos?api-key=foo')
+              .expectStatus(404)
+              .expectHeader(
+                  HttpHeaders.contentTypeHeader, 'application/json; charset=utf-8')
+              .expectBody(
+                  '{"path":"/api/user/chima/repos","method":"GET","message":"Not found"}')
+              .test();
         });
       });
 
       test('should return repos', () async {
-        final serverUrl = apisvc.app.uri.toString();
-        final path = Uri.parse('$serverUrl/api/repos?api-key=foo');
+        const result = [
+          {'name': 'express', 'url': "https://github.com/expressjs/express"},
+          {'name': 'stylus', 'url': "https://github.com/learnboost/stylus"},
+          {'name': 'cluster', 'url': "https://github.com/learnboost/cluster"},
+        ];
 
-        final result = await http.get(path);
-        expect(result.statusCode, 200);
-        expect(
-          result.headers[HttpHeaders.contentTypeHeader],
-          'application/json; charset=utf-8',
-        );
-        expect(
-          result.body,
-          '[{"name":"express","url":"https://github.com/expressjs/express"},{"name":"stylus","url":"https://github.com/learnboost/stylus"},{"name":"cluster","url":"https://github.com/learnboost/cluster"}]',
-        );
+        await (await request(apisvc.app))
+            .get('/api/repos?api-key=foo')
+            .expectStatus(200)
+            .expectHeader(
+                HttpHeaders.contentTypeHeader, 'application/json; charset=utf-8')
+            .expectBody(result)
+            .test();
       });
     });
   });

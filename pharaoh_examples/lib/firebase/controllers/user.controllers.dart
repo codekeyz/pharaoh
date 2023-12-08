@@ -10,7 +10,7 @@ import '../utils.dart';
 
 class UserController {
   /// function to create a user
-  static createUser($Request req, $Response res) async {
+  static createUser(Request req, Response res) async {
     try {
       if (req.body is! Map) {
         throw ApiError('Bad request body', HttpStatus.badRequest);

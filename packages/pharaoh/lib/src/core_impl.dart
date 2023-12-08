@@ -5,19 +5,21 @@ class _$PharaohImpl extends RouterContract<Pharaoh>
     implements Pharaoh {
   late final HttpServer _server;
   late final Logger _logger;
-  late final PharaohRouter _router;
+
+  final List<ReqResHook> _preResponseHooks = [
+    sessionPreResponseHook,
+  ];
 
   _$PharaohImpl() : _logger = Logger() {
     useSpanner(Spanner());
     use(bodyParser);
-    _router = PharaohRouter(spanner);
   }
 
   @override
   RouterContract<GroupRouter> router() => GroupRouter();
 
   @override
-  List<dynamic> get routes => [];
+  List<RouteEntry> get routes => spanner.routes;
 
   @override
   Uri get uri {
@@ -56,7 +58,8 @@ class _$PharaohImpl extends RouterContract<Pharaoh>
     final progress = _logger.progress('Starting server');
 
     try {
-      _server = await HttpServer.bind('0.0.0.0', port);
+      _server = await HttpServer.bind('0.0.0.0', port, shared: true)
+        ..autoCompress = true;
       _server.listen(handleRequest);
       progress.complete(
           'Server start on PORT: ${_server.port} -> ${uri.toString()}');
@@ -77,33 +80,53 @@ class _$PharaohImpl extends RouterContract<Pharaoh>
     httpReq.response.headers.chunkedTransferEncoding = false;
     httpReq.response.headers.clear();
 
-    final result = await resolveRequest(httpReq);
-    if (result.canNext == false) return;
-
-    final res = result.reqRes.res;
-    if (res.ended) {
-      return forward(httpReq, res);
-    }
-
-    /// TODO(codekeyz) If we get here, then it means the response was never ended.
-    /// we should alert the developer
-  }
-
-  Future<HandlerResult> resolveRequest(HttpRequest request) async {
-    final req = Request.from(request);
-    final res = Response.from(request);
+    final req = $Request.from(httpReq);
+    final res = $Response.from(httpReq);
 
     try {
-      return await _router.resolve(req, res);
-    } catch (e) {
-      return (
-        canNext: true,
-        reqRes: (req: req, res: res.internalServerError(e.toString())),
+      final result = await resolveAndExecuteHandlers(req, res);
+      await forward(httpReq, result.res);
+    } on PharaohValidationError catch (e) {
+      await forward(
+        httpReq,
+        res.status(422).json(res.makeError(message: e.toString())),
       );
+    } catch (e) {
+      await forward(httpReq, res.internalServerError(e.toString()));
     }
   }
 
-  Future<void> forward(HttpRequest request, Response res_) async {
+  Future<ReqRes> resolveAndExecuteHandlers($Request req, $Response res) async {
+    ReqRes reqRes = (req: req, res: res);
+
+    Response routeNotFound() => res.notFound("Route not found: ${req.path}");
+
+    final routeResult = spanner.lookup(req.method, req.path);
+    if (routeResult == null || routeResult.handlers.isEmpty) {
+      return reqRes.merge(routeNotFound());
+    }
+
+    /// update request params with params resolved from spanner
+    for (final param in routeResult.params.entries) {
+      req.params[param.key] = param.value;
+    }
+
+    final chainedHandlers = routeResult.handlers.reduce((a, b) => a.chain(b));
+    final result = await HandlerExecutor(chainedHandlers).execute(reqRes);
+    reqRes = result.reqRes;
+
+    for (final job in _preResponseHooks) {
+      reqRes = await Future.microtask(() => job(reqRes));
+    }
+
+    if (!reqRes.res.ended) {
+      return reqRes.merge(routeNotFound());
+    }
+
+    return reqRes;
+  }
+
+  Future<void> forward(HttpRequest request, $Response res_) async {
     var coding = res_.headers['transfer-encoding'];
 
     final statusCode = res_.statusCode;
@@ -113,7 +136,7 @@ class _$PharaohImpl extends RouterContract<Pharaoh>
       //
       // TODO(codekeyz): Do this more cleanly when sdk#27886 is fixed.
       final newStream = chunkedCoding.decoder.bind(res_.body!.read());
-      res_ = Response.from(request)..body = shelf.Body(newStream);
+      res_ = $Response.from(request)..body = shelf.Body(newStream);
       request.headers.set(HttpHeaders.transferEncodingHeader, 'chunked');
     } else if (statusCode >= 200 &&
         statusCode != 204 &&
@@ -154,9 +177,7 @@ class _$PharaohImpl extends RouterContract<Pharaoh>
   }
 
   @override
-  Future<void> shutdown() async {
-    await _server.close();
-  }
+  Future<void> shutdown() async => _server.close();
 }
 
 // ignore: constant_identifier_names

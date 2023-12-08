@@ -3,7 +3,7 @@ import '../handlers/handler.utils.dart';
 import '../utils.dart';
 
 class ResponseHandler {
-  $Response res;
+  Response res;
   ResponseHandler(this.res);
 
   success(String? message) {
