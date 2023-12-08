@@ -1,3 +1,4 @@
+import '../tree/utils.dart';
 import 'definition.dart';
 
 final parametricRegex = RegExp(r"<[^>]+>");
@@ -20,7 +21,16 @@ extension StringExtension on String {
 
   bool get isWildCard => codeUnitAt(0) == 42;
 
+  bool get isRegex => isRegexeric(this);
+
   String? get nullIfEmpty => isEmpty ? null : this;
+}
+
+/// converts `(^\\w+)` string value to Regex('\w+)
+RegExp descriptorToRegex(String descriptor) {
+  // Remove leading and trailing parentheses
+  String regexStr = descriptor.substring(1, descriptor.length - 1);
+  return RegExp(regexStr);
 }
 
 RegExp buildRegexFromTemplate(String template) {
@@ -56,14 +66,13 @@ extension ParametricDefinitionsExtension on List<ParameterDefinition> {
     final Map<int, int> nullCount = {};
     for (final def in this) {
       int count = 0;
+      if (def.prefix == null) count += 1;
       if (def.suffix == null) count += 1;
-      if (def.regex == null) count += 1;
       nullCount[def.hashCode] = count;
     }
 
     sort((a, b) => nullCount[a.hashCode]!.compareTo(nullCount[b.hashCode]!));
   }
 
-  Iterable get methods =>
-      map((e) => e.methods).reduce((val, e) => {...val, ...e});
+  Iterable get methods => map((e) => e.methods).reduce((val, e) => {...val, ...e});
 }

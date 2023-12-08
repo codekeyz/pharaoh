@@ -20,7 +20,9 @@ class PharaohException extends Error {
       : invalidValue = value,
         _hasValue = true;
 
-  String get _errorName => "Pharaoh Error${!_hasValue ? "(s)" : ""}";
+  String get _errorName => "$parentName${!_hasValue ? "(s)" : ""}";
+
+  String get parentName => "Pharaoh Error";
 
   @override
   String toString() {
@@ -45,9 +47,19 @@ class PharaohErrorBody {
     required this.method,
   });
 
-  Map<String, dynamic> get toJson => {
+  Map<String, dynamic> toJson() => {
         "path": path,
         "method": method.name,
         "message": message,
       };
+}
+
+class PharaohValidationError extends PharaohException {
+  PharaohValidationError(
+    String message,
+    String invalidValue,
+  ) : super.value(message, invalidValue);
+
+  @override
+  String get parentName => 'Pharaoh Validation Error';
 }

@@ -24,24 +24,19 @@ void main() {
       });
 
       test('close door parameter definitions', () {
-        router() =>
-            Spanner()..on(HTTPMethod.GET, '/user/<userId><keyId>', okHdler);
+        router() => Spanner()..on(HTTPMethod.GET, '/user/<userId><keyId>', okHdler);
 
         final exception = runSyncAndReturnException<ArgumentError>(router);
-        expect(
-            exception.message,
-            contains(
-                'Parameter definition is not valid. Close door neighbors'));
+        expect(exception.message,
+            contains('Parameter definition is invalid. Close door neighbors'));
         expect(exception.invalidValue, '<userId><keyId>');
       });
 
       test('invalid parameter definition', () {
-        router() => Spanner()
-          ..on(HTTPMethod.GET, '/user/<userId#@#.XDkd@#>>#>', okHdler);
+        router() => Spanner()..on(HTTPMethod.GET, '/user/<userId#@#.XDkd@#>>#>', okHdler);
 
         final exception = runSyncAndReturnException<ArgumentError>(router);
-        expect(
-            exception.message, contains('Parameter definition is not valid'));
+        expect(exception.message, contains('Parameter definition is invalid'));
         expect(exception.invalidValue, '<userId#@#.XDkd@#>>#>');
       });
     });
@@ -77,9 +72,7 @@ void main() {
 
       node = router.lookup(HTTPMethod.GET, '/user/aws-image.png/A29384/hello');
       expect(
-          node,
-          havingParameters<StaticNode>(
-              {'file': 'aws-image', 'user2': 'A29384'}));
+          node, havingParameters<StaticNode>({'file': 'aws-image', 'user2': 'A29384'}));
 
       node = router.lookup(HTTPMethod.GET, '/a/param-static');
       expect(node, havingParameters<ParameterDefinition>({'param': 'param'}));
@@ -102,6 +95,49 @@ void main() {
         router.lookup(HTTPMethod.GET, '/fr/item/12345/edit'),
         havingParameters({'lang': 'fr', '*': '12345/edit'}),
       );
+    });
+
+    test('should capture remaining parts as parameter when no wildcard', () {
+      final router = Spanner()..on(HTTPMethod.GET, '/<lang>/item/<id>', okHdler);
+
+      expect(
+        router.lookup(HTTPMethod.GET, '/fr/item/12345'),
+        havingParameters({'lang': 'fr', 'id': '12345'}),
+      );
+
+      expect(
+        router.lookup(HTTPMethod.GET, '/fr/item/12345/edit'),
+        havingParameters({'lang': 'fr', 'id': '12345/edit'}),
+      );
+    });
+
+    group('when descriptors', () {
+      test('in single parametric definition', () {
+        final router = Spanner()
+          ..on(HTTPMethod.GET, '/users/<userId|(^\\w+)|number>/detail', okHdler)
+          ..on(HTTPMethod.GET, '/<userId|(^\\w+)>', (req, res, next) => okHdler);
+
+        var result = router.lookup(HTTPMethod.GET, '/users/24/detail');
+        expect(result, havingParameters({'userId': 24}));
+
+        result = router.lookup(HTTPMethod.GET, '/hello-world');
+        expect(result, havingParameters({'userId': 'hello-world'}));
+
+        expect(
+          runSyncAndReturnException(() => router.lookup(HTTPMethod.GET, '/@388>)#(***)')),
+          isA<PharaohValidationError>()
+              .having((p0) => p0.message, 'with message', 'Invalid parameter value'),
+        );
+      });
+
+      test('in composite parametric definition', () async {
+        final router = Spanner()
+          ..on(HTTPMethod.GET, '/users/<userId|number>HELLO<paramId|number>/detail',
+              okHdler);
+
+        var result = router.lookup(HTTPMethod.GET, '/users/334HELLO387/detail');
+        expect(result, havingParameters({'userId': 334, 'paramId': 387}));
+      });
     });
   });
 }

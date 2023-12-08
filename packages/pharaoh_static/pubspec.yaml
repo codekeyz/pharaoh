@@ -1,7 +1,7 @@
 name: pharaoh_static
-description: A sample command-line application.
-version: 1.0.0
-# repository: https://github.com/my_org/my_repo
+description: Pharaoh Middleware that serves static files such as images, CSS files, and JavaScript files.
+version: 1.0.1
+repository: https://github.com/Pharaoh-Framework/pharaoh/tree/main/packages/pharaoh_static
 
 environment:
   sdk: ^3.0.0
@@ -12,7 +12,7 @@ dependencies:
   http_parser: ^4.0.2
   mime: ^1.0.4
   path: ^1.8.3
-  pharaoh:
+  pharaoh: ^0.0.5
 
 dev_dependencies:
   spookie: ^1.0.1

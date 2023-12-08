@@ -1,4 +1,3 @@
-// ignore: depend_on_referenced_packages
 import 'package:meta/meta.dart';
 import 'package:pharaoh/pharaoh.dart';
 
@@ -34,6 +33,10 @@ class Spanner {
 
   Spanner({this.config = const RouterConfig()}) : _root = StaticNode(BASE_PATH);
 
+  List<RouteEntry> get routes => _getRoutes(_root);
+
+  String get routeStr => routes.map((e) => '${e.method.name} ${e.path}').join('\n');
+
   void on(HTTPMethod method, String path, HandlerFunc handler) {
     _on(
       path,
@@ -55,9 +58,9 @@ class Spanner {
   /// a new [StaticNode] on the current root [node] and then return that.
   ///
   ///- eg2: when given `<userId>` in `/users/<userId>`
-  ///we will find a static child `users` or create one, then proceed to search
-  ///for a [ParametricNode] on the current root [node]. If found, we fill add a new
-  ///definition, or create a new [ParametricNode] with this definition.
+  /// we will find a static child `users` or create one, then proceed to search
+  /// for a [ParametricNode] on the current root [node]. If found, we fill add a new
+  /// definition, or create a new [ParametricNode] with this definition.
   Node _computeNode(
     Node node,
     String routePart,
@@ -200,8 +203,8 @@ class Spanner {
         rootNode = rootNode.getChild(routePart);
         devlog('- Found Static for             ->              $routePart');
       } else {
-        final paramNode = rootNode.paramNode;
-        if (paramNode == null) {
+        final parametricNode = rootNode.paramNode;
+        if (parametricNode == null) {
           devlog('x Found no static node for part       ->         $routePart');
           devlog('x Route is not registered             ->         $route');
 
@@ -212,48 +215,53 @@ class Spanner {
           break;
         }
 
-        final hasChild = paramNode.hasChild(routePart);
+        final hasChild = parametricNode.hasChild(routePart);
         if (hasChild) {
           devlog('- Found Static for             ->              $routePart');
-          rootNode = paramNode.getChild(routePart);
+          rootNode = parametricNode.getChild(routePart);
           continue;
         }
 
         devlog('- Finding Defn for $routePart        -> terminal?    $isLastPart');
 
-        final paramDefn = paramNode.findMatchingDefinition(
+        final definition = parametricNode.findMatchingDefinition(
           method,
           routePart,
-          shouldBeTerminal: isLastPart,
+          terminal: isLastPart,
         );
 
-        devlog('    * parametric defn:         ${paramDefn.toString()}');
+        devlog('    * parametric defn:         ${definition.toString()}');
 
-        if (paramDefn == null) {
-          devlog('x Found no defn for route part      ->         $routePart');
-          devlog('x Route is not registered             ->         $route');
-
+        if (definition == null) {
           final wc = rootNode.wildcardNode;
-          if (wc == null) return null;
+          if (wc != null) {
+            useWildcard(wc);
+          } else if (parametricNode.definitions.length == 1) {
+            final definition = parametricNode.definitions.first;
+            if (definition is CompositeParameterDefinition) break;
 
-          useWildcard(wc);
+            final remainingPath = routeSegments.sublist(i).join('/');
+            final name = parametricNode.definitions.first.name;
+            resolvedParams[name] = remainingPath;
+
+            final handlers = definition.getActions(method);
+            return RouteResult(resolvedParams, getResults(handlers), actual: definition);
+          }
           break;
         }
 
         devlog('- Found defn for route part    ->              $routePart');
 
-        final params = paramDefn.resolveParams(currPart);
+        final params = definition.resolveParams(currPart);
         resolvedParams.addAll(params);
-        rootNode = paramNode;
+        rootNode = parametricNode;
 
-        if (isLastPart && paramDefn.terminal) {
-          rootNode.terminal = true;
-          final hdlrs = paramDefn.getActions(method);
-
+        if (isLastPart && definition.terminal) {
+          final handlers = definition.getActions(method);
           return RouteResult(
             resolvedParams,
-            getResults(hdlrs),
-            actual: paramDefn,
+            getResults(handlers),
+            actual: definition,
           );
         }
       }
@@ -271,18 +279,7 @@ class Spanner {
   }
 
   void printTree() {
-    _printNode(_root, '$BASE_PATH ');
-  }
-
-  void _printNode(Node node, String prefix) {
-    if (node.terminal) print(prefix);
-
-    node.children.forEach((char, node) {
-      String prefixR = '$prefix$char';
-      if (node.hasChildren) prefixR += ' / ';
-
-      return _printNode(node, prefixR);
-    });
+    print(routeStr);
   }
 
   String _cleanPath(String path) {
@@ -302,7 +299,7 @@ class Spanner {
 
   List<String> _getRouteSegments(String route) => route.split('/');
 
-  String _getNodeKey(String part) => part.isParametric ? '<:>' : part;
+  String _getNodeKey(String part) => part.isParametric ? ParametricNode.key : part;
 }
 
 class RouteResult {
@@ -317,4 +314,48 @@ class RouteResult {
     this.handlers, {
     this.actual,
   });
+}
+
+List<RouteEntry> _getRoutes(Node node) {
+  final routes = <RouteEntry>[];
+
+  void iterateNode(Node node, String prefix) {
+    final hasTerminalInParametricNode = node is ParametricNode && node.hasTerminal;
+    if (node.terminal || hasTerminalInParametricNode) {
+      final entries = _getNodeEntries(node, prefix);
+      routes.addAll(entries);
+    }
+
+    node.children.forEach((char, node) {
+      String path = '$prefix$char';
+      if (node.hasChildren) path += ' / ';
+
+      return iterateNode(node, path);
+    });
+  }
+
+  iterateNode(node, '/ ');
+
+  return routes;
+}
+
+typedef RouteEntry = ({HTTPMethod method, String path});
+
+Iterable<RouteEntry> _getNodeEntries(Node node, String prefix) {
+  switch (node.runtimeType) {
+    case StaticNode:
+    case WildcardNode:
+      final methods = (node as StaticNode).methods;
+      return methods.map<RouteEntry>((e) => (method: e, path: prefix));
+    case ParametricNode:
+      final definitions = (node as ParametricNode).definitions.where((e) => e.terminal);
+      final entries = <RouteEntry>[];
+      for (final defn in definitions) {
+        final result = defn.methods.map<RouteEntry>((e) => (method: e, path: prefix));
+        entries.addAll(result);
+      }
+      return entries;
+  }
+
+  return [];
 }
