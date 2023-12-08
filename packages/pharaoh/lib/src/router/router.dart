@@ -85,17 +85,14 @@ class GroupRouter extends RouterContract<GroupRouter> {
 
   @override
   GroupRouter use(HandlerFunc mdw) {
-    _pendingRouteIntents.add((HTTPMethod.ALL, (path: '/*', handler: mdw)));
+    _pendingRouteIntents.add((HTTPMethod.ALL, (path: '*', handler: mdw)));
     return this;
   }
 
   @override
-  GroupRouter useOnPath(
-    String path,
-    HandlerFunc func, {
-    HTTPMethod method = HTTPMethod.ALL,
-  }) {
-    _pendingRouteIntents.add((method, (path: '$path/*', handler: func)));
+  GroupRouter on(String path, HandlerFunc func, {HTTPMethod method = HTTPMethod.ALL}) {
+    if (method == HTTPMethod.ALL) path = '$path/*';
+    _pendingRouteIntents.add((method, (path: path, handler: func)));
     return this;
   }
 

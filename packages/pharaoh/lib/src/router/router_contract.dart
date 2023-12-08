@@ -20,9 +20,5 @@ abstract class RouterContract<T> {
 
   T use(HandlerFunc middleware);
 
-  T useOnPath(
-    String path,
-    HandlerFunc func, {
-    HTTPMethod method = HTTPMethod.ALL,
-  });
+  T on(String path, HandlerFunc hdler, {HTTPMethod method = HTTPMethod.ALL});
 }

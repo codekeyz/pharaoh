@@ -6,35 +6,30 @@ class UserController extends BaseController {
   @override
   List<HandlerFunc> get middlewares => [logRequests];
 
-  @Get()
+  @Get(path: '/<userId>')
   Response getUsers(Request request, Response response) {
-    return response.ok('Hello WOrld 🚀');
+    return response.ok('Hello ${request.params['userId']} 🚀');
   }
 
-  // @Post()
-  // Future<Response> createUser(Request request, Response response) async {
-  //   /// do some fake loading
-  //   await Future.delayed(const Duration(seconds: 2));
+  @Get()
+  Future<Response> createUser(Request request, Response response) async {
+    /// do some fake loading
+    await Future.delayed(const Duration(seconds: 2));
 
-  //   return response.json({
-  //     'name': 'Chima',
-  //     'age': 22,
-  //     'nationality': 'Lagosian',
-  //   });
-  // }
-
-  // @RouteMapping([HTTPMethod.GET, HTTPMethod.HEAD], '/')
-  // Future<Response> saySomething(
-  //   Request request,
-  //   Response response,
-  // ) async {
-  //   return response.ok('Hello World');
-  // }
+    return response.json({
+      'name': 'Chima',
+      'age': 22,
+      'nationality': 'Lagosian',
+    });
+  }
 }
 
 void main() async {
-  final app = await AppModule(
-    middlewares: [],
+  var app = Pharaoh();
+  app.get('/', (req, res) => res.ok('Hello World 🚀'));
+
+  app = await AppModule(
+    custom: app,
     controllers: [UserController()],
   ).build();
 

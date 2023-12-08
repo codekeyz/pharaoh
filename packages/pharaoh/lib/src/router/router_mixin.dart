@@ -66,12 +66,13 @@ mixin RouteDefinitionMixin<T> on RouterContract<T> {
   }
 
   @override
-  T useOnPath(
+  T on(
     String path,
     HandlerFunc middleware, {
     HTTPMethod method = HTTPMethod.ALL,
   }) {
-    spanner.on(method, '$path/*', middleware);
+    if (method == HTTPMethod.ALL) path = '$path/*';
+    spanner.on(method, '$path', middleware);
     return this as T;
   }
 }

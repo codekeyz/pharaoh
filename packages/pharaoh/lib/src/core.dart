@@ -28,6 +28,8 @@ abstract class Pharaoh implements RouterContract<Pharaoh> {
 
   List<RouteEntry> get routes;
 
+  String get routeStr;
+
   Uri get uri;
 
   Pharaoh group(String path, RouterContract<GroupRouter> router);

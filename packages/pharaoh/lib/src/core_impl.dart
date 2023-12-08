@@ -22,6 +22,9 @@ class _$PharaohImpl extends RouterContract<Pharaoh>
   List<RouteEntry> get routes => spanner.routes;
 
   @override
+  String get routeStr => spanner.routeStr;
+
+  @override
   Uri get uri {
     if (_server.address.isLoopback) {
       return Uri(scheme: 'http', host: 'localhost', port: _server.port);
