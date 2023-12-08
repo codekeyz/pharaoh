@@ -3,8 +3,8 @@ import 'dart:io';
 
 import 'package:mime/mime.dart';
 
-import '../http/request.dart';
-import '../http/response.dart';
+import '../http/request_impl.dart';
+import '../http/response_impl.dart';
 import '../router/router_handler.dart';
 
 class MimeType {
@@ -14,7 +14,7 @@ class MimeType {
   static const String textPlain = 'text/plain';
 }
 
-_processBody(Request req, Response res, NextFunction next) async {
+_processBody($Request req, $Response res, NextFunction next) async {
   final mimeType = req.mediaType?.mimeType;
   if (mimeType == null || req.req.contentLength == 0) {
     return next(req..body = null);

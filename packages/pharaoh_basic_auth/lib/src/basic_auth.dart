@@ -6,7 +6,7 @@ import 'package:pharaoh/pharaoh.dart';
 
 typedef Authorizer = FutureOr<bool> Function(String username, String password);
 
-typedef UnAuthorizedResponse = String Function($Request req);
+typedef UnAuthorizedResponse = String Function(Request req);
 
 typedef GetRealm = String Function(Request req);
 

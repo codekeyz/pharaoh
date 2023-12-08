@@ -78,8 +78,8 @@ class _$PharaohImpl extends RouterContract<Pharaoh>
     httpReq.response.headers.chunkedTransferEncoding = false;
     httpReq.response.headers.clear();
 
-    final req = Request.from(httpReq);
-    final res = Response.from(httpReq);
+    final req = $Request.from(httpReq);
+    final res = $Response.from(httpReq);
 
     try {
       final result = await resolveAndExecuteHandlers(req, res);
@@ -94,7 +94,7 @@ class _$PharaohImpl extends RouterContract<Pharaoh>
     }
   }
 
-  Future<ReqRes> resolveAndExecuteHandlers(Request req, Response res) async {
+  Future<ReqRes> resolveAndExecuteHandlers($Request req, $Response res) async {
     ReqRes reqRes = (req: req, res: res);
 
     Response routeNotFound() => res.notFound("Route not found: ${req.path}");
@@ -124,7 +124,7 @@ class _$PharaohImpl extends RouterContract<Pharaoh>
     return reqRes;
   }
 
-  Future<void> forward(HttpRequest request, Response res_) async {
+  Future<void> forward(HttpRequest request, $Response res_) async {
     var coding = res_.headers['transfer-encoding'];
 
     final statusCode = res_.statusCode;
@@ -134,7 +134,7 @@ class _$PharaohImpl extends RouterContract<Pharaoh>
       //
       // TODO(codekeyz): Do this more cleanly when sdk#27886 is fixed.
       final newStream = chunkedCoding.decoder.bind(res_.body!.read());
-      res_ = Response.from(request)..body = shelf.Body(newStream);
+      res_ = $Response.from(request)..body = shelf.Body(newStream);
       request.headers.set(HttpHeaders.transferEncodingHeader, 'chunked');
     } else if (statusCode >= 200 &&
         statusCode != 204 &&
