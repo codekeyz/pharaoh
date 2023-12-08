@@ -26,7 +26,7 @@ Future<void> setupControllers(Pharaoh app, BaseController ctrl) async {
   final controllerAnnotation = controllerAnnotations
       .firstWhereOrNull((e) => e.type.isSubtypeOf(reflectType(Controller)));
   if (controllerAnnotation == null) {
-    throw PharaohAnnotationError('Class has missen @Controller annotation', value: ctrl);
+    throw PharaohAnnotationError('Class has missing @Controller annotation', value: ctrl);
   }
   final controller = controllerAnnotation.reflectee as Controller;
 
