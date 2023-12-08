@@ -3,8 +3,8 @@
 /// More dartdocs go here.
 library;
 
-export 'src/build.dart';
-export 'src/methods.dart';
+export 'src/module.dart';
+export 'src/method.dart';
 export 'src/controller.dart';
 
 

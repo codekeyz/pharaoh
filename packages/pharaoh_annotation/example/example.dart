@@ -22,4 +22,20 @@ class UserController extends BaseController {
       'nationality': 'Lagosian',
     });
   }
+
+  @RouteMapping([HTTPMethod.GET, HTTPMethod.HEAD], '/')
+  Future<Response> saySomething(
+    Request request,
+    Response response,
+  ) async {
+    return response.ok('Hello World');
+  }
+}
+
+void main() async {
+  final app = Pharaoh();
+
+  app.use(logRequests);
+
+  await app.listen();
 }
