@@ -223,7 +223,7 @@ packages:
       path: "../pharaoh"
       relative: true
     source: path
-    version: "0.0.5"
+    version: "0.0.5+5"
   pool:
     dependency: transitive
     description:
