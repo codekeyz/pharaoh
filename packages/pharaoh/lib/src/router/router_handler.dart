@@ -18,8 +18,8 @@ typedef ReqResHook = FutureOr<ReqRes> Function(ReqRes reqRes);
 
 extension ReqResExtension on ReqRes {
   ReqRes merge(dynamic val) => switch (val.runtimeType) {
-        Request => (req: val, res: this.res),
-        Response => (req: this.req, res: val),
+        $Request => (req: val, res: this.res),
+        $Response => (req: this.req, res: val),
         ReqRes => val,
         Null => this,
         _ => throw PharaohException.value('Invalid Type used on merge', val)
