@@ -1,16 +1,18 @@
 import 'dart:async';
 
 import '../http/request.dart';
+import '../http/request_impl.dart';
 import '../http/response.dart';
+import '../http/response_impl.dart';
 import '../utils/exceptions.dart';
 
-typedef ReqRes = ({Request req, Response res});
+typedef ReqRes = ({$Request req, $Response res});
 
-typedef NextFunction<Next> = dynamic Function([dynamic result, Next? chain]);
-
-typedef HandlerFunc = Function(Request req, Response res, NextFunction next);
+typedef HandlerFunc = Function($Request req, $Response res, NextFunction next);
 
 typedef HandlerResult = ({bool canNext, ReqRes reqRes});
+
+typedef NextFunction<Next> = dynamic Function([dynamic result, Next? chain]);
 
 typedef ReqResHook = FutureOr<ReqRes> Function(ReqRes reqRes);
 
@@ -24,7 +26,7 @@ extension ReqResExtension on ReqRes {
       };
 }
 
-typedef RequestHandlerFunc = FutureOr<dynamic> Function($Request req, $Response res);
+typedef RequestHandlerFunc = FutureOr<dynamic> Function(Request req, Response res);
 
 extension HandlerChainExtension on HandlerFunc {
   /// Chains the current middleware with a new one.
