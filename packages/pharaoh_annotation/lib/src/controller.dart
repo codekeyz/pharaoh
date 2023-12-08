@@ -1,13 +1,6 @@
 import 'dart:collection';
 import 'package:pharaoh/pharaoh.dart';
 import 'package:meta/meta_meta.dart';
-import 'package:pharaoh_annotation/src/method.dart';
-
-class Middleware {
-  final RouteMapping route;
-  final HandlerFunc handler;
-  const Middleware(this.handler, {this.route = const AllMethods()});
-}
 
 @Target({TargetKind.classType})
 class Controller {

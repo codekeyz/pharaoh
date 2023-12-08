@@ -9,6 +9,7 @@ environment:
 dependencies:
   pharaoh:
   meta: ^1.11.0
+  collection: ^1.18.0
 
 dev_dependencies:
   lints: ^3.0.0

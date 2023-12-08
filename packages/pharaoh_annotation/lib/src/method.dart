@@ -50,9 +50,3 @@ class Options extends RouteMapping {
     String path = '/',
   }) : super(const [HTTPMethod.OPTIONS], path);
 }
-
-class AllMethods extends RouteMapping {
-  const AllMethods({
-    String path = '/*',
-  }) : super(const [HTTPMethod.ALL], path);
-}
