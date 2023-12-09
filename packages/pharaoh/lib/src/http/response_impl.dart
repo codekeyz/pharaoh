@@ -5,6 +5,7 @@ import 'package:http_parser/http_parser.dart';
 
 import '../shelf_interop/shelf.dart' as shelf;
 import '../utils/exceptions.dart';
+import '../view/view.dart';
 import 'cookie.dart';
 import 'message.dart';
 import 'request.dart';
@@ -21,6 +22,8 @@ class $Response extends Message<shelf.Body?> implements Response {
   final int statusCode;
 
   final List<Cookie> _cookies = [];
+
+  ViewRenderData? viewToRender;
 
   DateTime? _expiresCache;
 
@@ -267,4 +270,10 @@ class $Response extends Message<shelf.Body?> implements Response {
     headers[HttpHeaders.setCookieHeader] = _cookies;
     return this;
   }
+
+  @override
+  Response render(String name, [Map<String, dynamic> data = const {}]) => type(
+        ContentType.html,
+      ).end()
+        ..viewToRender = ViewRenderData(name, data);
 }

@@ -14,8 +14,6 @@ typedef Middleware = Function($Request req, $Response res, NextFunction next);
 
 typedef RequestHandler = FutureOr<dynamic> Function(Request req, Response res);
 
-typedef HandlerResult = ({bool canNext, ReqRes reqRes});
-
 typedef ReqResHook = FutureOr<ReqRes> Function(ReqRes reqRes);
 
 extension ReqResExtension on ReqRes {
@@ -51,47 +49,3 @@ Middleware useRequestHandler(RequestHandler handler) => (req, res, next_) async 
       final result = await handler(req, res);
       next_(result);
     };
-
-final class Executor {
-  final Middleware _handler;
-
-  Executor(this._handler);
-
-  StreamController<Middleware>? _streamCtrl;
-
-  Future<HandlerResult> execute(final ReqRes reqRes) async {
-    await _resetStream();
-    final streamCtrl = _streamCtrl!;
-
-    ReqRes result = reqRes;
-    bool canGotoNext = false;
-
-    await for (final executor in streamCtrl.stream) {
-      canGotoNext = false;
-      await executor.call(
-        result.req,
-        result.res,
-        ([nr_, chain]) {
-          result = result.merge(nr_);
-          canGotoNext = true;
-
-          if (chain == null || result.res.ended) {
-            streamCtrl.close();
-          } else {
-            streamCtrl.add(chain);
-          }
-        },
-      );
-    }
-
-    return (canNext: canGotoNext, reqRes: result);
-  }
-
-  Future<void> _resetStream() async {
-    void newStream() => _streamCtrl = StreamController<Middleware>()..add(_handler);
-    final ctrl = _streamCtrl;
-    if (ctrl == null) return newStream();
-    if (ctrl.hasListener && ctrl.isClosed) await ctrl.close();
-    return newStream();
-  }
-}
