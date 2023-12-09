@@ -6,7 +6,7 @@ import '../route/action.dart';
 import '../parametric/definition.dart';
 import '../parametric/utils.dart';
 
-abstract class Node with EquatableMixin {
+abstract class Node with EquatableMixin, HandlerStore {
   final Map<String, Node> _children = {};
 
   Map<String, Node> get children => UnmodifiableMapView(_children);
@@ -45,7 +45,7 @@ abstract class Node with EquatableMixin {
   }
 }
 
-class StaticNode extends Node with RouteActionMixin {
+class StaticNode extends Node {
   final String _name;
 
   StaticNode(this._name);
@@ -59,6 +59,16 @@ class StaticNode extends Node with RouteActionMixin {
 
 class ParametricNode extends Node {
   static final String key = '<:>';
+
+  @override
+  void addMiddleware(IndexedHandler handler) {
+    throw ArgumentError('Parametric Node cannot have middlewares');
+  }
+
+  @override
+  void addRoute(HTTPMethod method, IndexedHandler handler) {
+    throw ArgumentError('Parametric Node cannot have routes');
+  }
 
   final List<ParameterDefinition> _definitions = [];
 

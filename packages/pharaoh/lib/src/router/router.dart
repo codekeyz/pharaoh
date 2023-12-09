@@ -99,8 +99,11 @@ class GroupRouter extends RouterContract {
   void commit(String prefix, Spanner spanner) {
     for (final intent in _pendingRouteIntents) {
       final handler = intent.$2.handler;
-      final path = intent.$2.path;
-      spanner.on(intent.$1, '$prefix$path', handler);
+      if (intent.$1 == HTTPMethod.ALL) {
+        spanner.addMiddleware(prefix, handler);
+      } else {
+        spanner.addRoute(intent.$1, '$prefix${intent.$2.path}', handler);
+      }
     }
   }
 }

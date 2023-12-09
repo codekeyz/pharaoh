@@ -3,7 +3,7 @@ import 'package:pharaoh/pharaoh.dart';
 
 typedef Indexed<T> = ({int index, T value});
 
-typedef IndexedHandler = Indexed<HandlerFunc?>;
+typedef IndexedHandler = Indexed<HandlerFunc>;
 
 class RouteAction extends Equatable {
   final HTTPMethod method;
@@ -20,32 +20,32 @@ class RouteAction extends Equatable {
   List<Object?> get props => [method];
 }
 
-typedef MethodAndHandlerStore = Map<HTTPMethod, List<IndexedHandler>>;
+mixin HandlerStore {
+  final Map<HTTPMethod, IndexedHandler> requestHandlers = {};
 
-mixin RouteActionMixin {
-  final MethodAndHandlerStore store = {};
+  final List<IndexedHandler> middlewares = [];
 
-  Iterable<HTTPMethod> get methods => store.keys;
+  Iterable<HTTPMethod> get methods => requestHandlers.keys;
 
-  bool hasMethod(HTTPMethod method) => store.containsKey(method);
+  bool hasMethod(HTTPMethod method) => requestHandlers.containsKey(method);
 
-  List<IndexedHandler> getActions(HTTPMethod method) {
-    if (store.isEmpty) return [];
+  IndexedHandler? getHandler(HTTPMethod method) => requestHandlers[method];
 
-    final hdlersForMethod = store[method] ?? [];
-    final allHandlers = store[HTTPMethod.ALL] ?? [];
+  void addRoute(HTTPMethod method, IndexedHandler handler) {
+    if (method == HTTPMethod.ALL) {
+      throw ArgumentError('HTTPMethod.all not supported for `addRoute`');
+    }
 
-    /// sorting is done to ensure we maintain the order in-which handlers were added.
-    return [
-      if (allHandlers.isNotEmpty) ...allHandlers,
-      if (hdlersForMethod.isNotEmpty) ...hdlersForMethod,
-    ]..sort((a, b) => a.index.compareTo(b.index));
+    if (requestHandlers.containsKey(method)) {
+      var name = (this as dynamic).name;
+      throw ArgumentError.value(
+          '${method.name}: $name', null, 'Route entry already exists');
+    }
+
+    requestHandlers[method] = handler;
   }
 
-  void addHandler(HTTPMethod method, IndexedHandler hdlr) {
-    final List<IndexedHandler> actionsList = store[method] ?? [];
-
-    actionsList.add((index: hdlr.index, value: hdlr.value));
-    store[method] = actionsList;
+  void addMiddleware(IndexedHandler handler) {
+    middlewares.add(handler);
   }
 }
