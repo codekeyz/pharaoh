@@ -5,6 +5,7 @@ import 'package:http_parser/http_parser.dart';
 
 import '../shelf_interop/shelf.dart' as shelf;
 import '../utils/exceptions.dart';
+import '../view/view.dart';
 import 'cookie.dart';
 import 'message.dart';
 import 'request.dart';
@@ -275,10 +276,4 @@ class $Response extends Message<shelf.Body?> implements Response {
         ContentType.html,
       ).end()
         ..viewToRender = ViewRenderData(name, data);
-}
-
-class ViewRenderData {
-  final String name;
-  final Map<String, dynamic> data;
-  const ViewRenderData(this.name, this.data);
 }

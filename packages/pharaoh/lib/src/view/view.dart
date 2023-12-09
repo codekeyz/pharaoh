@@ -15,6 +15,12 @@ abstract class ViewEngine {
   FutureOr<String> render(String template, Map<String, dynamic> data);
 }
 
+class ViewRenderData {
+  final String name;
+  final Map<String, dynamic> data;
+  const ViewRenderData(this.name, this.data);
+}
+
 class JinjaViewEngine implements ViewEngine {
   final String fileExt;
   late final Environment _environment;
