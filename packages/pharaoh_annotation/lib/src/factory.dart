@@ -1,7 +1,6 @@
 import 'package:pharaoh/pharaoh.dart';
-import 'package:pharaoh_annotation/src/reflector.dart';
-
 import 'controller.dart';
+import 'reflector/reflector.dart';
 
 class PharaohAppFactory {
   final Pharaoh _app;

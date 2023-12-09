@@ -1,18 +1,16 @@
 import 'package:pharaoh/pharaoh.dart';
 import 'package:pharaoh_annotation/pharaoh_annotation.dart';
+import 'package:pharaoh_annotation/src/middleware.dart';
 
 @Controller(path: '/users')
 class UserController extends BaseController {
   UserController() {
-    useMiddleware(logRequests);
+    useMdw(logRequests);
+
+    useScopedMdw(logRequests.only([#createUser, #getUsers]));
   }
 
-  @Get(path: '/<userId>')
-  Response getUsers(Request request, Response response) {
-    return response.ok('Hello ${request.params['userId']} 🚀');
-  }
-
-  @Get()
+  @getMapping()
   Future<Response> createUser(Request request, Response response) async {
     /// do some fake loading
     await Future.delayed(const Duration(seconds: 2));
@@ -24,7 +22,12 @@ class UserController extends BaseController {
     });
   }
 
-  @RouteMapping([HTTPMethod.GET, HTTPMethod.POST], '/hello/<userId>')
+  @getMapping(path: '/<userId>')
+  Response getUsers(Request request, Response response) {
+    return response.ok('Hello ${request.params['userId']} 🚀');
+  }
+
+  @routeMapping([HTTPMethod.GET, HTTPMethod.POST], '/hello/<userId>')
   Future<Response> sayHello(Request request, Response response) async {
     final userId = request.params['userId'];
 

@@ -1,6 +1,6 @@
-import 'dart:collection';
-import 'package:pharaoh/pharaoh.dart';
 import 'package:meta/meta_meta.dart';
+import 'package:pharaoh/pharaoh.dart';
+import 'reflector/_middleware.dart';
 
 @Target({TargetKind.classType})
 class Controller {
@@ -10,11 +10,19 @@ class Controller {
 }
 
 abstract class BaseController {
-  final List<Middleware> _middlewares = [];
+  final Set<MiddlewareDefinition> middlewares = {};
 
-  List<Middleware> get middlewares => UnmodifiableListView(_middlewares);
+  late Pharaoh app = throw UnimplementedError('Controller not yet initialized');
 
-  useMiddleware(Middleware func) {
-    _middlewares.add(func);
+  void useMdw(Middleware middleware) {
+    middlewares.add(MiddlewareDefinition(middleware));
+  }
+
+  void useScopedMdw(MiddlewareDefinition definition) {
+    middlewares.add(definition);
+  }
+
+  void setAppInstance(Pharaoh appInstance) {
+    app = appInstance;
   }
 }
