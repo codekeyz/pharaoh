@@ -228,7 +228,9 @@ class Spanner {
           devlog('x Route is not registered             ->         $route');
 
           final wc = rootNode.wildcardNode;
-          if (wc == null) return null;
+          if (wc == null) {
+            return RouteResult(resolvedParams, getResults(null), actual: null);
+          }
 
           useWildcard(wc);
           break;
@@ -292,7 +294,9 @@ class Spanner {
       print(debugLog);
     }
 
-    if (!rootNode.terminal) return null;
+    if (!rootNode.terminal) {
+      return RouteResult(resolvedParams, getResults(null), actual: null);
+    }
 
     final handler = rootNode.getHandler(method);
     if (handler == null) return null;
