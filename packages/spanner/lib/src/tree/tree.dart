@@ -89,12 +89,19 @@ class Spanner {
     for (int i = 0; i < pathSegments.length; i++) {
       final segment = pathSegments[i];
 
-      rootNode = _computeNode(
+      final result = _computeNode(
         rootNode,
         segment,
         fullPath: path,
         isLastSegment: i == (pathSegments.length - 1),
       );
+
+      /// the only time [result] won't be Node is when we have a parametric definition
+      /// that is a terminal. It's safe to break the loop since we're already
+      /// on the last segment anyways.
+      if (result is! Node) return result;
+
+      rootNode = result;
     }
 
     return rootNode;
@@ -280,7 +287,9 @@ class Spanner {
       }
     }
 
-    print(debugLog);
+    if (debug) {
+      print(debugLog);
+    }
 
     if (!rootNode.terminal) return null;
 
