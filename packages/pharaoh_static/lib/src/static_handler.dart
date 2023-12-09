@@ -17,7 +17,7 @@ import 'utils.dart';
 /// The default resolver for MIME types based on file extensions.
 final _defaultMimeTypeResolver = MimeTypeResolver();
 
-/// Creates [HandlerFunc] that serves files from the provided
+/// Creates [Middleware] that serves files from the provided
 /// [rootdir].
 ///
 /// Accessing a path containing symbolic links will succeed only if the resolved
@@ -33,7 +33,7 @@ final _defaultMimeTypeResolver = MimeTypeResolver();
 ///
 /// Specify a custom [contentTypeResolver] to customize automatic content type
 /// detection.
-HandlerFunc createStaticHandler(
+Middleware createStaticHandler(
   String rootdir, {
   bool serveFilesOutsidePath = false,
   bool fallthrough = true,
@@ -97,15 +97,13 @@ HandlerFunc createStaticHandler(
 
     // when serving the default document for a directory, if the requested
     // path doesn't end with '/', redirect to the path with a trailing '/'
-    if (entityType == FileSystemEntityType.directory &&
-        !uri.path.endsWith('/')) {
+    if (entityType == FileSystemEntityType.directory && !uri.path.endsWith('/')) {
       return next(_redirectToAddTrailingSlash(res, uri));
     }
 
     Future<String?>? getContentType() async {
       if (useHeaderBytesForContentType) {
-        final length =
-            math.min(mimeResolver.magicNumbersMaxLength, file.lengthSync());
+        final length = math.min(mimeResolver.magicNumbersMaxLength, file.lengthSync());
 
         final byteSink = ByteAccumulatorSink();
 
@@ -117,8 +115,7 @@ HandlerFunc createStaticHandler(
       }
     }
 
-    final response =
-        await _handleFile((req: request, res: res), file, getContentType);
+    final response = await _handleFile((req: request, res: res), file, getContentType);
 
     next(response);
   };
@@ -149,7 +146,7 @@ File? _tryDefaultFile(String dirPath, String? defaultFile) {
   return null;
 }
 
-/// Creates a middleware [HandlerFunc] that serves the file at [path].
+/// Creates a middleware [Middleware] that serves the file at [path].
 ///
 /// This returns a 404 response for any requests whose [Request.url] doesn't
 /// match [url]. The [url] defaults to the basename of [path].
@@ -157,7 +154,7 @@ File? _tryDefaultFile(String dirPath, String? defaultFile) {
 /// This uses the given [contentType] for the Content-Type header. It defaults
 /// to looking up a content type based on [path]'s file extension, and failing
 /// that doesn't sent a [contentType] header at all.
-HandlerFunc createFileHandler(String path, {String? url, String? contentType}) {
+Middleware createFileHandler(String path, {String? url, String? contentType}) {
   final file = File(path);
   if (!file.existsSync()) {
     throw PharaohException.value('Path does not exist.', path);
@@ -211,8 +208,7 @@ Future<Response> _handleFile(
   );
   if (fileRangeResponse != null) return fileRangeResponse;
 
-  final body =
-      request.method == HTTPMethod.HEAD ? Body(null) : Body(file.openRead());
+  final body = request.method == HTTPMethod.HEAD ? Body(null) : Body(file.openRead());
   response.body = body;
   return response.header(HttpHeaders.contentLengthHeader, '${stat.size}').end();
 }
@@ -272,12 +268,10 @@ Response? _fileRangeResponse(
 
   final headerUpdate = response.headers;
   headerUpdate[HttpHeaders.contentLengthHeader] = (end - start + 1).toString();
-  headerUpdate[HttpHeaders.contentRangeHeader] =
-      'bytes $start-$end/$actualLength';
+  headerUpdate[HttpHeaders.contentRangeHeader] = 'bytes $start-$end/$actualLength';
 
-  final body = request.method == HTTPMethod.HEAD
-      ? null
-      : Body(file.openRead(start, end + 1));
+  final body =
+      request.method == HTTPMethod.HEAD ? null : Body(file.openRead(start, end + 1));
   response.body = body;
 
   Response res = response;

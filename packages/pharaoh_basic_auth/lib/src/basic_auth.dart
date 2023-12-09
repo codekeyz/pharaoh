@@ -23,7 +23,7 @@ typedef GetRealm = String Function(Request req);
 /// on unauthorized responses.
 /// You can set the realm (the realm identifies the system to authenticate against and can be used by clients to save credentials) of the challenge
 /// by passing a static string or a function that gets passed the request object and is expected to return the challenge
-HandlerFunc basicAuth({
+Middleware basicAuth({
   final Authorizer? authorizer,
   final UnAuthorizedResponse? unauthorizedResponse,
   final Map<String, String>? users,

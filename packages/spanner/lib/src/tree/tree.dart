@@ -37,7 +37,7 @@ class Spanner {
 
   String get routeStr => routes.map((e) => '${e.method.name} ${e.path}').join('\n');
 
-  void addRoute(HTTPMethod method, String path, HandlerFunc handler) {
+  void addRoute(HTTPMethod method, String path, Middleware handler) {
     dynamic result = _on(path);
 
     final indexedHandler = (index: _nextIndex, value: handler);
@@ -54,7 +54,7 @@ class Spanner {
     _currentIndex = _nextIndex;
   }
 
-  void addMiddleware(String path, HandlerFunc handler) {
+  void addMiddleware(String path, Middleware handler) {
     dynamic result = _on(path);
 
     final middleware = (index: _nextIndex, value: handler);
@@ -170,7 +170,7 @@ class Spanner {
     Map<String, dynamic> resolvedParams = {};
     List<IndexedHandler> resolvedHandlers = [...rootNode.middlewares];
 
-    List<HandlerFunc> getResults(IndexedHandler? handler) {
+    List<Middleware> getResults(IndexedHandler? handler) {
       final resultingHandlers = [
         if (handler != null) handler,
         ...resolvedHandlers,
@@ -325,7 +325,7 @@ class Spanner {
 
 class RouteResult {
   final Map<String, dynamic> params;
-  final List<HandlerFunc> handlers;
+  final List<Middleware> handlers;
 
   @visibleForTesting
   final dynamic actual;

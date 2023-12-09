@@ -44,7 +44,7 @@ typedef GenSessionIdFunc = FutureOr<String> Function(Request request);
 /// - [secret] This is the secret used to sign the session ID cookie.
 /// You can also provide it in [cookie.secret] options. But [secret] will
 /// will be used if both are set.
-HandlerFunc session({
+Middleware session({
   String name = Session.name,
   String? secret,
   bool saveUninitialized = true,

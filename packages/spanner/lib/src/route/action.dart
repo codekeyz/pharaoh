@@ -3,11 +3,11 @@ import 'package:pharaoh/pharaoh.dart';
 
 typedef Indexed<T> = ({int index, T value});
 
-typedef IndexedHandler = Indexed<HandlerFunc>;
+typedef IndexedHandler = Indexed<Middleware>;
 
 class RouteAction extends Equatable {
   final HTTPMethod method;
-  final HandlerFunc handler;
+  final Middleware handler;
   final int index;
 
   const RouteAction(

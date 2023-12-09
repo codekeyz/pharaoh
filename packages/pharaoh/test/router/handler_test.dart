@@ -67,22 +67,22 @@ void main() {
     test('should chain middlewares in the right order', () async {
       final listResultList = <int>[];
 
-      final HandlerFunc mdw1 = (req, res, next) {
+      final Middleware mdw1 = (req, res, next) {
         listResultList.add(1);
         next();
       };
 
-      final HandlerFunc mdw2 = (req, res, next) {
+      final Middleware mdw2 = (req, res, next) {
         listResultList.add(2);
         next();
       };
 
-      final HandlerFunc mdw3 = (req, res, next) {
+      final Middleware mdw3 = (req, res, next) {
         listResultList.add(3);
         next();
       };
 
-      Pharaoh getApp(HandlerFunc chain) {
+      Pharaoh getApp(Middleware chain) {
         final app = Pharaoh();
         return app
           ..use(chain)

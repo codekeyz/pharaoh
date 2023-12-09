@@ -12,54 +12,54 @@ mixin RouteDefinitionMixin on RouterContract {
   }
 
   @override
-  void delete(String path, RequestHandlerFunc hdler) {
+  void delete(String path, RequestHandler hdler) {
     spanner.addRoute(HTTPMethod.DELETE, path, useRequestHandler(hdler));
   }
 
   @override
-  void get(String path, RequestHandlerFunc hdler) {
+  void get(String path, RequestHandler hdler) {
     spanner.addRoute(HTTPMethod.GET, path, useRequestHandler(hdler));
   }
 
   @override
-  void head(String path, RequestHandlerFunc hdler) {
+  void head(String path, RequestHandler hdler) {
     spanner.addRoute(HTTPMethod.HEAD, path, useRequestHandler(hdler));
   }
 
   @override
-  void options(String path, RequestHandlerFunc hdler) {
+  void options(String path, RequestHandler hdler) {
     spanner.addRoute(HTTPMethod.OPTIONS, path, useRequestHandler(hdler));
   }
 
   @override
-  void patch(String path, RequestHandlerFunc hdler) {
+  void patch(String path, RequestHandler hdler) {
     spanner.addRoute(HTTPMethod.PATCH, path, useRequestHandler(hdler));
   }
 
   @override
-  void post(String path, RequestHandlerFunc hdler) {
+  void post(String path, RequestHandler hdler) {
     spanner.addRoute(HTTPMethod.POST, path, useRequestHandler(hdler));
   }
 
   @override
-  void put(String path, RequestHandlerFunc hdler) {
+  void put(String path, RequestHandler hdler) {
     spanner.addRoute(HTTPMethod.PUT, path, useRequestHandler(hdler));
   }
 
   @override
-  void trace(String path, RequestHandlerFunc hdler) {
+  void trace(String path, RequestHandler hdler) {
     spanner.addRoute(HTTPMethod.TRACE, path, useRequestHandler(hdler));
   }
 
   @override
-  void use(HandlerFunc middleware) {
+  void use(Middleware middleware) {
     spanner.addMiddleware(BASE_PATH, middleware);
   }
 
   @override
   void on(
     String path,
-    HandlerFunc middleware, {
+    Middleware middleware, {
     HTTPMethod method = HTTPMethod.ALL,
   }) {
     if (method == HTTPMethod.ALL) {

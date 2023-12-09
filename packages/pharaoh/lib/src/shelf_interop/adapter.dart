@@ -9,13 +9,13 @@ import 'shelf.dart' as shelf;
 typedef ShelfMiddlewareType2 = FutureOr<shelf.Response> Function(shelf.Request);
 
 /// Use this hook to transform any shelf
-/// middleware into a [HandlerFunc] that Pharaoh
+/// middleware into a [Middleware] that Pharaoh
 /// can use.
 ///
 /// This will also throw an Exception if you use a Middleware
 /// that has a [Type] signature different from either [shelf.Middleware]
 /// or [ShelfMiddlewareType2] tho in most cases, it should work.
-HandlerFunc useShelfMiddleware(dynamic middleware) {
+Middleware useShelfMiddleware(dynamic middleware) {
   if (middleware is shelf.Middleware) {
     return (req, res, next) async {
       final shelfResponse =

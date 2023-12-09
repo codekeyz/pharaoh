@@ -4,7 +4,7 @@ import '../http/request.dart';
 import 'router_contract.dart';
 import 'router_handler.dart';
 
-typedef _PendingRouteIntent = (HTTPMethod method, ({String path, HandlerFunc handler}));
+typedef _PendingRouteIntent = (HTTPMethod method, ({String path, Middleware handler}));
 
 class GroupRouter extends RouterContract {
   final List<_PendingRouteIntent> _pendingRouteIntents = [];
@@ -12,7 +12,7 @@ class GroupRouter extends RouterContract {
   List<_PendingRouteIntent> get routes => _pendingRouteIntents;
 
   @override
-  GroupRouter delete(String path, RequestHandlerFunc hdler) {
+  GroupRouter delete(String path, RequestHandler hdler) {
     _pendingRouteIntents.add((
       HTTPMethod.DELETE,
       (path: path, handler: useRequestHandler(hdler)),
@@ -21,7 +21,7 @@ class GroupRouter extends RouterContract {
   }
 
   @override
-  GroupRouter get(String path, RequestHandlerFunc hdler) {
+  GroupRouter get(String path, RequestHandler hdler) {
     _pendingRouteIntents.add((
       HTTPMethod.GET,
       (path: path, handler: useRequestHandler(hdler)),
@@ -30,7 +30,7 @@ class GroupRouter extends RouterContract {
   }
 
   @override
-  GroupRouter head(String path, RequestHandlerFunc hdler) {
+  GroupRouter head(String path, RequestHandler hdler) {
     _pendingRouteIntents.add((
       HTTPMethod.HEAD,
       (path: path, handler: useRequestHandler(hdler)),
@@ -39,7 +39,7 @@ class GroupRouter extends RouterContract {
   }
 
   @override
-  GroupRouter options(String path, RequestHandlerFunc hdler) {
+  GroupRouter options(String path, RequestHandler hdler) {
     _pendingRouteIntents.add((
       HTTPMethod.OPTIONS,
       (path: path, handler: useRequestHandler(hdler)),
@@ -48,7 +48,7 @@ class GroupRouter extends RouterContract {
   }
 
   @override
-  GroupRouter patch(String path, RequestHandlerFunc hdler) {
+  GroupRouter patch(String path, RequestHandler hdler) {
     _pendingRouteIntents.add((
       HTTPMethod.PATCH,
       (path: path, handler: useRequestHandler(hdler)),
@@ -57,7 +57,7 @@ class GroupRouter extends RouterContract {
   }
 
   @override
-  GroupRouter post(String path, RequestHandlerFunc hdler) {
+  GroupRouter post(String path, RequestHandler hdler) {
     _pendingRouteIntents.add((
       HTTPMethod.POST,
       (path: path, handler: useRequestHandler(hdler)),
@@ -66,7 +66,7 @@ class GroupRouter extends RouterContract {
   }
 
   @override
-  GroupRouter put(String path, RequestHandlerFunc hdler) {
+  GroupRouter put(String path, RequestHandler hdler) {
     _pendingRouteIntents.add((
       HTTPMethod.PUT,
       (path: path, handler: useRequestHandler(hdler)),
@@ -75,7 +75,7 @@ class GroupRouter extends RouterContract {
   }
 
   @override
-  GroupRouter trace(String path, RequestHandlerFunc hdler) {
+  GroupRouter trace(String path, RequestHandler hdler) {
     _pendingRouteIntents.add((
       HTTPMethod.TRACE,
       (path: path, handler: useRequestHandler(hdler)),
@@ -84,13 +84,13 @@ class GroupRouter extends RouterContract {
   }
 
   @override
-  GroupRouter use(HandlerFunc mdw) {
+  GroupRouter use(Middleware mdw) {
     _pendingRouteIntents.add((HTTPMethod.ALL, (path: '*', handler: mdw)));
     return this;
   }
 
   @override
-  GroupRouter on(String path, HandlerFunc func, {HTTPMethod method = HTTPMethod.ALL}) {
+  GroupRouter on(String path, Middleware func, {HTTPMethod method = HTTPMethod.ALL}) {
     if (method == HTTPMethod.ALL) path = '$path/*';
     _pendingRouteIntents.add((method, (path: path, handler: func)));
     return this;

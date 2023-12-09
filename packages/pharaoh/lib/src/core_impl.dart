@@ -88,10 +88,10 @@ class _$PharaohImpl extends RouterContract with RouteDefinitionMixin implements 
     } on PharaohValidationError catch (e) {
       await forward(
         httpReq,
-        res.status(422).json(res.makeError(message: e.toString())),
+        res.status(422).json(res.makeError(message: '$e')),
       );
     } catch (e) {
-      await forward(httpReq, res.internalServerError(e.toString()));
+      await forward(httpReq, res.internalServerError('$e'));
     }
   }
 
@@ -111,7 +111,7 @@ class _$PharaohImpl extends RouterContract with RouteDefinitionMixin implements 
     }
 
     final chainedHandlers = routeResult.handlers.reduce((a, b) => a.chain(b));
-    final result = await HandlerExecutor(chainedHandlers).execute(reqRes);
+    final result = await Executor(chainedHandlers).execute(reqRes);
     reqRes = result.reqRes;
 
     for (final job in _preResponseHooks) {

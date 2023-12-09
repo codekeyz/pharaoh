@@ -56,4 +56,4 @@ _processBody($Request req, $Response res, NextFunction next) async {
   next(req);
 }
 
-const HandlerFunc bodyParser = _processBody;
+const Middleware bodyParser = _processBody;
