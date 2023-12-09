@@ -2,18 +2,18 @@ import 'package:pharaoh/pharaoh.dart';
 import 'controller.dart';
 import 'reflector/reflector.dart';
 
-class PharaohAppFactory {
+class PharaohTurbo {
   final Pharaoh _app;
   final List<BaseController> controllers;
 
-  PharaohAppFactory({
+  PharaohTurbo({
     Pharaoh? custom,
     this.controllers = const [],
   }) : _app = custom ?? Pharaoh();
 
-  Future<Pharaoh> build() async {
+  Pharaoh create() {
     for (final ctrl in controllers) {
-      setupControllers(_app, ctrl);
+      useController(_app, ctrl);
     }
 
     return _app;

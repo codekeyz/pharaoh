@@ -4,12 +4,12 @@ import 'package:pharaoh_turbo/pharaoh_turbo.dart';
 @Controller(path: '/users')
 class UserController extends BaseController {
   UserController() {
-    useMdw(logRequests);
+    // useMdw(logRequests);
 
     useScopedMdw(logRequests.only([#createUser, #getUsers]));
   }
 
-  @getMapping()
+  @Get()
   Future<Response> createUser(Request request, Response response) async {
     /// do some fake loading
     await Future.delayed(const Duration(seconds: 2));
@@ -21,7 +21,7 @@ class UserController extends BaseController {
     });
   }
 
-  @getMapping(path: '/<userId>')
+  @Get(path: '/<userId>')
   Response getUsers(Request request, Response response) {
     return response.ok('Hello ${request.params['userId']} 🚀');
   }
@@ -35,13 +35,9 @@ class UserController extends BaseController {
 }
 
 void main() async {
-  var app = Pharaoh();
-  app.get('/', (req, res) => res.ok('Hello World 🚀'));
-
-  app = await PharaohAppFactory(
-    custom: app,
+  final app = PharaohTurbo(
     controllers: [UserController()],
-  ).build();
+  ).create();
 
   await app.listen();
 

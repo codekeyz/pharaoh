@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:collection/collection.dart';
 import 'package:http_parser/http_parser.dart';
-import 'package:mason_logger/mason_logger.dart';
 import 'package:meta/meta.dart';
 import 'package:spanner/spanner.dart';
 

@@ -11,44 +11,44 @@ class routeMapping {
   const routeMapping(this.methods, this.path);
 }
 
-class getMapping extends routeMapping {
-  const getMapping({
+class Get extends routeMapping {
+  const Get({
     String path = '/',
   }) : super(const [HTTPMethod.GET], path);
 }
 
-class postMapping extends routeMapping {
-  const postMapping({
+class Post extends routeMapping {
+  const Post({
     String path = '/',
   }) : super(const [HTTPMethod.POST], path);
 }
 
-class putMapping extends routeMapping {
-  const putMapping({
+class Put extends routeMapping {
+  const Put({
     String path = '/',
   }) : super(const [HTTPMethod.PUT], path);
 }
 
-class patchMapping extends routeMapping {
-  const patchMapping({
+class Patch extends routeMapping {
+  const Patch({
     String path = '/',
   }) : super(const [HTTPMethod.PATCH], path);
 }
 
-class deleteMapping extends routeMapping {
-  const deleteMapping({
+class Delete extends routeMapping {
+  const Delete({
     String path = '/',
   }) : super(const [HTTPMethod.DELETE], path);
 }
 
-class traceMapping extends routeMapping {
-  const traceMapping({
+class Trace extends routeMapping {
+  const Trace({
     String path = '/',
   }) : super(const [HTTPMethod.TRACE], path);
 }
 
-class optionsMapping extends routeMapping {
-  const optionsMapping({
+class Options extends routeMapping {
+  const Options({
     String path = '/',
   }) : super(const [HTTPMethod.OPTIONS], path);
 }

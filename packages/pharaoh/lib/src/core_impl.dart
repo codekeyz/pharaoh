@@ -2,13 +2,12 @@ part of 'core.dart';
 
 class _$PharaohImpl extends RouterContract with RouteDefinitionMixin implements Pharaoh {
   late final HttpServer _server;
-  late final Logger _logger;
 
   final List<ReqResHook> _preResponseHooks = [
     sessionPreResponseHook,
   ];
 
-  _$PharaohImpl() : _logger = Logger() {
+  _$PharaohImpl() {
     useSpanner(Spanner());
     use(bodyParser);
   }
@@ -56,18 +55,11 @@ class _$PharaohImpl extends RouterContract with RouteDefinitionMixin implements 
 
   @override
   Future<Pharaoh> listen({int port = 3000}) async {
-    final progress = _logger.progress('Starting server');
+    _server = await HttpServer.bind('0.0.0.0', port, shared: true)
+      ..autoCompress = true;
+    _server.listen(handleRequest);
 
-    try {
-      _server = await HttpServer.bind('0.0.0.0', port, shared: true)
-        ..autoCompress = true;
-      _server.listen(handleRequest);
-      progress.complete('Server start on PORT: ${_server.port} -> ${uri.toString()}');
-    } catch (e) {
-      final errMsg = (e as dynamic).message ?? 'An occurred while starting server';
-      progress.fail(errMsg);
-    }
-
+    print('Server start on PORT: ${_server.port} -> ${uri.toString()}');
     return this;
   }
 

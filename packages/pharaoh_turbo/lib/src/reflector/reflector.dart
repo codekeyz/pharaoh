@@ -4,7 +4,7 @@ import '../../pharaoh_turbo.dart';
 import '_controller.dart';
 import '_middleware.dart';
 
-Future<void> setupControllers(Pharaoh app, BaseController ctrl) async {
+Future<void> useController(Pharaoh app, BaseController ctrl) async {
   final definition = buildControllerDefinition(ctrl).withApp(app);
   final basePath = definition.meta.path;
   final methodDefns = definition.methodDefns;
