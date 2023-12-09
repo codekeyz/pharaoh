@@ -3,11 +3,11 @@ import 'package:pharaoh_annotation/src/reflector.dart';
 
 import 'controller.dart';
 
-class AppModule {
+class PharaohAppFactory {
   final Pharaoh _app;
   final List<BaseController> controllers;
 
-  AppModule({
+  PharaohAppFactory({
     Pharaoh? custom,
     this.controllers = const [],
   }) : _app = custom ?? Pharaoh();

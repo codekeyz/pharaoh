@@ -10,11 +10,11 @@ class Controller {
 }
 
 abstract class BaseController {
-  final List<HandlerFunc> _middlewares = [];
+  final List<Middleware> _middlewares = [];
 
-  List<HandlerFunc> get middlewares => UnmodifiableListView(_middlewares);
+  List<Middleware> get middlewares => UnmodifiableListView(_middlewares);
 
-  useMiddleware(HandlerFunc func) {
+  useMiddleware(Middleware func) {
     _middlewares.add(func);
   }
 }

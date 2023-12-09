@@ -18,9 +18,7 @@ class PharaohAnnotationError extends PharaohException {
 Future<void> setupControllers(Pharaoh app, BaseController ctrl) async {
   final InstanceMirror ctrlMirror = reflect(ctrl);
   final controllerAnnotations = ctrlMirror.type.metadata;
-
   final members = ctrlMirror.type.instanceMembers;
-  final middlewares = members[#middlewares];
 
   /// resolving @Controller annotation on [ctrl]
   final controllerAnnotation = controllerAnnotations
@@ -29,6 +27,14 @@ Future<void> setupControllers(Pharaoh app, BaseController ctrl) async {
     throw PharaohAnnotationError('Class has missing @Controller annotation', value: ctrl);
   }
   final controller = controllerAnnotation.reflectee as Controller;
+  final basePath = controller.path;
+
+  final middlewares = ctrlMirror.getField(#middlewares).reflectee as Iterable<Middleware>;
+  if (middlewares.isNotEmpty) {
+    for (final mdw in middlewares) {
+      app.on(basePath, mdw);
+    }
+  }
 
   final List<_RouteDefinition> definitions = members.values
       .whereType<MethodMirror>()
@@ -41,25 +47,26 @@ Future<void> setupControllers(Pharaoh app, BaseController ctrl) async {
     final path = controller.path + definition.$1.path;
 
     if (methods.contains(HTTPMethod.ALL)) {
-      app.on(path, useRequestHandler(definition.$2), method: HTTPMethod.ALL);
+      app.on(path, definition.$2, method: HTTPMethod.ALL);
       continue;
     }
 
     for (final method in methods) {
-      app.on(path, useRequestHandler(definition.$2), method: method);
+      app.on(path, definition.$2, method: method);
     }
   }
 }
 
-typedef _RouteDefinition = (RouteMapping mapping, RequestHandlerFunc hdl);
+typedef _RouteDefinition = (RouteMapping mapping, Middleware hdl);
 
-RequestHandlerFunc _makeHandler(InstanceMirror parent, MethodMirror methodMirror) =>
-    (req, res) async {
-      final result = await Future.sync(
-        () => parent.invoke(methodMirror.simpleName, [req, res]),
-      );
-      return result.reflectee;
-    };
+Middleware _makeHandler(InstanceMirror parent, MethodMirror methodMirror) {
+  return useRequestHandler((req, res) async {
+    final result = await Future.sync(
+      () => parent.invoke(methodMirror.simpleName, [req, res]),
+    );
+    return result.reflectee;
+  });
+}
 
 RouteMapping _getMapping(MethodMirror methodMirror) {
   final routeMappings =

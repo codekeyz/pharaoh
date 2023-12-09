@@ -3,8 +3,9 @@ import 'package:pharaoh_annotation/pharaoh_annotation.dart';
 
 @Controller(path: '/users')
 class UserController extends BaseController {
-  @override
-  List<HandlerFunc> get middlewares => [logRequests];
+  UserController() {
+    useMiddleware(logRequests);
+  }
 
   @Get(path: '/<userId>')
   Response getUsers(Request request, Response response) {
@@ -23,9 +24,10 @@ class UserController extends BaseController {
     });
   }
 
-  @RouteMapping([HTTPMethod.ALL], '/hello/<userId>')
+  @RouteMapping([HTTPMethod.GET, HTTPMethod.POST], '/hello/<userId>')
   Future<Response> sayHello(Request request, Response response) async {
     final userId = request.params['userId'];
+
     return response.ok('${request.method} called just now 🚀 with $userId');
   }
 }
@@ -34,12 +36,12 @@ void main() async {
   var app = Pharaoh();
   app.get('/', (req, res) => res.ok('Hello World 🚀'));
 
-  app = await AppModule(
+  app = await PharaohAppFactory(
     custom: app,
     controllers: [UserController()],
   ).build();
 
-  print(app.routeStr);
-
   await app.listen();
+
+  print(app.routeStr);
 }
