@@ -38,9 +38,9 @@ class Spanner {
   String get routeStr => routes.map((e) => '${e.method.name} ${e.path}').join('\n');
 
   void addRoute(HTTPMethod method, String path, Middleware handler) {
-    dynamic result = _on(path);
-
     final indexedHandler = (index: _nextIndex, value: handler);
+
+    dynamic result = _on(path);
 
     /// parametric nodes being terminal is determined its definitions
     if (result is StaticNode || result is WildcardNode) {
@@ -55,11 +55,10 @@ class Spanner {
   }
 
   void addMiddleware(String path, Middleware handler) {
-    dynamic result = _on(path);
-
     final middleware = (index: _nextIndex, value: handler);
 
-    /// parametric nodes being terminal is determined its definitions
+    dynamic result = _on(path);
+
     if (result is Node) {
       result.addMiddleware(middleware);
     } else if (result is ParameterDefinition) {
