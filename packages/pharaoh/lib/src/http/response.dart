@@ -39,7 +39,7 @@ abstract interface class Response {
 
   Response internalServerError([String? message]);
 
-  Response render(String name, Map<String, dynamic> data);
+  Response render(String name, [Map<String, dynamic> data]);
 
   Response end();
 }

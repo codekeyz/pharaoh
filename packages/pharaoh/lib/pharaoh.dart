@@ -1,6 +1,6 @@
 library;
 
-export 'src/core.dart';
+export 'src/core.dart' hide $PharaohImpl;
 export 'src/view/view.dart';
 export 'src/http/cookie.dart';
 export 'src/http/request.dart';

@@ -23,7 +23,7 @@ import 'shelf_interop/shelf.dart' as shelf;
 part 'core_impl.dart';
 
 abstract class Pharaoh implements RouterContract {
-  factory Pharaoh() => _$PharaohImpl();
+  factory Pharaoh() => $PharaohImpl();
 
   ViewEngine? get viewEngine;
 

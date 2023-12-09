@@ -271,10 +271,10 @@ class $Response extends Message<shelf.Body?> implements Response {
   }
 
   @override
-  Response render(String name, Map<String, dynamic> data) {
-    final viewData = ViewRenderData(name, data);
-    return type(ContentType.html)..viewToRender = viewData;
-  }
+  Response render(String name, [Map<String, dynamic> data = const {}]) => type(
+        ContentType.html,
+      ).end()
+        ..viewToRender = ViewRenderData(name, data);
 }
 
 class ViewRenderData {
