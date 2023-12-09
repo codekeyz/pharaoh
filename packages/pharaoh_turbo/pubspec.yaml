@@ -1,4 +1,4 @@
-name: pharaoh_annotation
+name: pharaoh_turbo
 description: Class and annotation based development with Pharaoh.
 version: 0.0.1
 repository: https://github.com/codekeyz/pharaoh/tree/main/packages/pharaoh_annotations

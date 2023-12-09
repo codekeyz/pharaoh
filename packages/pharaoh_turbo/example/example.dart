@@ -1,6 +1,5 @@
 import 'package:pharaoh/pharaoh.dart';
-import 'package:pharaoh_annotation/pharaoh_annotation.dart';
-import 'package:pharaoh_annotation/src/middleware.dart';
+import 'package:pharaoh_turbo/pharaoh_turbo.dart';
 
 @Controller(path: '/users')
 class UserController extends BaseController {

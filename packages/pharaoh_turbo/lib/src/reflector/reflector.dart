@@ -1,8 +1,8 @@
 import 'package:pharaoh/pharaoh.dart';
-import 'package:pharaoh_annotation/src/reflector/_middleware.dart';
 
-import '../../pharaoh_annotation.dart';
+import '../../pharaoh_turbo.dart';
 import '_controller.dart';
+import '_middleware.dart';
 
 Future<void> setupControllers(Pharaoh app, BaseController ctrl) async {
   final definition = buildControllerDefinition(ctrl).withApp(app);
