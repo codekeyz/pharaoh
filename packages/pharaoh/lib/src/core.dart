@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:collection/collection.dart';
 import 'package:http_parser/http_parser.dart';
-import 'package:mason_logger/mason_logger.dart';
 import 'package:meta/meta.dart';
 import 'package:spanner/spanner.dart';
 
@@ -21,16 +20,18 @@ import 'shelf_interop/shelf.dart' as shelf;
 
 part 'core_impl.dart';
 
-abstract class Pharaoh implements RouterContract<Pharaoh> {
+abstract class Pharaoh implements RouterContract {
   factory Pharaoh() => _$PharaohImpl();
 
-  RouterContract<GroupRouter> router();
+  RouterContract router();
 
   List<RouteEntry> get routes;
 
+  String get routeStr;
+
   Uri get uri;
 
-  Pharaoh group(String path, RouterContract<GroupRouter> router);
+  Pharaoh group(String path, RouterContract router);
 
   Future<Pharaoh> listen({int port = 3000});
 

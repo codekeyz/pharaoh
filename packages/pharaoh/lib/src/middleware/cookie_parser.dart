@@ -6,7 +6,7 @@ import '../http/cookie.dart';
 import '../http/request.dart';
 import '../router/router_handler.dart';
 
-HandlerFunc cookieParser({CookieOpts opts = const CookieOpts()}) {
+Middleware cookieParser({CookieOpts opts = const CookieOpts()}) {
   opts.validate();
 
   return (req, res, next) async {

@@ -9,13 +9,12 @@ void main() {
   group('cookieParser', () {
     group('when cookies are sent', () {
       test('should populate req.cookies', () async {
-        final app = Pharaoh().use(cookieParser()).get(
-          '/',
-          (req, res) {
+        final app = Pharaoh()
+          ..use(cookieParser())
+          ..get('/', (req, res) {
             final str = req.cookies.toString();
             return res.ok(str);
-          },
-        );
+          });
 
         await (await request(app))
             .get('/', headers: {HttpHeaders.cookieHeader: 'foo=bar; bar=baz'})
@@ -26,13 +25,12 @@ void main() {
 
       test('should populate req.signedCookies', () async {
         const opts = CookieOpts(secret: 'foo bar baz', signed: true);
-        final app = Pharaoh().use(cookieParser(opts: opts)).get(
-          '/',
-          (req, res) {
+        final app = Pharaoh()
+          ..use(cookieParser(opts: opts))
+          ..get('/', (req, res) {
             final str = req.signedCookies.toString();
             return res.ok(str);
-          },
-        );
+          });
 
         await (await request(app))
             .get('/', headers: {
@@ -46,13 +44,12 @@ void main() {
 
       test('should remove tampered signed cookies', () async {
         const opts = CookieOpts(secret: 'foo bar baz', signed: true);
-        final app = Pharaoh().use(cookieParser(opts: opts)).get(
-          '/',
-          (req, res) {
+        final app = Pharaoh()
+          ..use(cookieParser(opts: opts))
+          ..get('/', (req, res) {
             final str = req.signedCookies.toString();
             return res.ok(str);
-          },
-        );
+          });
 
         await (await request(app))
             .get('/', headers: {
@@ -66,13 +63,12 @@ void main() {
 
       test('should leave unsigned cookies as they are', () async {
         const opts = CookieOpts(secret: 'foo bar baz', signed: true);
-        final app = Pharaoh().use(cookieParser(opts: opts)).get(
-          '/',
-          (req, res) {
+        final app = Pharaoh()
+          ..use(cookieParser(opts: opts))
+          ..get('/', (req, res) {
             final str = req.cookies.toString();
             return res.ok(str);
-          },
-        );
+          });
 
         await (await request(app))
             .get('/', headers: {HttpHeaders.cookieHeader: 'name=chima; Path=/'})
@@ -84,15 +80,14 @@ void main() {
 
     group('when no cookies are sent', () {
       test('should default req.cookies to []', () async {
-        final app = Pharaoh().use(cookieParser()).get(
-          '/',
-          (req, res) {
+        final app = Pharaoh()
+          ..use(cookieParser())
+          ..get('/', (req, res) {
             final str = req.cookies.toString();
             return res.ok(str);
-          },
-        );
+          });
 
-        await (await request(app))
+        await (await request<Pharaoh>(app))
             .get('/')
             .expectStatus(200)
             .expectBody('[]')
@@ -100,15 +95,14 @@ void main() {
       });
 
       test('should default req.signedCookies to []', () async {
-        final app = Pharaoh().use(cookieParser()).get(
-          '/',
-          (req, res) {
+        final app = Pharaoh()
+          ..use(cookieParser())
+          ..get('/', (req, res) {
             final str = req.signedCookies.toString();
             return res.ok(str);
-          },
-        );
+          });
 
-        await (await request(app))
+        await (await request<Pharaoh>(app))
             .get('/')
             .expectStatus(200)
             .expectBody('[]')

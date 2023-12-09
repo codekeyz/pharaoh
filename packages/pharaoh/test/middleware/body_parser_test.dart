@@ -5,9 +5,9 @@ void main() {
   group('body_parser', () {
     group('should parse request body ', () {
       test('when content-type not specified', () async {
-        final app = Pharaoh().post('/', (req, res) => res.json(req.body));
+        final app = Pharaoh()..post('/', (req, res) => res.json(req.body));
 
-        await (await request(app))
+        await (await request<Pharaoh>(app))
             .post('/', {'name': 'Chima', 'age': '24'})
             .expectStatus(200)
             .expectBody({'name': 'Chima', 'age': '24'})
@@ -15,9 +15,9 @@ void main() {
       });
 
       test('when content-type is `application/json`', () async {
-        final app = Pharaoh().post('/', (req, res) => res.json(req.body));
+        final app = Pharaoh()..post('/', (req, res) => res.json(req.body));
 
-        await (await request(app))
+        await (await request<Pharaoh>(app))
             .post('/', '{"name":"Chima","age":24}',
                 headers: {'Content-Type': 'application/json'})
             .expectStatus(200)
@@ -26,9 +26,9 @@ void main() {
       });
 
       test('when content-type is `application/x-www-form-urlencoded`', () async {
-        final app = Pharaoh().post('/', (req, res) => res.json(req.body));
+        final app = Pharaoh()..post('/', (req, res) => res.json(req.body));
 
-        await (await request(app))
+        await (await request<Pharaoh>(app))
             .post('/', 'name%3DChima%26age%3D24',
                 headers: {'Content-Type': 'application/x-www-form-urlencoded'})
             .expectStatus(200)
@@ -39,9 +39,9 @@ void main() {
 
     group('should not parse request body', () {
       test('when request body is null', () async {
-        final app = Pharaoh().post('/', (req, res) => res.json(req.body));
+        final app = Pharaoh()..post('/', (req, res) => res.json(req.body));
 
-        await (await request(app))
+        await (await request<Pharaoh>(app))
             .post('/', null)
             .expectStatus(200)
             .expectBody('null')
@@ -49,9 +49,9 @@ void main() {
       });
 
       test('when request body is empty', () async {
-        final app = Pharaoh().post('/', (req, res) => res.json(req.body));
+        final app = Pharaoh()..post('/', (req, res) => res.json(req.body));
 
-        await (await request(app))
+        await (await request<Pharaoh>(app))
             .post('/', '')
             .expectStatus(200)
             .expectBody('null')

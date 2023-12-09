@@ -1,25 +1,25 @@
 part of 'core.dart';
 
-class _$PharaohImpl extends RouterContract<Pharaoh>
-    with RouteDefinitionMixin<Pharaoh>
-    implements Pharaoh {
+class _$PharaohImpl extends RouterContract with RouteDefinitionMixin implements Pharaoh {
   late final HttpServer _server;
-  late final Logger _logger;
 
   final List<ReqResHook> _preResponseHooks = [
     sessionPreResponseHook,
   ];
 
-  _$PharaohImpl() : _logger = Logger() {
+  _$PharaohImpl() {
     useSpanner(Spanner());
     use(bodyParser);
   }
 
   @override
-  RouterContract<GroupRouter> router() => GroupRouter();
+  RouterContract router() => GroupRouter();
 
   @override
   List<RouteEntry> get routes => spanner.routes;
+
+  @override
+  String get routeStr => spanner.routeStr;
 
   @override
   Uri get uri {
@@ -55,18 +55,12 @@ class _$PharaohImpl extends RouterContract<Pharaoh>
 
   @override
   Future<Pharaoh> listen({int port = 3000}) async {
-    final progress = _logger.progress('Starting server');
+    _server = await HttpServer.bind('0.0.0.0', port, shared: true)
+      ..autoCompress = true;
+    _server.listen(handleRequest);
 
-    try {
-      _server = await HttpServer.bind('0.0.0.0', port, shared: true)
-        ..autoCompress = true;
-      _server.listen(handleRequest);
-      progress.complete('Server start on PORT: ${_server.port} -> ${uri.toString()}');
-    } catch (e) {
-      final errMsg = (e as dynamic).message ?? 'An occurred while starting server';
-      progress.fail(errMsg);
-    }
-
+    print(
+        'Server start on PORT: ${_server.port} -> ${uri.scheme}://localhost:${_server.port}');
     return this;
   }
 
@@ -87,10 +81,10 @@ class _$PharaohImpl extends RouterContract<Pharaoh>
     } on PharaohValidationError catch (e) {
       await forward(
         httpReq,
-        res.status(422).json(res.makeError(message: e.toString())),
+        res.status(422).json(res.makeError(message: '$e')),
       );
     } catch (e) {
-      await forward(httpReq, res.internalServerError(e.toString()));
+      await forward(httpReq, res.internalServerError('$e'));
     }
   }
 
@@ -110,7 +104,7 @@ class _$PharaohImpl extends RouterContract<Pharaoh>
     }
 
     final chainedHandlers = routeResult.handlers.reduce((a, b) => a.chain(b));
-    final result = await HandlerExecutor(chainedHandlers).execute(reqRes);
+    final result = await Executor(chainedHandlers).execute(reqRes);
     reqRes = result.reqRes;
 
     for (final job in _preResponseHooks) {

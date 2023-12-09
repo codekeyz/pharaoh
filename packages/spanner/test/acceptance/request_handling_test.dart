@@ -123,7 +123,11 @@ void main() {
     });
 
     test('should execute route groups', () async {
-      final app = Pharaoh().get('/users/<userId>', (req, res) => res.json(req.params));
+      final app = Pharaoh()
+        ..get(
+          '/users/<userId>',
+          (req, res) => res.json(req.params),
+        );
 
       final router = app.router()
         ..get('/', (req, res) => res.ok('Group working'))

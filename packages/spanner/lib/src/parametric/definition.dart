@@ -57,7 +57,7 @@ ParameterDefinition? _buildParamDefinition(String part, bool terminal) {
   return CompositeParameterDefinition._(parent, subparts: UnmodifiableListView(subparts));
 }
 
-class ParameterDefinition with EquatableMixin, RouteActionMixin {
+class ParameterDefinition with EquatableMixin, HandlerStore {
   final String name;
   final String? prefix;
   final String? suffix;

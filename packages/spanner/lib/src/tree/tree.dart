@@ -37,14 +37,73 @@ class Spanner {
 
   String get routeStr => routes.map((e) => '${e.method.name} ${e.path}').join('\n');
 
-  void on(HTTPMethod method, String path, HandlerFunc handler) {
-    _on(
-      path,
-      method,
-      (index: _nextIndex, value: handler),
-    );
+  void addRoute(HTTPMethod method, String path, Middleware handler) {
+    final indexedHandler = (index: _nextIndex, value: handler);
+
+    dynamic result = _on(path);
+
+    /// parametric nodes being terminal is determined its definitions
+    if (result is StaticNode || result is WildcardNode) {
+      (result as StaticNode)
+        ..addRoute(method, indexedHandler)
+        ..terminal = true;
+    } else if (result is ParameterDefinition) {
+      result.addRoute(method, indexedHandler);
+    }
 
     _currentIndex = _nextIndex;
+  }
+
+  void addMiddleware(String path, Middleware handler) {
+    final middleware = (index: _nextIndex, value: handler);
+
+    dynamic result = _on(path);
+
+    if (result is Node) {
+      result.addMiddleware(middleware);
+    } else if (result is ParameterDefinition) {
+      result.addMiddleware(middleware);
+    }
+
+    _currentIndex = _nextIndex;
+  }
+
+  dynamic _on(String path) {
+    path = _cleanPath(path);
+
+    Node rootNode = _root;
+
+    if (path == BASE_PATH) {
+      return rootNode..terminal = true;
+    } else if (path == WildcardNode.key) {
+      var wildCardNode = rootNode.wildcardNode;
+      if (wildCardNode != null) return wildCardNode..terminal = true;
+
+      wildCardNode = WildcardNode();
+      (rootNode as StaticNode).addChildAndReturn(WildcardNode.key, wildCardNode);
+      return wildCardNode..terminal = true;
+    }
+
+    final pathSegments = _getRouteSegments(path);
+    for (int i = 0; i < pathSegments.length; i++) {
+      final segment = pathSegments[i];
+
+      final result = _computeNode(
+        rootNode,
+        segment,
+        fullPath: path,
+        isLastSegment: i == (pathSegments.length - 1),
+      );
+
+      /// the only time [result] won't be Node is when we have a parametric definition
+      /// that is a terminal. It's safe to break the loop since we're already
+      /// on the last segment anyways.
+      if (result is! Node) return result;
+
+      rootNode = result;
+    }
+
+    return rootNode;
   }
 
   /// Given the current segment in a route, this method figures
@@ -61,11 +120,9 @@ class Spanner {
   /// we will find a static child `users` or create one, then proceed to search
   /// for a [ParametricNode] on the current root [node]. If found, we fill add a new
   /// definition, or create a new [ParametricNode] with this definition.
-  Node _computeNode(
+  dynamic _computeNode(
     Node node,
-    String routePart,
-    HTTPMethod method,
-    IndexedHandler handler, {
+    String routePart, {
     bool isLastSegment = false,
     required String fullPath,
   }) {
@@ -92,48 +149,17 @@ class Spanner {
       final paramNode = node.paramNode;
       if (paramNode == null) {
         final defn = ParameterDefinition.from(routePart, terminal: isLastSegment);
-        if (isLastSegment) defn.addHandler(method, handler);
+        final newNode = node.addChildAndReturn(key, ParametricNode(defn));
+        if (isLastSegment) return defn;
 
-        return node.addChildAndReturn(key, ParametricNode(defn));
+        return newNode;
       }
 
       final defn = ParameterDefinition.from(routePart, terminal: isLastSegment);
-      if (isLastSegment) defn.addHandler(method, handler);
+      paramNode.addNewDefinition(defn);
+      if (isLastSegment) return defn;
 
-      return node.addChildAndReturn(key, paramNode..addNewDefinition(defn));
-    }
-  }
-
-  void _on(String path, HTTPMethod method, IndexedHandler handler) {
-    path = _cleanPath(path);
-    Node rootNode = _root;
-
-    if (path == BASE_PATH) {
-      (rootNode as StaticNode)
-        ..addHandler(method, handler)
-        ..terminal = true;
-      return;
-    }
-
-    final pathSegments = _getRouteSegments(path);
-    for (int i = 0; i < pathSegments.length; i++) {
-      final segment = pathSegments[i];
-
-      rootNode = _computeNode(
-        rootNode,
-        segment,
-        method,
-        handler,
-        fullPath: path,
-        isLastSegment: i == (pathSegments.length - 1),
-      );
-    }
-
-    /// parametric nodes being terminal is determined its definitions
-    if (rootNode is StaticNode || rootNode is WildcardNode) {
-      (rootNode as StaticNode)
-        ..addHandler(method, handler)
-        ..terminal = true;
+      return node.addChildAndReturn(key, paramNode);
     }
   }
 
@@ -141,36 +167,27 @@ class Spanner {
     Node rootNode = _root;
 
     Map<String, dynamic> resolvedParams = {};
-    List<IndexedHandler> wildcardHandlers = [];
+    List<IndexedHandler> resolvedHandlers = [...rootNode.middlewares];
 
-    List<HandlerFunc> getResults(List<IndexedHandler> handlers) {
+    List<Middleware> getResults(IndexedHandler? handler) {
       final resultingHandlers = [
-        ...handlers,
-        ...wildcardHandlers,
+        if (handler != null) handler,
+        ...resolvedHandlers,
       ]..sort((a, b) => a.index.compareTo(b.index));
 
-      return resultingHandlers
-          .where((e) => e.value != null)
-          .map((e) => e.value!)
-          .toList();
+      return resultingHandlers.map((e) => e.value).toList();
     }
 
     if (path == BASE_PATH) {
       rootNode as StaticNode;
-      final wc = rootNode.wildcardNode;
-      if (wc != null) wildcardHandlers.addAll(wc.getActions(method));
-      return RouteResult(
-        resolvedParams,
-        getResults(rootNode.getActions(method)),
-      );
+      return RouteResult(resolvedParams, getResults(rootNode.getHandler(method)));
     }
 
     final debugLog = StringBuffer("\n");
 
     void devlog(String message) {
       if (!debug) return;
-      debugLog.writeln(message.toLowerCase());
-      print(debugLog);
+      debugLog.writeln(message);
     }
 
     String route = _cleanPath(path);
@@ -188,19 +205,20 @@ class Spanner {
       final hasChild = rootNode.hasChild(routePart);
       final isLastPart = i == (routeSegments.length - 1);
 
-      final wildcard = rootNode.wildcardNode;
-      if (wildcard != null) {
-        final handlers = wildcard.getActions(method);
-        wildcardHandlers.addAll(handlers);
-      }
-
       void useWildcard(WildcardNode wildcard) {
         resolvedParams['*'] = routeSegments.sublist(i).join('/');
         rootNode = wildcard;
       }
 
+      void extractNodeMdws(StaticNode node) {
+        final mdws = node.middlewares;
+        if (mdws.isEmpty) return;
+        resolvedHandlers.addAll(mdws);
+      }
+
       if (hasChild) {
         rootNode = rootNode.getChild(routePart);
+        extractNodeMdws(rootNode as StaticNode);
         devlog('- Found Static for             ->              $routePart');
       } else {
         final parametricNode = rootNode.paramNode;
@@ -209,7 +227,9 @@ class Spanner {
           devlog('x Route is not registered             ->         $route');
 
           final wc = rootNode.wildcardNode;
-          if (wc == null) return null;
+          if (wc == null) {
+            return RouteResult(resolvedParams, getResults(null), actual: null);
+          }
 
           useWildcard(wc);
           break;
@@ -244,8 +264,11 @@ class Spanner {
             final name = parametricNode.definitions.first.name;
             resolvedParams[name] = remainingPath;
 
-            final handlers = definition.getActions(method);
-            return RouteResult(resolvedParams, getResults(handlers), actual: definition);
+            return RouteResult(
+              resolvedParams,
+              getResults(definition.getHandler(method)),
+              actual: definition,
+            );
           }
           break;
         }
@@ -257,25 +280,27 @@ class Spanner {
         rootNode = parametricNode;
 
         if (isLastPart && definition.terminal) {
-          final handlers = definition.getActions(method);
           return RouteResult(
             resolvedParams,
-            getResults(handlers),
+            getResults(definition.getHandler(method)),
             actual: definition,
           );
         }
       }
     }
 
-    if (!rootNode.terminal) return null;
+    if (debug) {
+      print(debugLog);
+    }
 
-    final List<IndexedHandler> handlers = switch (rootNode.runtimeType) {
-      StaticNode => (rootNode as StaticNode).getActions(method),
-      WildcardNode => (rootNode as WildcardNode).getActions(method),
-      _ => [],
-    };
+    if (!rootNode.terminal) {
+      return RouteResult(resolvedParams, getResults(null), actual: null);
+    }
 
-    return RouteResult(resolvedParams, getResults(handlers), actual: rootNode);
+    final handler = rootNode.getHandler(method);
+    if (handler == null) return null;
+
+    return RouteResult(resolvedParams, getResults(handler), actual: rootNode);
   }
 
   void printTree() {
@@ -283,11 +308,10 @@ class Spanner {
   }
 
   String _cleanPath(String path) {
+    if ([BASE_PATH, WildcardNode.key].contains(path)) return path;
     if (!path.startsWith(BASE_PATH)) {
       throw ArgumentError.value(path, null, 'Route registration must start with `/`');
     }
-    if (path.length == 1) return path;
-
     if (config.ignoreDuplicateSlashes) {
       path = path.replaceAll(RegExp(r'/+'), '/');
     }
@@ -304,7 +328,7 @@ class Spanner {
 
 class RouteResult {
   final Map<String, dynamic> params;
-  final List<HandlerFunc> handlers;
+  final List<Middleware> handlers;
 
   @visibleForTesting
   final dynamic actual;

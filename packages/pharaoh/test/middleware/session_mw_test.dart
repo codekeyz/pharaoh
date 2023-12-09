@@ -41,10 +41,10 @@ void main() {
     group('genId option', () {
       test('should provide default generator', () async {
         final app = Pharaoh()
-            .use(session(secret: 'foo bar fuz'))
-            .get('/', (req, res) => res.end());
+          ..use(session(secret: 'foo bar fuz'))
+          ..get('/', (req, res) => res.end());
 
-        await (await request(app))
+        await (await request<Pharaoh>(app))
             .get('/')
             .expectStatus(200)
             .expectHeader(HttpHeaders.setCookieHeader, contains(Session.name))
@@ -53,10 +53,10 @@ void main() {
 
       test('should allow custom function', () async {
         final app = Pharaoh()
-            .use(session(secret: 'foo bar fuz', genId: (req) => 'mangoes'))
-            .get('/', (req, res) => res.end());
+          ..use(session(secret: 'foo bar fuz', genId: (req) => 'mangoes'))
+          ..get('/', (req, res) => res.end());
 
-        await (await request(app))
+        await (await request<Pharaoh>(app))
             .get('/')
             .expectStatus(200)
             .expectHeader(HttpHeaders.setCookieHeader,
@@ -68,10 +68,10 @@ void main() {
     group('name option', () {
       test('should default to pharaoh.sid', () async {
         final app = Pharaoh()
-            .use(session(secret: 'foo bar fuz'))
-            .get('/', (req, res) => res.end());
+          ..use(session(secret: 'foo bar fuz'))
+          ..get('/', (req, res) => res.end());
 
-        await (await request(app))
+        await (await request<Pharaoh>(app))
             .get('/')
             .expectStatus(200)
             .expectHeader(HttpHeaders.setCookieHeader, contains(Session.name))
@@ -80,10 +80,10 @@ void main() {
 
       test('should set the cookie name', () async {
         final app = Pharaoh()
-            .use(session(secret: 'foo bar fuz', name: 'session_id'))
-            .get('/', (req, res) => res.end());
+          ..use(session(secret: 'foo bar fuz', name: 'session_id'))
+          ..get('/', (req, res) => res.end());
 
-        await (await request(app))
+        await (await request<Pharaoh>(app))
             .get('/')
             .expectStatus(200)
             .expectHeader(HttpHeaders.setCookieHeader, contains('session_id='))
@@ -93,17 +93,15 @@ void main() {
 
     test('should do nothing if req.session exists', () async {
       final app = Pharaoh()
-          .use((req, res, next) {
-            final session = Session('id')
-              ..cookie = bakeCookie('phar', 'adf', CookieOpts());
-            req[RequestContext.session] = session;
+        ..use((req, res, next) {
+          final session = Session('id')..cookie = bakeCookie('phar', 'adf', CookieOpts());
+          req[RequestContext.session] = session;
 
-            next((req));
-          })
-          .use(session(secret: ''))
-          .get('/', (req, res) => res.end());
+          next((req));
+        }.chain(session(secret: '')))
+        ..get('/', (req, res) => res.end());
 
-      await (await request(app))
+      await (await request<Pharaoh>(app))
           .get('/')
           .expectBody('')
           .expectStatus(200)
@@ -126,10 +124,10 @@ void main() {
     test('should use secret from cookie options if provided', () async {
       const opts = CookieOpts(secret: 'foo bar baz');
       final app = Pharaoh()
-          .use(session(cookie: opts))
-          .get('/', (req, res) => res.end());
+        ..use(session(cookie: opts))
+        ..get('/', (req, res) => res.end());
 
-      await (await request(app))
+      await (await request<Pharaoh>(app))
           .get('/')
           .expectStatus(200)
           .expectHeader(HttpHeaders.setCookieHeader, contains('pharaoh.sid='))
@@ -138,10 +136,10 @@ void main() {
 
     test('should create a new session', () async {
       final app = Pharaoh()
-          .use(session(secret: 'foo bar baz'))
-          .get('/', (req, res) => res.json(req.session));
+        ..use(session(secret: 'foo bar baz'))
+        ..get('/', (req, res) => res.json(req.session));
 
-      await (await request(app))
+      await (await request<Pharaoh>(app))
           .get('/')
           .expectStatus(200)
           .expectHeader(HttpHeaders.setCookieHeader, contains('pharaoh.sid='))
@@ -151,15 +149,15 @@ void main() {
 
     test('should pass session fetch error', () async {
       const opts = CookieOpts(secret: 'foo bar baz');
-      final store = _$TestStore(
-          getFunc: (_) => throw Exception('Session store not available'));
+      final store =
+          _$TestStore(getFunc: (_) => throw Exception('Session store not available'));
 
       final app = Pharaoh()
-          .use(cookieParser(opts: opts))
-          .use(session(cookie: opts, store: store))
-          .get('/', (req, res) => res.end());
+        ..use(cookieParser(opts: opts))
+        ..use(session(cookie: opts, store: store))
+        ..get('/', (req, res) => res.end());
 
-      await (await request(app))
+      await (await request<Pharaoh>(app))
           .get('/', headers: {
             HttpHeaders.cookieHeader:
                 'pharaoh.sid=s%3A4badf56b-ab39-4d77-8992-934c995772da.vqiT1VnWppTRhR2pr4F4vb9Oxrbn67E0n0txjKD0qJ4; Path=/'
@@ -175,21 +173,21 @@ void main() {
       final store = InMemoryStore();
 
       final app = Pharaoh()
-          .use(cookieParser(opts: opts))
-          .use(session(cookie: opts, store: store))
-          .get('/', (req, res) {
-        req.session?['message'] = 'Hello World';
-        return res.ok('Message: ${req.session?['message']}');
-      });
+        ..use(cookieParser(opts: opts))
+        ..use(session(cookie: opts, store: store))
+        ..get('/', (req, res) {
+          req.session?['message'] = 'Hello World';
+          return res.ok('Message: ${req.session?['message']}');
+        });
 
-      final result = await (await request(app)).get('/').actual;
+      final result = await (await request<Pharaoh>(app)).get('/').actual;
       expect(store.sessions, hasLength(1));
 
       final headers = result.headers;
       expect(headers, contains(HttpHeaders.setCookieHeader));
 
       final cookieStr = headers[HttpHeaders.setCookieHeader]!;
-      await (await request(app))
+      await (await request<Pharaoh>(app))
           .get('/', headers: {HttpHeaders.cookieHeader: cookieStr})
           .expectStatus(200)
           .expectBody('Message: Hello World')
@@ -202,10 +200,10 @@ void main() {
       test('should default to true', () async {
         final store = InMemoryStore();
         final app = Pharaoh()
-            .use(session(secret: 'foo bar fuz', store: store))
-            .get('/', (req, res) => res.end());
+          ..use(session(secret: 'foo bar fuz', store: store))
+          ..get('/', (req, res) => res.end());
 
-        await (await request(app))
+        await (await request<Pharaoh>(app))
             .get('/')
             .expectStatus(200)
             .expectHeader(HttpHeaders.setCookieHeader, contains(Session.name))
@@ -217,11 +215,10 @@ void main() {
       test('should prevent save of uninitialized session', () async {
         final store = InMemoryStore();
         final app = Pharaoh()
-            .use(session(
-                secret: 'foo bar fuz', store: store, saveUninitialized: false))
-            .get('/', (req, res) => res.end());
+          ..use(session(secret: 'foo bar fuz', store: store, saveUninitialized: false))
+          ..get('/', (req, res) => res.end());
 
-        await (await request(app))
+        await (await request<Pharaoh>(app))
             .get('/')
             .expectStatus(200)
             .expectHeaders(isNot(contains(HttpHeaders.setCookieHeader)))
@@ -233,15 +230,14 @@ void main() {
       test('should still save modified session', () async {
         final store = InMemoryStore();
         final app = Pharaoh()
-            .use(session(
-                secret: 'foo bar fuz', store: store, saveUninitialized: false))
-            .get('/', (req, res) {
-          req.session?['name'] = 'Chima';
-          req.session?['world'] = 'World';
-          return res.end();
-        });
+          ..use(session(secret: 'foo bar fuz', store: store, saveUninitialized: false))
+          ..get('/', (req, res) {
+            req.session?['name'] = 'Chima';
+            req.session?['world'] = 'World';
+            return res.end();
+          });
 
-        await (await request(app))
+        await (await request<Pharaoh>(app))
             .get('/')
             .expectStatus(200)
             .expectHeaders(contains(HttpHeaders.setCookieHeader))
@@ -256,16 +252,15 @@ void main() {
           setFunc: (_, __) => throw Exception('Boom shakalaka'),
         );
         final app = Pharaoh()
-            .use(session(
-                secret: 'foo bar fuz', store: store, saveUninitialized: false))
-            .get('/', (req, res) {
-          req.session?['name'] = 'Chima';
-          req.session?['world'] = 'World';
+          ..use(session(secret: 'foo bar fuz', store: store, saveUninitialized: false))
+          ..get('/', (req, res) {
+            req.session?['name'] = 'Chima';
+            req.session?['world'] = 'World';
 
-          return res.end();
-        });
+            return res.end();
+          });
 
-        await (await request(app))
+        await (await request<Pharaoh>(app))
             .get('/')
             .expectStatus(500)
             .expectBody(
@@ -283,16 +278,12 @@ void main() {
           final opts = CookieOpts(secret: 'foo bar fuz');
 
           final app = Pharaoh()
-              .use(cookieParser(opts: opts))
-              .use(session(
-                cookie: opts,
-                store: store,
-                rolling: true,
-                saveUninitialized: false,
-              ))
-              .get('/', (req, res) => res.end());
+            ..use(cookieParser(opts: opts))
+            ..use(session(
+                cookie: opts, store: store, rolling: true, saveUninitialized: false))
+            ..get('/', (req, res) => res.end());
 
-          await (await request(app))
+          await (await request<Pharaoh>(app))
               .get('/')
               .expectStatus(200)
               .expectHeaders(isNot(contains(HttpHeaders.setCookieHeader)))
@@ -310,16 +301,12 @@ void main() {
           final opts = CookieOpts(secret: 'foo bar fuz');
 
           final app = Pharaoh()
-              .use(cookieParser(opts: opts))
-              .use(session(
-                cookie: opts,
-                store: store,
-                rolling: true,
-                saveUninitialized: true,
-              ))
-              .get('/', (req, res) => res.end());
+            ..use(cookieParser(opts: opts))
+            ..use(session(
+                cookie: opts, store: store, rolling: true, saveUninitialized: true))
+            ..get('/', (req, res) => res.end());
 
-          await (await request(app))
+          await (await request<Pharaoh>(app))
               .get('/')
               .expectStatus(200)
               .expectHeaders(contains(HttpHeaders.setCookieHeader))
@@ -337,22 +324,15 @@ void main() {
           final opts = CookieOpts(secret: 'foo bar fuz');
 
           final app = Pharaoh()
-              .use(cookieParser(opts: opts))
-              .use(session(
-                cookie: opts,
-                store: store,
-                rolling: true,
-                saveUninitialized: false,
-              ))
-              .get(
-            '/',
-            (req, res) {
+            ..use(cookieParser(opts: opts))
+            ..use(session(
+                cookie: opts, store: store, rolling: true, saveUninitialized: false))
+            ..get('/', (req, res) {
               req.session?['name'] = 'codekeyz';
               return res.end();
-            },
-          );
+            });
 
-          await (await request(app))
+          await (await request<Pharaoh>(app))
               .get('/')
               .expectStatus(200)
               .expectHeaders(contains(HttpHeaders.setCookieHeader))
