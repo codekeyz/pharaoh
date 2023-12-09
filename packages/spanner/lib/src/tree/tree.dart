@@ -157,9 +157,10 @@ class Spanner {
       }
 
       final defn = ParameterDefinition.from(routePart, terminal: isLastSegment);
+      paramNode.addNewDefinition(defn);
       if (isLastSegment) return defn;
 
-      return node.addChildAndReturn(key, paramNode..addNewDefinition(defn));
+      return node.addChildAndReturn(key, paramNode);
     }
   }
 
