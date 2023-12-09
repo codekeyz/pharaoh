@@ -22,6 +22,8 @@ class $Response extends Message<shelf.Body?> implements Response {
 
   final List<Cookie> _cookies = [];
 
+  ViewRenderData? viewToRender;
+
   DateTime? _expiresCache;
 
   /// The date and time after which the $Response's data should be considered
@@ -267,4 +269,16 @@ class $Response extends Message<shelf.Body?> implements Response {
     headers[HttpHeaders.setCookieHeader] = _cookies;
     return this;
   }
+
+  @override
+  Response render(String name, Map<String, dynamic> data) {
+    final viewData = ViewRenderData(name, data);
+    return type(ContentType.html)..viewToRender = viewData;
+  }
+}
+
+class ViewRenderData {
+  final String name;
+  final Map<String, dynamic> data;
+  const ViewRenderData(this.name, this.data);
 }

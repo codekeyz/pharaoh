@@ -9,10 +9,12 @@ import 'http/response.dart';
 import 'http/response_impl.dart';
 import 'http/request_impl.dart';
 import 'middleware/session_mw.dart';
+import 'router/_handler_executor.dart';
 import 'router/router_contract.dart';
 import 'router/router_handler.dart';
 import 'router/router_mixin.dart';
 import 'router/router.dart';
+import 'view/view.dart';
 
 import 'middleware/body_parser.dart';
 import 'utils/exceptions.dart';
@@ -22,6 +24,10 @@ part 'core_impl.dart';
 
 abstract class Pharaoh implements RouterContract {
   factory Pharaoh() => _$PharaohImpl();
+
+  ViewEngine? get viewEngine;
+
+  set viewEngine(ViewEngine? engine);
 
   RouterContract router();
 

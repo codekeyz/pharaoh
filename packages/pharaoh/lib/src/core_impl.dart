@@ -3,6 +3,8 @@ part of 'core.dart';
 class _$PharaohImpl extends RouterContract with RouteDefinitionMixin implements Pharaoh {
   late final HttpServer _server;
 
+  ViewEngine? _viewEngine;
+
   final List<ReqResHook> _preResponseHooks = [
     sessionPreResponseHook,
   ];
@@ -167,6 +169,12 @@ class _$PharaohImpl extends RouterContract with RouteDefinitionMixin implements 
 
   @override
   Future<void> shutdown() async => _server.close();
+
+  @override
+  ViewEngine? get viewEngine => _viewEngine;
+
+  @override
+  set viewEngine(ViewEngine? engine) => _viewEngine = engine;
 }
 
 // ignore: constant_identifier_names
