@@ -1,4 +1,4 @@
-import '../http/request.dart';
+import 'package:spanner/spanner.dart';
 
 class PharaohException extends Error {
   /// Whether value was provided.

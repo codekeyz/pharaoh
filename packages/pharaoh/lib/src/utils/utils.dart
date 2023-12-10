@@ -3,6 +3,18 @@ import 'dart:io';
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
 
+// spanner.HTTPMethod getSpannerMethod(HTTPMethod method) => switch (method) {
+//       HTTPMethod.GET => spanner.HTTPMethod.GET,
+//       HTTPMethod.POST => spanner.HTTPMethod.POST,
+//       HTTPMethod.PUT => spanner.HTTPMethod.PUT,
+//       HTTPMethod.PATCH => spanner.HTTPMethod.PATCH,
+//       HTTPMethod.HEAD => spanner.HTTPMethod.HEAD,
+//       HTTPMethod.OPTIONS => spanner.HTTPMethod.OPTIONS,
+//       HTTPMethod.TRACE => spanner.HTTPMethod.TRACE,
+//       HTTPMethod.ALL => spanner.HTTPMethod.ALL,
+//       HTTPMethod.DELETE => spanner.HTTPMethod.DELETE,
+//     };
+
 String contentTypeToString(ContentType type, {String charset = 'utf-8'}) {
   return '${type.value}; charset=${type.charset ?? charset}';
 }
@@ -12,8 +24,8 @@ String contentTypeToString(ContentType type, {String charset = 'utf-8'}) {
 /// If `this` is called in a non-root error zone, it will just run [callback]
 /// and return the result. Otherwise, it will capture any errors using
 /// [runZoned] and pass them to [onError].
-void catchTopLevelErrors(void Function() callback,
-    void Function(dynamic error, StackTrace) onError) {
+void catchTopLevelErrors(
+    void Function() callback, void Function(dynamic error, StackTrace) onError) {
   if (Zone.current.inSameErrorZone(Zone.root)) {
     return runZonedGuarded(callback, onError);
   } else {
