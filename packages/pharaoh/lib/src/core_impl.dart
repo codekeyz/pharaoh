@@ -97,7 +97,7 @@ class $PharaohImpl extends RouterContract with RouteDefinitionMixin implements P
     Response routeNotFound() => res.notFound("Route not found: ${req.path}");
 
     final routeResult = spanner.lookup(req.method, req.path);
-    final resolvedHandlers = routeResult?.handlers.cast<Middleware>() ?? [];
+    final resolvedHandlers = routeResult?.values.cast<Middleware>() ?? [];
     if (routeResult == null || resolvedHandlers.isEmpty) {
       return reqRes.merge(routeNotFound());
     }

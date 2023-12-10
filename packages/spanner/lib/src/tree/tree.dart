@@ -330,14 +330,14 @@ class Spanner {
 
 class RouteResult {
   final Map<String, dynamic> params;
-  final List<dynamic> handlers;
+  final List<dynamic> values;
 
   @visibleForTesting
   final dynamic actual;
 
   const RouteResult(
     this.params,
-    this.handlers, {
+    this.values, {
     this.actual,
   });
 }
