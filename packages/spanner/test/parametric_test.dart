@@ -1,4 +1,3 @@
-import 'package:pharaoh/pharaoh.dart';
 import 'package:spanner/spanner.dart';
 import 'package:spanner/src/parametric/definition.dart';
 import 'package:spanner/src/tree/node.dart';
@@ -126,7 +125,7 @@ void main() {
 
         expect(
           runSyncAndReturnException(() => router.lookup(HTTPMethod.GET, '/@388>)#(***)')),
-          isA<PharaohValidationError>()
+          isA<ArgumentError>()
               .having((p0) => p0.message, 'with message', 'Invalid parameter value'),
         );
       });

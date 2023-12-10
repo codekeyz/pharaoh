@@ -1,7 +1,7 @@
 import 'package:collection/collection.dart';
 import 'package:equatable/equatable.dart';
-import 'package:pharaoh/pharaoh.dart';
 
+import 'tree.dart';
 import '../route/action.dart';
 import '../parametric/definition.dart';
 import '../parametric/utils.dart';
@@ -61,12 +61,12 @@ class ParametricNode extends Node {
   static final String key = '<:>';
 
   @override
-  void addMiddleware(IndexedHandler handler) {
+  void addMiddleware<T>(IndexedValue<T> handler) {
     throw ArgumentError('Parametric Node cannot have middlewares');
   }
 
   @override
-  void addRoute(HTTPMethod method, IndexedHandler handler) {
+  void addRoute<T>(HTTPMethod method, IndexedValue<T> handler) {
     throw ArgumentError('Parametric Node cannot have routes');
   }
 
