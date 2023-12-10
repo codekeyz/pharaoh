@@ -8,7 +8,7 @@ void main() {
 
       await (await request<Pharaoh>(app))
           .get('/?value1=1&value2=2')
-          // .expectStatus(200)
+          .expectStatus(200)
           .expectBody({"value1": "1", "value2": "2"}).test();
     });
   });
