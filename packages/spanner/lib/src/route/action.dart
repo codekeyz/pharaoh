@@ -1,37 +1,21 @@
-import 'package:equatable/equatable.dart';
-import 'package:pharaoh/pharaoh.dart';
+import '../tree/tree.dart';
 
 typedef Indexed<T> = ({int index, T value});
 
-typedef IndexedHandler = Indexed<Middleware>;
-
-class RouteAction extends Equatable {
-  final HTTPMethod method;
-  final Middleware handler;
-  final int index;
-
-  const RouteAction(
-    this.handler, {
-    required this.method,
-    required this.index,
-  });
-
-  @override
-  List<Object?> get props => [method];
-}
+typedef IndexedValue<T> = Indexed<T>;
 
 mixin HandlerStore {
-  final Map<HTTPMethod, IndexedHandler> requestHandlers = {};
+  final Map<HTTPMethod, IndexedValue> requestHandlers = {};
 
-  final List<IndexedHandler> middlewares = [];
+  final List<IndexedValue> middlewares = [];
 
   Iterable<HTTPMethod> get methods => requestHandlers.keys;
 
   bool hasMethod(HTTPMethod method) => requestHandlers.containsKey(method);
 
-  IndexedHandler? getHandler(HTTPMethod method) => requestHandlers[method];
+  IndexedValue? getHandler(HTTPMethod method) => requestHandlers[method];
 
-  void addRoute(HTTPMethod method, IndexedHandler handler) {
+  void addRoute<T>(HTTPMethod method, IndexedValue<T> handler) {
     if (method == HTTPMethod.ALL) {
       throw ArgumentError('HTTPMethod.all not supported for `addRoute`');
     }
@@ -45,7 +29,7 @@ mixin HandlerStore {
     requestHandlers[method] = handler;
   }
 
-  void addMiddleware(IndexedHandler handler) {
+  void addMiddleware<T>(IndexedValue<T> handler) {
     middlewares.add(handler);
   }
 }

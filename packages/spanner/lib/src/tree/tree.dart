@@ -1,5 +1,4 @@
 import 'package:meta/meta.dart';
-import 'package:pharaoh/pharaoh.dart';
 
 import 'node.dart';
 import '../route/action.dart';
@@ -8,6 +7,9 @@ import '../parametric/utils.dart';
 
 // ignore: constant_identifier_names
 const BASE_PATH = '/';
+
+// ignore: constant_identifier_names
+enum HTTPMethod { GET, HEAD, POST, PUT, DELETE, ALL, PATCH, OPTIONS, TRACE }
 
 class RouterConfig {
   final bool caseSensitive;
@@ -37,7 +39,7 @@ class Spanner {
 
   String get routeStr => routes.map((e) => '${e.method.name} ${e.path}').join('\n');
 
-  void addRoute(HTTPMethod method, String path, Middleware handler) {
+  void addRoute<T>(HTTPMethod method, String path, T handler) {
     final indexedHandler = (index: _nextIndex, value: handler);
 
     dynamic result = _on(path);
@@ -54,7 +56,7 @@ class Spanner {
     _currentIndex = _nextIndex;
   }
 
-  void addMiddleware(String path, Middleware handler) {
+  void addMiddleware<T>(String path, T handler) {
     final middleware = (index: _nextIndex, value: handler);
 
     dynamic result = _on(path);
@@ -167,9 +169,9 @@ class Spanner {
     Node rootNode = _root;
 
     Map<String, dynamic> resolvedParams = {};
-    List<IndexedHandler> resolvedHandlers = [...rootNode.middlewares];
+    List<IndexedValue> resolvedHandlers = [...rootNode.middlewares];
 
-    List<Middleware> getResults(IndexedHandler? handler) {
+    List<dynamic> getResults(IndexedValue? handler) {
       final resultingHandlers = [
         if (handler != null) handler,
         ...resolvedHandlers,
@@ -328,14 +330,14 @@ class Spanner {
 
 class RouteResult {
   final Map<String, dynamic> params;
-  final List<Middleware> handlers;
+  final List<dynamic> values;
 
   @visibleForTesting
   final dynamic actual;
 
   const RouteResult(
     this.params,
-    this.handlers, {
+    this.values, {
     this.actual,
   });
 }

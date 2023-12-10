@@ -1,10 +1,9 @@
 import 'dart:io';
 
+import 'package:spanner/spanner.dart';
+
 import '../middleware/session_mw.dart';
 import '../utils/exceptions.dart';
-
-// ignore: constant_identifier_names
-enum HTTPMethod { GET, HEAD, POST, PUT, DELETE, ALL, PATCH, OPTIONS, TRACE }
 
 class RequestContext {
   static const String phar = 'phar';

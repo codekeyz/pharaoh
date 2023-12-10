@@ -1,10 +1,8 @@
-import 'package:pharaoh/pharaoh.dart';
 import 'package:spanner/spanner.dart';
 import 'package:spanner/src/parametric/definition.dart';
 import 'package:spanner/src/tree/node.dart';
 import 'package:test/test.dart';
 
-import 'fixtures/handlers.dart';
 import 'helpers/test_utils.dart';
 
 void main() {
@@ -12,9 +10,9 @@ void main() {
     group('should reject', () {
       test('inconsistent parameter definitions', () {
         router() => Spanner()
-          ..addRoute(HTTPMethod.GET, '/user/<file>.png/download', okHdler)
-          ..addRoute(HTTPMethod.POST, '/user/<heyyou>.png', okHdler)
-          ..addRoute(HTTPMethod.GET, '/user/<hello>.png/<user2>/hello', okHdler);
+          ..addRoute(HTTPMethod.GET, '/user/<file>.png/download', null)
+          ..addRoute(HTTPMethod.POST, '/user/<heyyou>.png', null)
+          ..addRoute(HTTPMethod.GET, '/user/<hello>.png/<user2>/hello', null);
 
         final exception = runSyncAndReturnException<ArgumentError>(router);
         expect(exception.message,
@@ -24,7 +22,7 @@ void main() {
       });
 
       test('close door parameter definitions', () {
-        router() => Spanner()..addRoute(HTTPMethod.GET, '/user/<userId><keyId>', okHdler);
+        router() => Spanner()..addRoute(HTTPMethod.GET, '/user/<userId><keyId>', null);
 
         final exception = runSyncAndReturnException<ArgumentError>(router);
         expect(exception.message,
@@ -34,7 +32,7 @@ void main() {
 
       test('invalid parameter definition', () {
         router() =>
-            Spanner()..addRoute(HTTPMethod.GET, '/user/<userId#@#.XDkd@#>>#>', okHdler);
+            Spanner()..addRoute(HTTPMethod.GET, '/user/<userId#@#.XDkd@#>>#>', null);
 
         final exception = runSyncAndReturnException<ArgumentError>(router);
         expect(exception.message, contains('Parameter definition is invalid'));
@@ -43,7 +41,7 @@ void main() {
     });
 
     test('with request.url contains dash', () {
-      final router = Spanner()..addRoute(HTTPMethod.GET, '/a/<param>/b', okHdler);
+      final router = Spanner()..addRoute(HTTPMethod.GET, '/a/<param>/b', null);
 
       final result = router.lookup(HTTPMethod.GET, '/a/foo-bar/b');
       expect(result, havingParameters<StaticNode>({'param': 'foo-bar'}));
@@ -51,13 +49,13 @@ void main() {
 
     test('with fixed suffix', () async {
       final router = Spanner()
-        ..addRoute(HTTPMethod.GET, '/user', okHdler)
-        ..addRoute(HTTPMethod.GET, '/user/<userId>', okHdler)
-        ..addRoute(HTTPMethod.GET, '/user/<userId>/details', okHdler)
-        ..addRoute(HTTPMethod.GET, '/user/<file>.png/download', okHdler)
-        ..addRoute(HTTPMethod.GET, '/user/<file>.png/<user2>/hello', okHdler)
-        ..addRoute(HTTPMethod.GET, '/a/<param>-static', okHdler)
-        ..addRoute(HTTPMethod.GET, '/b/<param>.static', okHdler);
+        ..addRoute(HTTPMethod.GET, '/user', null)
+        ..addRoute(HTTPMethod.GET, '/user/<userId>', null)
+        ..addRoute(HTTPMethod.GET, '/user/<userId>/details', null)
+        ..addRoute(HTTPMethod.GET, '/user/<file>.png/download', null)
+        ..addRoute(HTTPMethod.GET, '/user/<file>.png/<user2>/hello', null)
+        ..addRoute(HTTPMethod.GET, '/a/<param>-static', null)
+        ..addRoute(HTTPMethod.GET, '/b/<param>.static', null);
 
       var node = router.lookup(HTTPMethod.GET, '/user');
       expect(node, isStaticNode('user'));
@@ -84,8 +82,8 @@ void main() {
 
     test('contain param and wildcard together', () {
       final router = Spanner()
-        ..addRoute(HTTPMethod.GET, '/<lang>/item/<id>', okHdler)
-        ..addRoute(HTTPMethod.GET, '/<lang>/item/*', okHdler);
+        ..addRoute(HTTPMethod.GET, '/<lang>/item/<id>', null)
+        ..addRoute(HTTPMethod.GET, '/<lang>/item/*', null);
 
       expect(
         router.lookup(HTTPMethod.GET, '/fr/item/12345'),
@@ -99,7 +97,7 @@ void main() {
     });
 
     test('should capture remaining parts as parameter when no wildcard', () {
-      final router = Spanner()..addRoute(HTTPMethod.GET, '/<lang>/item/<id>', okHdler);
+      final router = Spanner()..addRoute(HTTPMethod.GET, '/<lang>/item/<id>', null);
 
       expect(
         router.lookup(HTTPMethod.GET, '/fr/item/12345'),
@@ -115,8 +113,8 @@ void main() {
     group('when descriptors', () {
       test('in single parametric definition', () {
         final router = Spanner()
-          ..addRoute(HTTPMethod.GET, '/users/<userId|(^\\w+)|number>/detail', okHdler)
-          ..addRoute(HTTPMethod.GET, '/<userId|(^\\w+)>', (req, res, next) => okHdler);
+          ..addRoute(HTTPMethod.GET, '/users/<userId|(^\\w+)|number>/detail', null)
+          ..addRoute(HTTPMethod.GET, '/<userId|(^\\w+)>', null);
 
         var result = router.lookup(HTTPMethod.GET, '/users/24/detail');
         expect(result, havingParameters({'userId': 24}));
@@ -126,15 +124,15 @@ void main() {
 
         expect(
           runSyncAndReturnException(() => router.lookup(HTTPMethod.GET, '/@388>)#(***)')),
-          isA<PharaohValidationError>()
+          isA<ArgumentError>()
               .having((p0) => p0.message, 'with message', 'Invalid parameter value'),
         );
       });
 
       test('in composite parametric definition', () async {
         final router = Spanner()
-          ..addRoute(HTTPMethod.GET, '/users/<userId|number>HELLO<paramId|number>/detail',
-              okHdler);
+          ..addRoute(
+              HTTPMethod.GET, '/users/<userId|number>HELLO<paramId|number>/detail', null);
 
         var result = router.lookup(HTTPMethod.GET, '/users/334HELLO387/detail');
         expect(result, havingParameters({'userId': 334, 'paramId': 387}));
