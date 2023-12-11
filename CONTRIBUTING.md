@@ -52,10 +52,9 @@ a future release of Pharaoh.
 ## Reporting an Issue
 
 We will typically close any vague issues or questions that are specific to some
-app you are writing. Please double check the docs and other references before
-being trigger happy with posting a question issue.
+app you are writing. Please double check the docs and other references before reporting an issue or posting a question.
 
-Things that will help get your question issue looked at:
+Things that will help get your issue looked at:
 
 - Full and runnable Dart code.
 
@@ -68,13 +67,39 @@ Things that will help get your question issue looked at:
 - If you post a question and do not outline the above items or make it easy for us to understand and reproduce your issue, it will be closed.
 
 ## PRs and Code contributions
-- All Tests must pass.
+When you've got your contribution working, all test and lint style passed, and committed to your branch it's time to create a Pull Request (PR). If you are unsure how to do this GitHub's [Creating a pull request from a fork](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request-from-a-fork) documentation will help you with that. Once you create your PR you will be presented with a template in the PR's description that looks like this:
 
-- Follow the Dart Lint Style and `melos run lint:all`.
+```md
+<!--
+  Thanks for contributing!
 
-- If you fix a bug, add a test.
+  Provide a description of your changes below and a general summary in the title
 
-- Include a description to your PR and a
+  Please look at the following checklist to ensure that your PR can be accepted quickly:
+-->
+
+## Description
+<!-- Please describe what you added, and add a screenshot if possible.
+     That makes it easier to understand the change so we can :shipit: faster. -->
+
+## Type of Change
+
+<!--- Put an `x` in all the boxes that apply: -->
+
+- [ ] ✨ New feature (non-breaking change which adds functionality)
+- [ ] 🛠️ Bug fix (non-breaking change which fixes an issue)
+- [ ] ❌ Breaking change (fix or feature that would cause existing functionality to change)
+- [ ] 🧹 Code refactor
+- [ ] ✅ Build configuration change
+- [ ] 📝 Documentation
+- [ ] 🗑️ Chore
+
+All you need to do is fill in the information as requested by the template. Please do not remove this as it helps both you and the reviewers confirm that the various tasks have been completed.
+```
+
+Here is an examples of good PR descriptions:
+
+- <https://github.com/Pharaoh-Framework/pharaoh/pull/70>
 
 
 
