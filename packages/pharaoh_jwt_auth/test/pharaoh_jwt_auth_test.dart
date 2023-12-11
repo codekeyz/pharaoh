@@ -11,8 +11,8 @@ void main() {
 
     setUpAll(() {
       app = Pharaoh()
-          .use(jwtAuth(secret: () => secretKey))
-          .get('/users/me', (req, res) => res.json(req.auth));
+        ..use(jwtAuth(secret: () => secretKey))
+        ..get('/users/me', (req, res) => res.json(req.auth));
     });
 
     test(
@@ -21,8 +21,8 @@ void main() {
           .get('/users/me')
           .expectStatus(401)
           .expectContentType('application/json; charset=utf-8')
-          .expectBodyCustom((body) => jsonDecode(body)['message'],
-              'No authorization token was found')
+          .expectBodyCustom(
+              (body) => jsonDecode(body)['message'], 'No authorization token was found')
           .test(),
     );
 
@@ -59,8 +59,7 @@ void main() {
             .token(token)
             .get('/users/me')
             .expectStatus(401)
-            .expectBodyCustom(
-                (body) => jsonDecode(body)['message'], 'jwt expired')
+            .expectBodyCustom((body) => jsonDecode(body)['message'], 'jwt expired')
             .test();
       },
     );

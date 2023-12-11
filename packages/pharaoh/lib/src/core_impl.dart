@@ -1,16 +1,17 @@
 part of 'core.dart';
 
-class _$PharaohImpl extends RouterContract<Pharaoh>
-    with RouteDefinitionMixin<Pharaoh>
-    implements Pharaoh {
+class $PharaohImpl extends RouterContract with RouteDefinitionMixin implements Pharaoh {
   late final HttpServer _server;
-  late final Logger _logger;
-  late final PharaohRouter _router;
 
-  _$PharaohImpl() : _logger = Logger() {
-    final _spanner = Spanner();
-    _router = PharaohRouter(_spanner);
-    useSpanner(_spanner);
+  static ViewEngine? viewEngine_;
+
+  final List<ReqResHook> _preResponseHooks = [
+    sessionPreResponseHook,
+    viewRenderHook,
+  ];
+
+  $PharaohImpl() {
+    useSpanner(Spanner());
     use(bodyParser);
   }
 
@@ -18,7 +19,10 @@ class _$PharaohImpl extends RouterContract<Pharaoh>
   RouterContract router() => GroupRouter();
 
   @override
-  List<dynamic> get routes => [];
+  List<RouteEntry> get routes => spanner.routes;
+
+  @override
+  String get routeStr => spanner.routeStr;
 
   @override
   Uri get uri {
@@ -48,24 +52,18 @@ class _$PharaohImpl extends RouterContract<Pharaoh>
     if (router is! GroupRouter) {
       throw PharaohException.value('Router is not an instance of GroupRouter');
     }
-    _router.spanner.prefix(path, router.spanner.root);
+    router.commit(path, spanner);
     return this;
   }
 
   @override
   Future<Pharaoh> listen({int port = 3000}) async {
-    final progress = _logger.progress('Starting server');
+    _server = await HttpServer.bind('0.0.0.0', port, shared: true)
+      ..autoCompress = true;
+    _server.listen(handleRequest);
 
-    try {
-      _server = await HttpServer.bind('localhost', port);
-      _server.listen(handleRequest);
-      progress.complete('Server start on PORT: $port -> ${uri.toString()}');
-    } catch (e) {
-      final errMsg =
-          (e as dynamic).message ?? 'An occurred while starting server';
-      progress.fail(errMsg);
-    }
-
+    print(
+        'Server start on PORT: ${_server.port} -> ${uri.scheme}://localhost:${_server.port}');
     return this;
   }
 
@@ -77,36 +75,54 @@ class _$PharaohImpl extends RouterContract<Pharaoh>
     httpReq.response.headers.chunkedTransferEncoding = false;
     httpReq.response.headers.clear();
 
-    final result = await resolveRequest(httpReq);
-    if (result.canNext == false) return;
-
-    final res = result.reqRes.res;
-    if (res.ended) {
-      return forward(httpReq, res);
-    }
-
-    /// TODO(codekeyz) If we get here, then it means the response was never ended.
-    /// we should alert the developer
-  }
-
-  Future<HandlerResult> resolveRequest(HttpRequest request) async {
-    final req = Request.from(request);
-    final res = Response.from(request);
+    final req = $Request.from(httpReq);
+    final res = $Response.from(httpReq);
 
     try {
-      return await _router.resolve(req, res);
-    } catch (e) {
-      return (
-        canNext: true,
-        reqRes: (req: req, res: res.internalServerError(e.toString())),
+      final result = await resolveAndExecuteHandlers(req, res);
+      await forward(httpReq, result.res);
+    } on PharaohValidationError catch (e) {
+      await forward(
+        httpReq,
+        res.status(422).json(res.makeError(message: '$e')),
       );
+    } catch (e) {
+      await forward(httpReq, res.internalServerError('$e'));
     }
   }
 
-  bool hasNoRequestHandlers(List<RouteHandler> handlers) =>
-      !handlers.any((e) => e is RequestHandler);
+  Future<ReqRes> resolveAndExecuteHandlers($Request req, $Response res) async {
+    ReqRes reqRes = (req: req, res: res);
 
-  Future<void> forward(HttpRequest request, Response res_) async {
+    Response routeNotFound() => res.notFound("Route not found: ${req.path}");
+
+    final routeResult = spanner.lookup(req.method, req.path);
+    final resolvedHandlers = routeResult?.values.cast<Middleware>() ?? [];
+    if (routeResult == null || resolvedHandlers.isEmpty) {
+      return reqRes.merge(routeNotFound());
+    }
+
+    /// update request params with params resolved from spanner
+    for (final param in routeResult.params.entries) {
+      req.params[param.key] = param.value;
+    }
+
+    final chainedHandlers = resolvedHandlers.reduce((a, b) => a.chain(b));
+    final result = await Executor(chainedHandlers).execute(reqRes);
+    reqRes = result.reqRes;
+
+    for (final job in _preResponseHooks) {
+      reqRes = await Future.microtask(() => job(reqRes));
+    }
+
+    if (!reqRes.res.ended) {
+      return reqRes.merge(routeNotFound());
+    }
+
+    return reqRes;
+  }
+
+  Future<void> forward(HttpRequest request, $Response res_) async {
     var coding = res_.headers['transfer-encoding'];
 
     final statusCode = res_.statusCode;
@@ -116,7 +132,7 @@ class _$PharaohImpl extends RouterContract<Pharaoh>
       //
       // TODO(codekeyz): Do this more cleanly when sdk#27886 is fixed.
       final newStream = chunkedCoding.decoder.bind(res_.body!.read());
-      res_ = Response.from(request)..body = shelf.Body(newStream);
+      res_ = $Response.from(request)..body = shelf.Body(newStream);
       request.headers.set(HttpHeaders.transferEncodingHeader, 'chunked');
     } else if (statusCode >= 200 &&
         statusCode != 204 &&
@@ -125,8 +141,7 @@ class _$PharaohImpl extends RouterContract<Pharaoh>
         res_.mimeType != 'multipart/byteranges') {
       // If the response isn't chunked yet and there's no other way to tell its
       // length, enable `dart:io`'s chunked encoding.
-      request.response.headers
-          .set(HttpHeaders.transferEncodingHeader, 'chunked');
+      request.response.headers.set(HttpHeaders.transferEncodingHeader, 'chunked');
     }
 
     // headers to write to the response
@@ -138,14 +153,12 @@ class _$PharaohImpl extends RouterContract<Pharaoh>
       request.response.headers.add(_XPoweredByHeader, 'Pharaoh');
     }
     if (!hders.containsKey(HttpHeaders.dateHeader)) {
-      request.response.headers
-          .add(HttpHeaders.dateHeader, DateTime.now().toUtc());
+      request.response.headers.add(HttpHeaders.dateHeader, DateTime.now().toUtc());
     }
     if (!hders.containsKey(HttpHeaders.contentLengthHeader)) {
       final contentLength = res_.contentLength;
       if (contentLength != null) {
-        request.response.headers
-            .add(HttpHeaders.contentLengthHeader, contentLength);
+        request.response.headers.add(HttpHeaders.contentLengthHeader, contentLength);
       }
     }
 
@@ -157,9 +170,13 @@ class _$PharaohImpl extends RouterContract<Pharaoh>
   }
 
   @override
-  Future<void> shutdown() async {
-    await _server.close();
-  }
+  Future<void> shutdown() async => _server.close();
+
+  @override
+  ViewEngine? get viewEngine => viewEngine_;
+
+  @override
+  set viewEngine(ViewEngine? engine) => viewEngine_ = engine;
 }
 
 // ignore: constant_identifier_names

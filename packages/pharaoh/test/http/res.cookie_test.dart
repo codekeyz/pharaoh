@@ -6,9 +6,7 @@ import 'package:spookie/spookie.dart';
 void main() {
   group('res.cookie(name, string)', () {
     test('should set a cookie', () async {
-      final app = Pharaoh().get('/', (req, res) {
-        return res.cookie('name', 'chima').end();
-      });
+      final app = Pharaoh()..get('/', (req, res) => res.cookie('name', 'chima').end());
 
       await (await request<Pharaoh>(app))
           .get('/')
@@ -18,13 +16,14 @@ void main() {
     });
 
     test('should allow multiple calls', () async {
-      final app = Pharaoh().get('/', (req, res) {
-        return res
-            .cookie('name', 'chima')
-            .cookie('age', '1')
-            .cookie('gender', '?')
-            .end();
-      });
+      final app = Pharaoh()
+        ..get(
+            '/',
+            (req, res) => res
+                .cookie('name', 'chima')
+                .cookie('age', '1')
+                .cookie('gender', '?')
+                .end());
 
       await (await request<Pharaoh>(app))
           .get('/')
@@ -37,27 +36,28 @@ void main() {
 
   group('res.cookie(name, string, {...options})', () {
     test('should set :httpOnly or :secure', () async {
-      final app = Pharaoh().get('/', (req, res) {
-        return res
-            .cookie('name', 'chima', CookieOpts(httpOnly: true, secure: true))
-            .end();
-      });
+      final app = Pharaoh()
+        ..get('/', (req, res) {
+          return res
+              .cookie('name', 'chima', CookieOpts(httpOnly: true, secure: true))
+              .end();
+        });
 
       await (await request<Pharaoh>(app))
           .get('/')
           .expectStatus(200)
-          .expectHeader(HttpHeaders.setCookieHeader,
-              'name=chima; Path=/; Secure; HttpOnly')
+          .expectHeader(
+              HttpHeaders.setCookieHeader, 'name=chima; Path=/; Secure; HttpOnly')
           .test();
     });
 
     test('should set :maxAge', () async {
-      final app = Pharaoh().get('/', (req, res) {
-        return res
-            .cookie(
-                'name', 'chima', CookieOpts(maxAge: const Duration(seconds: 5)))
-            .end();
-      });
+      final app = Pharaoh()
+        ..get('/', (req, res) {
+          return res
+              .cookie('name', 'chima', CookieOpts(maxAge: const Duration(seconds: 5)))
+              .end();
+        });
 
       await (await request<Pharaoh>(app))
           .get('/')
@@ -68,12 +68,13 @@ void main() {
     });
 
     test('should set :signed', () async {
-      final app = Pharaoh().get('/', (req, res) {
-        return res
-            .cookie('user', {"name": 'tobi'},
-                CookieOpts(signed: true, secret: 'foo bar baz'))
-            .end();
-      });
+      final app = Pharaoh()
+        ..get('/', (req, res) {
+          return res
+              .cookie('user', {"name": 'tobi'},
+                  CookieOpts(signed: true, secret: 'foo bar baz'))
+              .end();
+        });
 
       await (await request<Pharaoh>(app))
           .get('/')
@@ -84,17 +85,16 @@ void main() {
     });
 
     test('should reject when :signed without :secret', () async {
-      final app = Pharaoh().get('/', (req, res) {
-        return res
-            .cookie('user', {"name": 'tobi'}, CookieOpts(signed: true))
-            .end();
-      });
+      final app = Pharaoh()
+        ..get(
+            '/',
+            (req, res) =>
+                res.cookie('user', {"name": 'tobi'}, CookieOpts(signed: true)).end());
 
       await (await request<Pharaoh>(app))
           .get('/')
           .expectStatus(500)
-          .expectBody(
-              contains('CookieOpts(\\"secret\\") required for signed cookies'))
+          .expectBody(contains('CookieOpts(\\"secret\\") required for signed cookies'))
           .test();
     });
   });

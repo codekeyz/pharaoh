@@ -28,6 +28,8 @@ var userRepos = {
 final app = Pharaoh();
 
 void main([args]) async {
+  final port = List.from(args).isEmpty ? 3000 : args[0];
+
   /// if we wanted to supply more than JSON, we could
   /// use something similar to the content-negotiation
   /// example.
@@ -35,7 +37,7 @@ void main([args]) async {
   /// by mounting this middleware to /api
   /// meaning only paths prefixed with "/api"
   /// will cause this middleware to be invoked
-  app.useOnPath('/api', (req, res, next) {
+  app.on('/api', (req, res, next) {
     var key = req.query['api-key'];
 
     /// key isn't present
@@ -75,5 +77,5 @@ void main([args]) async {
     return res.notFound();
   });
 
-  await app.listen(port: args?['port'] ?? 3000);
+  await app.listen(port: port);
 }

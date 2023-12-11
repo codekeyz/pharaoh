@@ -7,10 +7,10 @@ import 'package:dart_jsonwebtoken/dart_jsonwebtoken.dart';
 const _tokenMalformed = 'Format is Authorization: Bearer [token]';
 const _tokenNotFound = 'No authorization token was found';
 
-HandlerFunc jwtAuth({required FutureOr<JWTKey> Function() secret}) {
+Middleware jwtAuth({required FutureOr<JWTKey> Function() secret}) {
   return (req, res, next) async {
     void reject(String message) {
-      final error = res.makeError(message: message).toJson;
+      final error = res.makeError(message: message);
       next(res.unauthorized(data: error));
     }
 

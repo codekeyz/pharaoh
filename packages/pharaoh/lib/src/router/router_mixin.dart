@@ -1,10 +1,9 @@
 import 'package:spanner/spanner.dart';
 
-import '../http/request.dart';
 import 'router_contract.dart';
 import 'router_handler.dart';
 
-mixin RouteDefinitionMixin<T> on RouterContract<T> {
+mixin RouteDefinitionMixin on RouterContract {
   late final Spanner spanner;
 
   void useSpanner(Spanner router) {
@@ -12,67 +11,60 @@ mixin RouteDefinitionMixin<T> on RouterContract<T> {
   }
 
   @override
-  T delete(String path, RequestHandlerFunc hdler) {
-    spanner.on(HTTPMethod.DELETE, path, RequestHandler(hdler));
-    return this as T;
+  void delete(String path, RequestHandler hdler) {
+    spanner.addRoute(HTTPMethod.DELETE, path, useRequestHandler(hdler));
   }
 
   @override
-  T get(String path, RequestHandlerFunc hdler) {
-    spanner.on(HTTPMethod.GET, path, RequestHandler(hdler));
-    spanner.on(HTTPMethod.HEAD, path, RequestHandler(hdler));
-    return this as T;
+  void get(String path, RequestHandler hdler) {
+    spanner.addRoute(HTTPMethod.GET, path, useRequestHandler(hdler));
   }
 
   @override
-  T head(String path, RequestHandlerFunc hdler) {
-    spanner.on(HTTPMethod.HEAD, path, RequestHandler(hdler));
-    return this as T;
+  void head(String path, RequestHandler hdler) {
+    spanner.addRoute(HTTPMethod.HEAD, path, useRequestHandler(hdler));
   }
 
   @override
-  T options(String path, RequestHandlerFunc hdler) {
-    spanner.on(HTTPMethod.OPTIONS, path, RequestHandler(hdler));
-    return this as T;
+  void options(String path, RequestHandler hdler) {
+    spanner.addRoute(HTTPMethod.OPTIONS, path, useRequestHandler(hdler));
   }
 
   @override
-  T patch(String path, RequestHandlerFunc hdler) {
-    spanner.on(HTTPMethod.PATCH, path, RequestHandler(hdler));
-    return this as T;
+  void patch(String path, RequestHandler hdler) {
+    spanner.addRoute(HTTPMethod.PATCH, path, useRequestHandler(hdler));
   }
 
   @override
-  T post(String path, RequestHandlerFunc hdler) {
-    spanner.on(HTTPMethod.POST, path, RequestHandler(hdler));
-    return this as T;
+  void post(String path, RequestHandler hdler) {
+    spanner.addRoute(HTTPMethod.POST, path, useRequestHandler(hdler));
   }
 
   @override
-  T put(String path, RequestHandlerFunc hdler) {
-    spanner.on(HTTPMethod.PUT, path, RequestHandler(hdler));
-    return this as T;
+  void put(String path, RequestHandler hdler) {
+    spanner.addRoute(HTTPMethod.PUT, path, useRequestHandler(hdler));
   }
 
   @override
-  T trace(String path, RequestHandlerFunc hdler) {
-    spanner.on(HTTPMethod.TRACE, path, RequestHandler(hdler));
-    return this as T;
+  void trace(String path, RequestHandler hdler) {
+    spanner.addRoute(HTTPMethod.TRACE, path, useRequestHandler(hdler));
   }
 
   @override
-  T use(HandlerFunc mdw) {
-    spanner.on(HTTPMethod.ALL, '/*', Middleware(mdw));
-    return this as T;
+  void use(Middleware middleware) {
+    spanner.addMiddleware(BASE_PATH, middleware);
   }
 
   @override
-  T useOnPath(
+  void on(
     String path,
-    HandlerFunc mdw, {
+    Middleware middleware, {
     HTTPMethod method = HTTPMethod.ALL,
   }) {
-    spanner.on(method, '$path/*', Middleware(mdw));
-    return this as T;
+    if (method == HTTPMethod.ALL) {
+      spanner.addMiddleware(path, middleware);
+    } else {
+      spanner.addRoute(method, path, middleware);
+    }
   }
 }

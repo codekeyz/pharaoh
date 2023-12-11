@@ -1,28 +1,25 @@
-import '../http/request.dart';
+import 'package:spanner/spanner.dart';
+
 import 'router_handler.dart';
 
-abstract class RouterContract<T> {
-  T get(String path, RequestHandlerFunc hdler);
+abstract class RouterContract {
+  void get(String path, RequestHandler hdler);
 
-  T post(String path, RequestHandlerFunc hdler);
+  void post(String path, RequestHandler hdler);
 
-  T put(String path, RequestHandlerFunc hdler);
+  void put(String path, RequestHandler hdler);
 
-  T delete(String path, RequestHandlerFunc hdler);
+  void delete(String path, RequestHandler hdler);
 
-  T head(String path, RequestHandlerFunc hdler);
+  void head(String path, RequestHandler hdler);
 
-  T patch(String path, RequestHandlerFunc hdler);
+  void patch(String path, RequestHandler hdler);
 
-  T options(String path, RequestHandlerFunc hdler);
+  void options(String path, RequestHandler hdler);
 
-  T trace(String path, RequestHandlerFunc hdler);
+  void trace(String path, RequestHandler hdler);
 
-  T use(HandlerFunc mdw);
+  void use(Middleware middleware);
 
-  T useOnPath(
-    String path,
-    HandlerFunc func, {
-    HTTPMethod method = HTTPMethod.ALL,
-  });
+  void on(String path, Middleware hdler, {HTTPMethod method = HTTPMethod.ALL});
 }

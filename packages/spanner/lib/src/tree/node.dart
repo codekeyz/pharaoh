@@ -1,12 +1,12 @@
 import 'package:collection/collection.dart';
 import 'package:equatable/equatable.dart';
-import 'package:pharaoh/pharaoh.dart';
 
+import 'tree.dart';
 import '../route/action.dart';
 import '../parametric/definition.dart';
 import '../parametric/utils.dart';
 
-abstract class Node with EquatableMixin {
+abstract class Node with EquatableMixin, HandlerStore {
   final Map<String, Node> _children = {};
 
   Map<String, Node> get children => UnmodifiableMapView(_children);
@@ -45,35 +45,43 @@ abstract class Node with EquatableMixin {
   }
 }
 
-class StaticNode extends Node with RouteActionMixin {
-  String _key;
+class StaticNode extends Node {
+  final String _name;
+
+  StaticNode(this._name);
 
   @override
-  String get name => 'static($_key)';
-
-  StaticNode(this._key);
-
-  void changeKey(String key) {
-    _key = key;
-  }
+  String get name => _name;
 
   @override
   List<Object?> get props => [name, children];
 }
 
 class ParametricNode extends Node {
+  static final String key = '<:>';
+
+  @override
+  void addMiddleware<T>(IndexedValue<T> handler) {
+    throw ArgumentError('Parametric Node cannot have middlewares');
+  }
+
+  @override
+  void addRoute<T>(HTTPMethod method, IndexedValue<T> handler) {
+    throw ArgumentError('Parametric Node cannot have routes');
+  }
+
   final List<ParameterDefinition> _definitions = [];
 
-  List<ParameterDefinition> get definitions =>
-      UnmodifiableListView(_definitions);
+  List<ParameterDefinition> get definitions => UnmodifiableListView(_definitions);
 
   ParametricNode(ParameterDefinition defn) {
     _definitions.add(defn);
   }
 
+  bool get hasTerminal => _definitions.any((e) => e.terminal);
+
   void addNewDefinition(ParameterDefinition defn) {
-    final existing =
-        _definitions.firstWhereOrNull((e) => e.isExactExceptName(defn));
+    final existing = _definitions.firstWhereOrNull((e) => e.isExactExceptName(defn));
 
     if (existing != null) {
       if (existing.name != defn.name) {
@@ -103,7 +111,7 @@ class ParametricNode extends Node {
   }
 
   @override
-  String get name => 'parametric(${_definitions.length}-defns)';
+  String get name => ParametricNode.key;
 
   @override
   List<Object?> get props => [name, _definitions, children];
@@ -111,28 +119,22 @@ class ParametricNode extends Node {
   ParameterDefinition? findMatchingDefinition(
     HTTPMethod method,
     String part, {
-    bool shouldBeTerminal = false,
+    bool terminal = false,
   }) {
     return definitions.firstWhereOrNull(
       (e) {
-        final definitionCanHandleMethod =
-            e.methods.isEmpty || e.hasMethod(method);
-
-        return definitionCanHandleMethod &&
-            e.matches(part, shouldbeTerminal: shouldBeTerminal);
+        final supportsMethod = e.methods.isEmpty || e.hasMethod(method);
+        if (terminal != e.terminal || !supportsMethod) return false;
+        return e.matches(part);
       },
     );
   }
 }
 
-// ignore: constant_identifier_names
-const String WILDCARD_SYMBOL = '*';
-
 class WildcardNode extends StaticNode {
-  WildcardNode() : super(WILDCARD_SYMBOL);
+  static final String key = '*';
 
-  @override
-  String get name => 'wildcard($WILDCARD_SYMBOL)';
+  WildcardNode() : super(WildcardNode.key);
 
   @override
   List<Object?> get props => [name];

@@ -32,8 +32,8 @@ void main() {
           unauthorizedResponse: (_) => 'Username & password is required!',
         );
         app = Pharaoh()
-            .use(staticUserAuth)
-            .get(endpoint, (req, res) => res.send('You passed'));
+          ..use(staticUserAuth)
+          ..get(endpoint, (req, res) => res.send('You passed'));
       });
 
       test(
@@ -100,8 +100,8 @@ void main() {
           unauthorizedResponse: (_) => 'Ohmygod, credentials is required!',
         );
         app = Pharaoh()
-            .use(customAuthorizerAuth)
-            .get(endpoint, (req, res) => res.send('You passed'));
+          ..use(customAuthorizerAuth)
+          ..get(endpoint, (req, res) => res.send('You passed'));
       });
 
       test(
@@ -139,13 +139,12 @@ void main() {
 
         setUp(() {
           bool myComparingAuthorizer(username, password) =>
-              safeCompare(username, 'Testeroni') &&
-              safeCompare(password, 'testsecret');
+              safeCompare(username, 'Testeroni') && safeCompare(password, 'testsecret');
 
           final customAuth = basicAuth(authorizer: myComparingAuthorizer);
           app = Pharaoh()
-              .use(customAuth)
-              .get(endpoint, (req, res) => res.send('You passed'));
+            ..use(customAuth)
+            ..get(endpoint, (req, res) => res.send('You passed'));
         });
 
         test(

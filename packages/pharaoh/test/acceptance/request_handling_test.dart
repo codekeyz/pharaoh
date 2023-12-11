@@ -51,8 +51,7 @@ void main() {
     test('on base path /', () async {
       final app = Pharaoh()
         ..use((req, res, next) => next(req..setParams('foo', 'bar')))
-        ..get('/',
-            (req, res) => res.json({...req.params, "name": 'Hello World'}));
+        ..get('/', (req, res) => res.json({...req.params, "name": 'Hello World'}));
 
       await (await request(app))
           .get('/')
@@ -63,8 +62,7 @@ void main() {
     test('of level 1', () async {
       final app = Pharaoh()
         ..use((req, res, next) => next(req..setParams('name', 'Chima')))
-        ..get(
-            '/foo/bar', (req, res) => res.ok('Name: ${req.params['name']} 🚀'));
+        ..get('/foo/bar', (req, res) => res.ok('Name: ${req.params['name']} 🚀'));
 
       await (await request(app))
           .get('/foo/bar')
@@ -125,8 +123,11 @@ void main() {
     });
 
     test('should execute route groups', () async {
-      final app =
-          Pharaoh().get('/users/<userId>', (req, res) => res.json(req.params));
+      final app = Pharaoh()
+        ..get(
+          '/users/<userId>',
+          (req, res) => res.json(req.params),
+        );
 
       final router = app.router()
         ..get('/', (req, res) => res.ok('Group working'))

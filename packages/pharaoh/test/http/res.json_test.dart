@@ -6,11 +6,12 @@ import 'package:spookie/spookie.dart';
 void main() {
   group('.json(Object)', () {
     test('should not override previous Content-Types', () async {
-      final app = Pharaoh().get('/', (req, res) {
-        return res
-            .type(ContentType.parse('application/vnd.example+json'))
-            .json({"hello": "world"});
-      });
+      final app = Pharaoh()
+        ..get('/', (req, res) {
+          return res
+              .type(ContentType.parse('application/vnd.example+json'))
+              .json({"hello": "world"});
+        });
 
       await (await request<Pharaoh>(app))
           .get('/')
@@ -20,11 +21,24 @@ void main() {
           .test();
     });
 
+    test('should catch object serialization errors', () async {
+      final app = Pharaoh()..get('/', (req, res) => res.json(Never));
+
+      await (await request<Pharaoh>(app))
+          .get('/')
+          .expectStatus(500)
+          .expectBody({
+            'path': '/',
+            'method': 'GET',
+            'message': "Converting object to an encodable object failed: Never"
+          })
+          .expectContentType('application/json; charset=utf-8')
+          .test();
+    });
+
     group('when given primitives', () {
       test('should respond with json for <null>', () async {
-        final app = Pharaoh().use((req, res, next) {
-          next(res.json(null));
-        });
+        final app = Pharaoh()..use((req, res, next) => next(res.json(null)));
 
         await (await request<Pharaoh>(app))
             .get('/')
@@ -35,11 +49,9 @@ void main() {
       });
 
       test('should respond with json for <int>', () async {
-        final app = Pharaoh().use((req, res, next) {
-          next(res.json(300));
-        });
+        final app = Pharaoh()..use((req, res, next) => next(res.json(300)));
 
-        await (await request(app))
+        await (await request<Pharaoh>(app))
             .get('/')
             .expectStatus(200)
             .expectBody('300')
@@ -48,11 +60,9 @@ void main() {
       });
 
       test('should respond with json for <double>', () async {
-        final app = Pharaoh().use((req, res, next) {
-          next(res.json(300.34));
-        });
+        final app = Pharaoh()..use((req, res, next) => next(res.json(300.34)));
 
-        await (await request(app))
+        await (await request<Pharaoh>(app))
             .get('/')
             .expectStatus(200)
             .expectBody('300.34')
@@ -61,11 +71,9 @@ void main() {
       });
 
       test('should respond with json for <String>', () async {
-        final app = Pharaoh().use((req, res, next) {
-          next(res.json("str"));
-        });
+        final app = Pharaoh()..use((req, res, next) => next(res.json("str")));
 
-        await (await request(app))
+        await (await request<Pharaoh>(app))
             .get('/')
             .expectStatus(200)
             .expectBody('"str"')
@@ -74,11 +82,9 @@ void main() {
       });
 
       test('should respond with json for <bool>', () async {
-        final app = Pharaoh().use((req, res, next) {
-          next(res.json(true));
-        });
+        final app = Pharaoh()..use((req, res, next) => next(res.json(true)));
 
-        await (await request(app))
+        await (await request<Pharaoh>(app))
             .get('/')
             .expectStatus(200)
             .expectBody('true')
@@ -89,11 +95,10 @@ void main() {
 
     group('when given a collection type', () {
       test('<List> should respond with json', () async {
-        final app = Pharaoh().use((req, res, next) {
-          next(res.json(["foo", "bar", "baz"]));
-        });
+        final app = Pharaoh()
+          ..use((req, res, next) => next(res.json(["foo", "bar", "baz"])));
 
-        await (await request(app))
+        await (await request<Pharaoh>(app))
             .get('/')
             .expectStatus(200)
             .expectBody('["foo","bar","baz"]')
@@ -102,11 +107,10 @@ void main() {
       });
 
       test('<Map> should respond with json', () async {
-        final app = Pharaoh().use((req, res, next) {
-          next(res.json({"name": "Foo bar", "age": 23.45}));
-        });
+        final app = Pharaoh()
+          ..use((req, res, next) => next(res.json({"name": "Foo bar", "age": 23.45})));
 
-        await (await request(app))
+        await (await request<Pharaoh>(app))
             .get('/')
             .expectStatus(200)
             .expectBody('{"name":"Foo bar","age":23.45}')
@@ -115,11 +119,10 @@ void main() {
       });
 
       test('<Set> should respond with json', () async {
-        final app = Pharaoh().use((req, res, next) {
-          next(res.json({"Chima", "Foo", "Bar"}));
-        });
+        final app = Pharaoh()
+          ..use((req, res, next) => next(res.json({"Chima", "Foo", "Bar"})));
 
-        await (await request(app))
+        await (await request<Pharaoh>(app))
             .get('/')
             .expectStatus(200)
             .expectBody('["Chima","Foo","Bar"]')

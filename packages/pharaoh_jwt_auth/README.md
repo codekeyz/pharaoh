@@ -1,39 +1,44 @@
-<!-- 
-This README describes the package. If you publish this package to pub.dev,
-this README's contents appear on the landing page for your package.
+# pharaoh_jwt_auth 🪭
 
-For information about how to write a good package README, see the guide for
-[writing package pages](https://dart.dev/guides/libraries/writing-package-pages). 
+This module provides Pharaoh middleware for validating JWTs (JSON Web Tokens) through the [dart_jsonwebtoken](https://pub.dev/packages/dart_jsonwebtoken)
+package.
 
-For general information about developing packages, see the Dart guide for
-[creating packages](https://dart.dev/guides/libraries/create-library-packages)
-and the Flutter guide for
-[developing packages and plugins](https://flutter.dev/developing-packages). 
--->
+The decoded JWT payload is available on the request object via `req.auth`.
 
-TODO: Put a short description of the package here that helps potential users
-know whether this package might be useful for them.
+## Installing:
 
-## Features
+In your pubspec.yaml
 
-TODO: List what your package can do. Maybe include images, gifs, or videos.
-
-## Getting started
-
-TODO: List prerequisites and provide or point to information on how to
-start using the package.
-
-## Usage
-
-TODO: Include short and useful examples for package users. Add longer examples
-to `/example` folder. 
-
-```dart
-const like = 'sample';
+```yaml
+dependencies:
+  pharaoh: ^0.0.5
+  pharaoh_jwt_auth: ^1.0.0
 ```
 
-## Additional information
+## Basic Usage:
 
-TODO: Tell users more about the package: where to find more information, how to 
-contribute to the package, how to file issues, what response they can expect 
-from the package authors, and more.
+```dart
+import 'package:pharaoh/pharaoh.dart';
+import 'package:pharaoh_jwt_auth/pharaoh_jwt_auth.dart';
+
+void main() async {
+  final app = Pharaoh();
+
+  app.use(jwtAuth(secret: () => SecretKey('some-secret-key')));
+
+  app.get('/', (req, res) => res.ok('Hello World'));
+
+  await app.listen();
+}
+```
+
+The package also exports the [dart_jsonwebtoken](https://pub.dev/packages/dart_jsonwebtoken) package for your usage outside of this library.
+
+## Tests
+
+The cases in the `pharaoh_jwt_auth_test.dart` are also used for automated testing. So if you want  
+to contribute or just make sure that the package still works, simply run:
+
+```shell
+dart test
+```

@@ -1,3 +1,5 @@
+// ignore: constant_identifier_names
+
 // <username> --> username
 String? getParameter(String pattern, {int start = 0}) {
   if (start != 0) pattern = pattern.substring(start);
@@ -17,9 +19,7 @@ String? getParameter(String pattern, {int start = 0}) {
 bool isDoubleColon(String pattern, {int at = 0}) {
   if (at > (pattern.length - 1)) return false;
   final safeNext = (at + 1) < pattern.length;
-  return pattern.codeUnitAt(at) == 58 &&
-      safeNext &&
-      pattern.codeUnitAt(at + 1) == 58;
+  return pattern.codeUnitAt(at) == 58 && safeNext && pattern.codeUnitAt(at + 1) == 58;
 }
 
 bool isRegexeric(String pattern, {int at = 0}) {

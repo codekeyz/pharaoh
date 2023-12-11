@@ -2,30 +2,38 @@ import 'dart:io';
 
 import 'package:collection/collection.dart';
 import 'package:http_parser/http_parser.dart';
-import 'package:mason_logger/mason_logger.dart';
 import 'package:meta/meta.dart';
 import 'package:spanner/spanner.dart';
 
+import 'http/response.dart';
+import 'http/response_impl.dart';
+import 'http/request_impl.dart';
+import 'middleware/session_mw.dart';
+import 'router/_handler_executor.dart';
 import 'router/router_contract.dart';
-import 'router/router_group.dart';
 import 'router/router_handler.dart';
-import './http/response.dart';
-import './middleware/body_parser.dart';
-import './shelf_interop/shelf.dart' as shelf;
-
 import 'router/router_mixin.dart';
 import 'router/router.dart';
-import 'http/request.dart';
+import 'view/view.dart';
+
+import 'middleware/body_parser.dart';
 import 'utils/exceptions.dart';
+import 'shelf_interop/shelf.dart' as shelf;
 
 part 'core_impl.dart';
 
-abstract class Pharaoh implements RouterContract<Pharaoh> {
-  factory Pharaoh() => _$PharaohImpl();
+abstract class Pharaoh implements RouterContract {
+  factory Pharaoh() => $PharaohImpl();
+
+  ViewEngine? get viewEngine;
+
+  set viewEngine(ViewEngine? engine);
 
   RouterContract router();
 
-  List<dynamic> get routes;
+  List<RouteEntry> get routes;
+
+  String get routeStr;
 
   Uri get uri;
 

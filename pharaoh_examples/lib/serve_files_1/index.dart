@@ -17,11 +17,10 @@ void main() async {
     return res.type(ContentType.html).send(file.openRead());
   });
 
-  /// /files/* is accessed via req.params[0]
-  /// but here we name it :file
-  app.get('/files/:file(.*)', (req, res) async {
+  /// /files/* is accessed via req.params[*]
+  /// but here we name it <file>
+  app.get('/files/<file>', (req, res) async {
     final pathToFile = req.params['file'];
-
     final file = File('$publicDir/files/$pathToFile');
     final exists = await file.exists();
     if (!exists) {

@@ -12,7 +12,7 @@
 - Focus on high performance
 - Super-high test coverage
 - HTTP helpers (just like ExpressJS)
-- Interoperability with Shelf Middlewares [See here](./packages/pharaoh/SHELF_INTEROP.md)
+- Interoperability with Shelf Middlewares [See here](https://github.com/Pharaoh-Framework/pharaoh/blob/main/packages/pharaoh/SHELF_INTEROP.md)
 
 ## Installing:
 
@@ -48,7 +48,7 @@ void main() async {
 
 ```
 
-See the [Pharaoh Examples](./pharaoh_examples/lib/) directory for more practical use-cases.
+See the [Pharaoh Examples](https://github.com/Pharaoh-Framework/pharaoh/tree/main/pharaoh_examples) directory for more practical use-cases.
 
 ## Philosophy
 

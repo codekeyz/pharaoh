@@ -44,7 +44,7 @@ typedef GenSessionIdFunc = FutureOr<String> Function(Request request);
 /// - [secret] This is the secret used to sign the session ID cookie.
 /// You can also provide it in [cookie.secret] options. But [secret] will
 /// will be used if both are set.
-HandlerFunc session({
+Middleware session({
   String name = Session.name,
   String? secret,
   bool saveUninitialized = true,
@@ -69,8 +69,7 @@ HandlerFunc session({
     if (!req.path.startsWith(opts.path)) return next();
     if (req.session?.valid ?? false) return next();
 
-    final reqSid =
-        req.signedCookies.firstWhereOrNull((e) => e.name == name)?.value;
+    final reqSid = req.signedCookies.firstWhereOrNull((e) => e.name == name)?.value;
     if (reqSid != null) {
       var result = await sessionStore.get(reqSid);
       if (result != null && result.valid) {

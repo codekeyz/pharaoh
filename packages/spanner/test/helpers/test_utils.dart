@@ -12,7 +12,15 @@ Matcher isStaticNode(String name) {
   return isA<RouteResult>().having(
     (p0) => p0.actual,
     'has actual',
-    isA<StaticNode>().having((p0) => p0.name, 'has name', 'static($name)'),
+    isA<StaticNode>().having((p0) => p0.name, 'has name', name),
+  );
+}
+
+Matcher hasValues<T>(List<T> result) {
+  return isA<RouteResult>().having(
+    (p0) => p0.values,
+    'has values',
+    result,
   );
 }
 
