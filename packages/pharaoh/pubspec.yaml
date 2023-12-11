@@ -13,7 +13,7 @@ dependencies:
   http_parser: ^4.0.2
   crypto: ^3.0.3
   uuid: ^4.2.1
-  spanner: ^1.0.0
+  spanner: ^1.0.1
   jinja: ^0.5.0
   
   # We only need this to implement inter-operability for shelf
