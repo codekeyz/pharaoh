@@ -15,6 +15,7 @@ void main() {
   if (result == null) return;
 
   final routeParams = result.params; // Map<String, dynamic>
+  print(routeParams);
 
   /// your handler will be in this list.
   ///
@@ -24,4 +25,5 @@ void main() {
   /// The list is ordered in the exact way you registed your middlewares
   /// and handlers
   final resolvedHandler = result.values; // List<dynamic>
+  print(resolvedHandler);
 }
