@@ -47,7 +47,7 @@ void main() async {
     /// and handlers
     final resolvedHandler = result.values; // List<dynamic>
 
-    final handlerResult = (resolvedHandler.first as Handler).call(result.params);
+    final handlerResult = (resolvedHandler.first as Handler).call(params);
     request.response
       ..write(handlerResult)
       ..close();
