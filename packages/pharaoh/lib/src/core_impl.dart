@@ -82,7 +82,8 @@ class $PharaohImpl extends RouterContract with RouteDefinitionMixin implements P
       final result = await resolveAndExecuteHandlers(req, res);
       await forward(httpReq, result.res);
     } on PharaohValidationError catch (e) {
-      await forward(httpReq, res.json(res.error(e.toString()), statusCode: 422));
+      await forward(httpReq,
+          res.json(res.error(e.toString()), statusCode: HttpStatus.unprocessableEntity));
     } catch (e) {
       await forward(httpReq, res.internalServerError('$e'));
     }
