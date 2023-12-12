@@ -26,27 +26,27 @@ abstract interface class Response {
   Response status(int code);
 
   /// [data] should be json-encodable
-  Response json(Object? data);
+  Response.json(Object? data);
 
-  Response ok([String? data]);
+  Response.ok([String? data]);
 
-  Response send(Object data);
+  Response.send(Object data);
 
-  Response notModified({Map<String, dynamic>? headers});
+  Response.notModified({Map<String, dynamic>? headers});
 
-  Response format(Map<String, Function(Response res)> data);
+  Response.format(Map<String, Function(Response res)> data);
 
-  Response notFound([String? message]);
+  Response.notFound([String? message]);
 
-  Response unauthorized({Object? data});
+  Response.unauthorized({Object? data});
 
-  Response redirect(String url, [int statusCode = HttpStatus.found]);
+  Response.redirect(String url, [int statusCode = HttpStatus.found]);
 
-  Response movedPermanently(String url);
+  Response.movedPermanently(String url);
 
-  Response internalServerError([String? message]);
+  Response.internalServerError([String? message]);
 
-  Response render(String name, [Map<String, dynamic> data]);
+  Response.render(String name, [Map<String, dynamic>? data]);
 
-  Response end();
+  Response.end();
 }
