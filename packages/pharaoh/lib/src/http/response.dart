@@ -10,7 +10,7 @@ final applicationOctetStreamType = ContentType('application', 'octet-stream');
 
 abstract interface class Response {
   /// Constructs an HTTP Response
-  factory Response.new({
+  factory Response({
     int? statusCode,
     Object? body,
     Encoding? encoding,

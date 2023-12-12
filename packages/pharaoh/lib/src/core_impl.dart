@@ -96,7 +96,7 @@ class $PharaohImpl extends RouterContract with RouteDefinitionMixin implements P
     }
 
     final result = await _onErrorCb!.call(requestError, request);
-    return forward(httpReq, result);
+    return forward(httpReq, (result as $Response));
   }
 
   Future<ReqRes> resolveAndExecuteHandlers($Request req) async {
