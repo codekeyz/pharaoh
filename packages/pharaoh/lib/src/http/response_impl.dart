@@ -213,7 +213,7 @@ class $Response extends Message<shelf.Body?> implements Response {
     return handler.call(this);
   }
 
-  Map<String, dynamic> error(String message) => {'message': message};
+  Map<String, dynamic> error(String message) => {'error': message};
 
   @override
   $Response cookie(

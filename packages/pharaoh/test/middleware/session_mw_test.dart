@@ -163,7 +163,7 @@ void main() {
                 'pharaoh.sid=s%3A4badf56b-ab39-4d77-8992-934c995772da.vqiT1VnWppTRhR2pr4F4vb9Oxrbn67E0n0txjKD0qJ4; Path=/'
           })
           .expectStatus(500)
-          .expectBody({"message": "Exception: Session store not available"})
+          .expectBody({"error": "Exception: Session store not available"})
           .test();
     });
 
@@ -262,7 +262,7 @@ void main() {
         await (await request<Pharaoh>(app))
             .get('/')
             .expectStatus(500)
-            .expectBody({"message": "Exception: Boom shakalaka"}).test();
+            .expectBody({"error": "Exception: Boom shakalaka"}).test();
       });
     });
 

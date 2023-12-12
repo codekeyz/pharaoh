@@ -72,7 +72,7 @@ void main() {
           )
           .expectStatus(406)
           .expectContentType('application/json; charset=utf-8')
-          .expectBody('{"message":"Not Acceptable"}')
+          .expectBody({"error": "Not Acceptable"})
           .test();
     });
   });

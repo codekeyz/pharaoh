@@ -36,7 +36,7 @@ void main() {
     await (await request(app))
         .get('/something-new-is-here')
         .expectStatus(404)
-        .expectBody({"message": "Route not found: /something-new-is-here"}).test();
+        .expectBody({"error": "Route not found: /something-new-is-here"}).test();
 
     await (await request(app))
         .delete('/home/chima')
