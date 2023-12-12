@@ -9,13 +9,10 @@ import '../view/view.dart';
 import 'cookie.dart';
 import 'message.dart';
 import 'request.dart';
-import 'request_impl.dart';
 import 'response.dart';
 
 class $Response extends Message<shelf.Body?> implements Response {
   late final Request _reqInfo;
-
-  late final HttpRequest _httpReq;
 
   final bool ended;
 
@@ -26,6 +23,9 @@ class $Response extends Message<shelf.Body?> implements Response {
   ViewRenderData? viewToRender;
 
   DateTime? _expiresCache;
+
+  @override
+  void setRequest(Request request) => _reqInfo = request;
 
   /// The date and time after which the $Response's data should be considered
   /// stale.
@@ -57,26 +57,23 @@ class $Response extends Message<shelf.Body?> implements Response {
   /// [statusCode] must be greater than or equal to 100.
   ///
   /// {@macro shelf_$Response_body_and_encoding_param}
-  $Response(
-    this._httpReq, {
+  $Response({
     shelf.Body? body,
     int? statusCode,
     this.ended = false,
     Encoding? encoding,
     Map<String, dynamic>? headers,
-  })  : _reqInfo = $Request.from(_httpReq),
-        statusCode = statusCode ?? 200,
+  })  : statusCode = statusCode ?? 200,
         super(shelf.Body(body, encoding), headers: headers ?? {}) {
     if (this.statusCode < 100) {
       throw PharaohException('Invalid status code: $statusCode.');
     }
   }
 
-  factory $Response.from(HttpRequest request, {shelf.Body? body}) => $Response(request);
+  factory $Response.from(Request request) => $Response()..setRequest(request);
 
   @override
   $Response header(String headerKey, String headerValue) => $Response(
-        _httpReq,
         headers: headers..[headerKey] = headerValue,
         body: body,
         encoding: encoding,
@@ -86,7 +83,6 @@ class $Response extends Message<shelf.Body?> implements Response {
 
   @override
   $Response type(ContentType type) => $Response(
-        _httpReq,
         headers: headers..[HttpHeaders.contentTypeHeader] = type.toString(),
         body: body,
         ended: ended,
@@ -96,7 +92,6 @@ class $Response extends Message<shelf.Body?> implements Response {
 
   @override
   $Response status(int code) => $Response(
-        _httpReq,
         statusCode: code,
         body: body,
         ended: ended,
@@ -110,7 +105,6 @@ class $Response extends Message<shelf.Body?> implements Response {
     int statusCode = HttpStatus.found,
   ]) =>
       $Response(
-        _httpReq,
         statusCode: statusCode,
         headers: headers..[HttpHeaders.locationHeader] = url,
         ended: true,
@@ -118,7 +112,6 @@ class $Response extends Message<shelf.Body?> implements Response {
 
   @override
   $Response movedPermanently(String url) => $Response(
-        _httpReq,
         statusCode: 301,
         headers: headers..[HttpHeaders.locationHeader] = url,
         ended: true,
@@ -135,7 +128,6 @@ class $Response extends Message<shelf.Body?> implements Response {
     existingHeaders[HttpHeaders.dateHeader] = formatHttpDate(DateTime.now());
 
     return $Response(
-      _httpReq,
       ended: true,
       statusCode: 304,
       headers: existingHeaders,
@@ -154,7 +146,6 @@ class $Response extends Message<shelf.Body?> implements Response {
     }
 
     final res = $Response(
-      _httpReq,
       body: shelf.Body(result),
       statusCode: statusCode,
       encoding: encoding,
@@ -182,7 +173,6 @@ class $Response extends Message<shelf.Body?> implements Response {
 
   @override
   $Response ok([String? data]) => $Response(
-        _httpReq,
         body: shelf.Body(data, encoding),
         statusCode: statusCode,
         headers: headers,
@@ -193,26 +183,23 @@ class $Response extends Message<shelf.Body?> implements Response {
   @override
   $Response send(Object data) {
     final ctype = _getContentType(data, valueWhenNull: ContentType.html);
-    return $Response(_httpReq,
-            body: shelf.Body(data),
-            encoding: encoding,
-            statusCode: statusCode,
-            headers: headers,
-            ended: true)
-        .type(ctype);
+    return $Response(
+      body: shelf.Body(data),
+      encoding: encoding,
+      statusCode: statusCode,
+      headers: headers,
+      ended: true,
+    ).type(ctype);
   }
 
   @override
-  $Response end() {
-    return $Response(
-      _httpReq,
-      body: body,
-      ended: true,
-      headers: headers,
-      statusCode: statusCode,
-      encoding: encoding,
-    );
-  }
+  $Response end() => $Response(
+        body: body,
+        ended: true,
+        headers: headers,
+        statusCode: statusCode,
+        encoding: encoding,
+      );
 
   PharaohErrorBody makeError({required String message}) => PharaohErrorBody(
         message,

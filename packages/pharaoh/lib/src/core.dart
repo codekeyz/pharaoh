@@ -29,6 +29,8 @@ abstract class Pharaoh implements RouterContract {
 
   set viewEngine(ViewEngine? engine);
 
+  void useSpanner(Spanner spanner);
+
   RouterContract router();
 
   List<RouteEntry> get routes;
