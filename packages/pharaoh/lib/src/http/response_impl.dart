@@ -57,7 +57,7 @@ class $Response extends Message<shelf.Body?> implements Response {
     int? statusCode,
     this.ended = false,
     Map<String, dynamic> headers = const {},
-  })  : statusCode = statusCode ?? 200,
+  })  : statusCode = statusCode ?? HttpStatus.ok,
         super(body, headers: Map<String, dynamic>.from(headers)) {
     if (this.statusCode < 100) {
       throw PharaohException('Invalid status code: $statusCode.');
@@ -98,7 +98,7 @@ class $Response extends Message<shelf.Body?> implements Response {
 
   @override
   $Response movedPermanently(String url) => $Response(
-        statusCode: 301,
+        statusCode: HttpStatus.movedPermanently,
         body: body,
         headers: headers..[HttpHeaders.locationHeader] = url,
         ended: true,
@@ -116,7 +116,7 @@ class $Response extends Message<shelf.Body?> implements Response {
 
     return $Response(
       ended: true,
-      statusCode: 304,
+      statusCode: HttpStatus.notModified,
       headers: existingHeaders,
     );
   }
@@ -135,7 +135,7 @@ class $Response extends Message<shelf.Body?> implements Response {
       result = jsonEncode(data);
     } catch (_) {
       result = jsonEncode(error(_.toString()));
-      statusCode = 500;
+      statusCode = HttpStatus.internalServerError;
     }
 
     return $Response(
@@ -148,15 +148,16 @@ class $Response extends Message<shelf.Body?> implements Response {
 
   @override
   $Response notFound([String? message]) =>
-      json(error(message ?? 'Not found'), statusCode: 404);
+      json(error(message ?? 'Not found'), statusCode: HttpStatus.notFound);
 
   @override
   $Response unauthorized({Object? data}) =>
-      json(data ?? error('Unauthorized'), statusCode: 401);
+      json(data ?? error('Unauthorized'), statusCode: HttpStatus.unauthorized);
 
   @override
   $Response internalServerError([String? message]) =>
-      json(error(message ?? 'Internal Server Error'), statusCode: 500);
+      json(error(message ?? 'Internal Server Error'),
+          statusCode: HttpStatus.internalServerError);
 
   @override
   $Response ok([String? data]) => $Response(
@@ -209,7 +210,7 @@ class $Response extends Message<shelf.Body?> implements Response {
     final handler = options[reqAcceptType] ?? options['_'];
 
     if (handler == null) {
-      return status(HttpStatus.notAcceptable).json(error('Not Acceptable'));
+      return json(error('Not Acceptable'), statusCode: HttpStatus.notAcceptable);
     }
 
     return handler.call(this);
