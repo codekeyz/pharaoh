@@ -123,7 +123,7 @@ class $Response extends Message<shelf.Body?> implements Response {
 
   @override
   $Response json(Object? data, {int? statusCode}) {
-    statusCode ?? this.statusCode;
+    statusCode ??= this.statusCode;
     if (mediaType == null) {
       headers[HttpHeaders.contentTypeHeader] = ContentType.json.toString();
     }
