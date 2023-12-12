@@ -1,9 +1,16 @@
 import 'dart:io';
+
+import 'package:meta/meta.dart';
+
 import 'cookie.dart';
+import 'request.dart';
 
 final applicationOctetStreamType = ContentType('application', 'octet-stream');
 
 abstract interface class Response {
+  @visibleForTesting
+  void setRequest(Request request);
+
   Response header(String headerKey, String headerValue);
 
   /// Creates a new cookie setting the name and value.

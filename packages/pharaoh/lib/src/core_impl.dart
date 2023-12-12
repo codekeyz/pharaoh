@@ -76,7 +76,7 @@ class $PharaohImpl extends RouterContract with RouteDefinitionMixin implements P
     httpReq.response.headers.clear();
 
     final req = $Request.from(httpReq);
-    final res = $Response.from(httpReq);
+    final res = $Response.from(req);
 
     try {
       final result = await resolveAndExecuteHandlers(req, res);
@@ -132,7 +132,7 @@ class $PharaohImpl extends RouterContract with RouteDefinitionMixin implements P
       //
       // TODO(codekeyz): Do this more cleanly when sdk#27886 is fixed.
       final newStream = chunkedCoding.decoder.bind(res_.body!.read());
-      res_ = $Response.from(request)..body = shelf.Body(newStream);
+      res_.body = shelf.Body(newStream);
       request.headers.set(HttpHeaders.transferEncodingHeader, 'chunked');
     } else if (statusCode >= 200 &&
         statusCode != 204 &&
