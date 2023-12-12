@@ -138,12 +138,9 @@ class $Response extends Message<shelf.Body?> implements Response {
       statusCode = HttpStatus.internalServerError;
     }
 
-    return $Response(
-      body: shelf.Body(result),
-      statusCode: statusCode,
-      headers: headers,
-      ended: true,
-    );
+    body = shelf.Body(result);
+
+    return this.status(statusCode).end();
   }
 
   @override
