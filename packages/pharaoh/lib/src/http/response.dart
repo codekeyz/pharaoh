@@ -1,15 +1,28 @@
+import 'dart:convert';
 import 'dart:io';
-
-import 'package:meta/meta.dart';
 
 import 'cookie.dart';
 import 'request.dart';
+import 'response_impl.dart';
+import '../shelf_interop/shelf.dart' as shelf;
 
 final applicationOctetStreamType = ContentType('application', 'octet-stream');
 
 abstract interface class Response {
-  @visibleForTesting
-  void setRequest(Request request);
+  /// Constructs an HTTP $Response with the given [statusCode].
+  ///
+  /// [statusCode] must be greater than or equal to 100.
+  factory Response(
+    int statusCode, {
+    Object? body,
+    Encoding? encoding,
+    Map<String, dynamic> headers = const {},
+  }) =>
+      $Response(
+        body: shelf.Body(body, encoding),
+        headers: headers,
+        statusCode: statusCode,
+      );
 
   Response header(String headerKey, String headerValue);
 
@@ -26,27 +39,30 @@ abstract interface class Response {
   Response status(int code);
 
   /// [data] should be json-encodable
-  Response.json(Object? data);
+  Response json(
+    Object? data, {
+    int? statusCode,
+  });
 
-  Response.ok([String? data]);
+  Response ok([String? data]);
 
-  Response.send(Object data);
+  Response send(Object data);
 
-  Response.notModified({Map<String, dynamic>? headers});
+  Response notModified({Map<String, dynamic>? headers});
 
-  Response.format(Map<String, Function(Response res)> data);
+  Response format(Request request, Map<String, Function(Response res)> data);
 
-  Response.notFound([String? message]);
+  Response notFound([String? message]);
 
-  Response.unauthorized({Object? data});
+  Response unauthorized({Object? data});
 
-  Response.redirect(String url, [int statusCode = HttpStatus.found]);
+  Response redirect(String url, [int statusCode = HttpStatus.found]);
 
-  Response.movedPermanently(String url);
+  Response movedPermanently(String url);
 
-  Response.internalServerError([String? message]);
+  Response internalServerError([String? message]);
 
-  Response.render(String name, [Map<String, dynamic>? data]);
+  Response render(String name, [Map<String, dynamic> data = const {}]);
 
-  Response.end();
+  Response end();
 }

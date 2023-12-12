@@ -76,16 +76,13 @@ class $PharaohImpl extends RouterContract with RouteDefinitionMixin implements P
     httpReq.response.headers.clear();
 
     final req = $Request.from(httpReq);
-    final res = $Response.from(req);
+    final res = $Response();
 
     try {
       final result = await resolveAndExecuteHandlers(req, res);
       await forward(httpReq, result.res);
     } on PharaohValidationError catch (e) {
-      await forward(
-        httpReq,
-        res.status(422).json(res.makeError(message: '$e')),
-      );
+      await forward(httpReq, res.json(res.error(e.toString()), statusCode: 422));
     } catch (e) {
       await forward(httpReq, res.internalServerError('$e'));
     }
@@ -162,11 +159,10 @@ class $PharaohImpl extends RouterContract with RouteDefinitionMixin implements P
       }
     }
 
-    request.response.statusCode = statusCode;
-
-    return request.response
-        .addStream(res_.body!.read())
-        .then((_) => request.response.close());
+    final response = request.response..statusCode = statusCode;
+    final body = res_.body;
+    if (body == null) return response.close();
+    return response.addStream(body.read()).then((_) => response.close());
   }
 
   @override

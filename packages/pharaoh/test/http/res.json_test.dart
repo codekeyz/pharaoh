@@ -27,11 +27,8 @@ void main() {
       await (await request<Pharaoh>(app))
           .get('/')
           .expectStatus(500)
-          .expectBody({
-            'path': '/',
-            'method': 'GET',
-            'message': "Converting object to an encodable object failed: Never"
-          })
+          .expectBody(
+              {'message': "Converting object to an encodable object failed: Never"})
           .expectContentType('application/json; charset=utf-8')
           .test();
     });
