@@ -39,10 +39,7 @@ abstract interface class Response {
   Response status(int code);
 
   /// [data] should be json-encodable
-  Response json(
-    Object? data, {
-    int? statusCode,
-  });
+  Response json(Object? data, {int? statusCode});
 
   Response ok([String? data]);
 
