@@ -3,6 +3,8 @@ part of 'core.dart';
 class $PharaohImpl extends RouterContract with RouteDefinitionMixin implements Pharaoh {
   late final HttpServer _server;
 
+  OnErrorCallback? _onErrorCb;
+
   static ViewEngine? viewEngine_;
 
   final List<ReqResHook> _preResponseHooks = [
@@ -67,7 +69,7 @@ class $PharaohImpl extends RouterContract with RouteDefinitionMixin implements P
     return this;
   }
 
-  void handleRequest(HttpRequest httpReq) async {
+  Future<void> handleRequest(HttpRequest httpReq) async {
     // An adapter must not add or modify the `Transfer-Encoding` parameter, but
     // the Dart SDK sets it by default. Set this before we fill in
     // [response.headers] so that the user or Shelf can explicitly override it if
@@ -75,21 +77,30 @@ class $PharaohImpl extends RouterContract with RouteDefinitionMixin implements P
     httpReq.response.headers.chunkedTransferEncoding = false;
     httpReq.response.headers.clear();
 
-    final req = $Request.from(httpReq);
-    final res = $Response();
+    final request = $Request.from(httpReq);
 
+    late Object requestError;
     try {
-      final result = await resolveAndExecuteHandlers(req, res);
-      await forward(httpReq, result.res);
-    } on PharaohValidationError catch (e) {
-      await forward(httpReq,
-          res.json(res.error(e.toString()), statusCode: HttpStatus.unprocessableEntity));
-    } catch (e) {
-      await forward(httpReq, res.internalServerError('$e'));
+      final result = await resolveAndExecuteHandlers(request);
+      return forward(httpReq, result.res);
+    } catch (error) {
+      requestError = error;
     }
+
+    if (_onErrorCb == null) {
+      var response = Response.new().internalServerError('$requestError');
+      if (requestError is PharaohValidationError) {
+        response = response.status(HttpStatus.unprocessableEntity);
+      }
+      return forward(httpReq, (response as $Response));
+    }
+
+    final result = await _onErrorCb!.call(requestError, request);
+    return forward(httpReq, result);
   }
 
-  Future<ReqRes> resolveAndExecuteHandlers($Request req, $Response res) async {
+  Future<ReqRes> resolveAndExecuteHandlers($Request req) async {
+    final res = $Response();
     ReqRes reqRes = (req: req, res: res);
 
     Response routeNotFound() => res.notFound("Route not found: ${req.path}");
@@ -174,6 +185,9 @@ class $PharaohImpl extends RouterContract with RouteDefinitionMixin implements P
 
   @override
   set viewEngine(ViewEngine? engine) => viewEngine_ = engine;
+
+  @override
+  void onError(OnErrorCallback errorCb) => _onErrorCb = errorCb;
 }
 
 // ignore: constant_identifier_names

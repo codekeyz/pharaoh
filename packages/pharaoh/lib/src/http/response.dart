@@ -9,11 +9,9 @@ import '../shelf_interop/shelf.dart' as shelf;
 final applicationOctetStreamType = ContentType('application', 'octet-stream');
 
 abstract interface class Response {
-  /// Constructs an HTTP $Response with the given [statusCode].
-  ///
-  /// [statusCode] must be greater than or equal to 100.
-  factory Response(
-    int statusCode, {
+  /// Constructs an HTTP Response
+  factory Response.new({
+    int? statusCode,
     Object? body,
     Encoding? encoding,
     Map<String, dynamic> headers = const {},
@@ -22,6 +20,7 @@ abstract interface class Response {
         body: shelf.Body(body, encoding),
         headers: headers,
         statusCode: statusCode,
+        ended: false,
       );
 
   Response header(String headerKey, String headerValue);
