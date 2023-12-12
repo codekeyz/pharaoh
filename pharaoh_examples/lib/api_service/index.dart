@@ -42,13 +42,13 @@ void main([args]) async {
 
     /// key isn't present
     if (key == null) {
-      next(res.status(400).json('API key required'));
+      next(res.json('API key required', statusCode: 400));
       return;
     }
 
     /// key is invalid
     if (!apiKeys.contains(key)) {
-      next(res.status(401).json('Invalid API key'));
+      next(res.json('Invalid API key', statusCode: 401));
       return;
     }
 

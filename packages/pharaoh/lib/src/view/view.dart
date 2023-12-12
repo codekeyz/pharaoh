@@ -9,6 +9,9 @@ import '../router/router_handler.dart';
 import '../utils/exceptions.dart';
 import '../shelf_interop/shelf.dart' as shelf;
 
+export 'package:jinja/loaders.dart';
+export 'package:jinja/jinja.dart';
+
 abstract class ViewEngine {
   String get name;
 

@@ -62,10 +62,9 @@ $Response _fromShelfResponse(ReqRes reqRes, shelf.Response response) {
   Map<String, dynamic> headers = reqRes.res.headers;
   response.headers.forEach((key, value) => headers[key] = value);
   return $Response(
-    body: shelf.Body(response.read()),
+    body: shelf.Body(response.read(), response.encoding),
     headers: headers,
     statusCode: response.statusCode,
-    encoding: response.encoding,
     ended: false,
   );
 }

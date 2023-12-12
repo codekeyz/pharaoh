@@ -1,15 +1,27 @@
+import 'dart:convert';
 import 'dart:io';
-
-import 'package:meta/meta.dart';
 
 import 'cookie.dart';
 import 'request.dart';
+import 'response_impl.dart';
+import '../shelf_interop/shelf.dart' as shelf;
 
 final applicationOctetStreamType = ContentType('application', 'octet-stream');
 
 abstract interface class Response {
-  @visibleForTesting
-  void setRequest(Request request);
+  /// Constructs an HTTP Response
+  factory Response({
+    int? statusCode,
+    Object? body,
+    Encoding? encoding,
+    Map<String, dynamic> headers = const {},
+  }) =>
+      $Response(
+        body: shelf.Body(body, encoding),
+        headers: headers,
+        statusCode: statusCode,
+        ended: false,
+      );
 
   Response header(String headerKey, String headerValue);
 
@@ -26,7 +38,7 @@ abstract interface class Response {
   Response status(int code);
 
   /// [data] should be json-encodable
-  Response json(Object? data);
+  Response json(Object? data, {int? statusCode});
 
   Response ok([String? data]);
 
@@ -34,7 +46,7 @@ abstract interface class Response {
 
   Response notModified({Map<String, dynamic>? headers});
 
-  Response format(Map<String, Function(Response res)> data);
+  Response format(Request request, Map<String, Function(Response res)> data);
 
   Response notFound([String? message]);
 
@@ -46,7 +58,7 @@ abstract interface class Response {
 
   Response internalServerError([String? message]);
 
-  Response render(String name, [Map<String, dynamic> data]);
+  Response render(String name, [Map<String, dynamic> data = const {}]);
 
   Response end();
 }
