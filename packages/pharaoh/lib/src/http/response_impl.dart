@@ -89,35 +89,24 @@ class $Response extends Message<shelf.Body?> implements Response {
       );
 
   @override
-  $Response redirect(String url, [int statusCode = HttpStatus.found]) => $Response(
-        statusCode: statusCode,
-        body: body,
-        headers: headers..[HttpHeaders.locationHeader] = url,
-        ended: true,
-      );
+  $Response redirect(String url, [int statusCode = HttpStatus.found]) => this.end()
+    ..headers[HttpHeaders.locationHeader] = url
+    ..status(statusCode);
 
   @override
-  $Response movedPermanently(String url) => $Response(
-        statusCode: HttpStatus.movedPermanently,
-        body: body,
-        headers: headers..[HttpHeaders.locationHeader] = url,
-        ended: true,
-      );
+  $Response movedPermanently(String url) => redirect(url, HttpStatus.movedPermanently);
 
   @override
   $Response notModified({Map<String, dynamic>? headers}) {
     final existingHeaders = this.headers;
-    if (headers != null) {
-      headers.forEach((key, val) => existingHeaders[key] = val);
-    }
-
-    existingHeaders.removeWhere((name, _) => name.toLowerCase() == 'content-length');
-    existingHeaders[HttpHeaders.dateHeader] = formatHttpDate(DateTime.now());
+    if (headers != null) headers.forEach((key, val) => existingHeaders[key] = val);
 
     return $Response(
       ended: true,
       statusCode: HttpStatus.notModified,
-      headers: existingHeaders,
+      headers: existingHeaders
+        ..removeWhere((name, _) => name.toLowerCase() == HttpHeaders.contentLengthHeader)
+        ..[HttpHeaders.dateHeader] = formatHttpDate(DateTime.now()),
     );
   }
 
@@ -157,21 +146,15 @@ class $Response extends Message<shelf.Body?> implements Response {
           statusCode: HttpStatus.internalServerError);
 
   @override
-  $Response ok([String? data]) => $Response(
-        body: shelf.Body(data, encoding),
-        statusCode: statusCode,
-        headers: headers,
-        ended: true,
-      ).type(ContentType.text);
+  $Response ok([String? data]) => this.end()
+    ..headers[HttpHeaders.contentTypeHeader] = ContentType.text.toString()
+    ..body = shelf.Body(data, encoding);
 
   @override
-  $Response send(Object data) {
-    final result = this
-      ..headers[HttpHeaders.contentTypeHeader] =
-          _getContentType(data, valueWhenNull: ContentType.html).toString()
-      ..body = shelf.Body(data);
-    return result.end();
-  }
+  $Response send(Object data) => this.end()
+    ..headers[HttpHeaders.contentTypeHeader] =
+        _getContentType(data, valueWhenNull: ContentType.html).toString()
+    ..body = shelf.Body(data);
 
   @override
   $Response end() => $Response(
@@ -231,7 +214,7 @@ class $Response extends Message<shelf.Body?> implements Response {
     ..headers[HttpHeaders.setCookieHeader] = _cookies;
 
   @override
-  Response render(String name, [Map<String, dynamic> data = const {}]) => this
-    ..headers[HttpHeaders.contentTypeHeader] = ContentType.html.toString()
-    ..viewToRender = ViewRenderData(name, data);
+  Response render(String name, [Map<String, dynamic> data = const {}]) => this.end()
+    ..viewToRender = ViewRenderData(name, data)
+    ..headers[HttpHeaders.contentTypeHeader] = ContentType.html.toString();
 }
