@@ -9,7 +9,7 @@ import '../router/router_handler.dart';
 Middleware cookieParser({CookieOpts opts = const CookieOpts()}) {
   opts.validate();
 
-  return (req, res, next) async {
+  return (req, res, next) {
     final rawcookies = req.req.cookies;
     if (rawcookies.isEmpty) return next();
 
