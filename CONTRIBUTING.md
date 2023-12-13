@@ -14,30 +14,36 @@ Pharaoh is a backend framework, inspired by the likes of ExpressJS, to empower d
 ready to contribute ... 👋🏽 Let's go 🚀
 
 ### Steps for contributing
-1. [Open an issue](https://github.com/codekeyz/pharaoh/issues/new/choose) for the bug you want to fix or the feature that you want to add.
+1. [Open an issue](https://github.com/Pharaoh-Framework/pharaoh/issues/new/choose) for the bug you want to fix or the feature that you want to add.
 
-2. Fork repo to your GitHub Account, then clone the code to your local machine. If you are not sure how to do this, GitHub's [Fork a repo](https://docs.github.com/en/get-started/quickstart/fork-a-repo) documentation has a great step by step guide for that.
+2. Fork the repo to your GitHub Account, then clone the code to your local machine. If you are not sure how to do this, GitHub's [Fork a repo](https://docs.github.com/en/get-started/quickstart/fork-a-repo) documentation has a great step by step guide for that.
 
-3. Set up the development by running the following commands
+3. Set up the workspace by running the following commands
+
+```shell
+dart pub global activate melos
+```
+
+and this
 
 ```
-dart pub global activate melos
  melos bootstrap
 ```
+
 ## Coding Guidelines
 
-Write your code on your local machine. It's good practice to create a branch for
-each new issue you work on, although not compulsory.
+It's good practice to create a branch for each new issue you work on, although not compulsory. 
+- All dart analysis checks must pass before you submit your code. Ensure your code is linted by running 
+```
+melos run analyze
+```
 
-To run the test suite,
+- You must write tests for your bug-fix/feature and all tests must pass. You can verify by running
 ```
 run melos run all tests.
 ``` 
 
-Ensure your code is linted by running 
-```
-melos run lint:all
-```
+
 
 If the tests pass, you can commit your changes to your fork and then create
 a pull request from there. Make sure to reference your issue from the pull request comments by including the issue number e.g. Resolves: #123.
