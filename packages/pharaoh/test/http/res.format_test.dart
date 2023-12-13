@@ -9,7 +9,7 @@ void main() {
       final app = Pharaoh()
         ..get(
           '/',
-          (req, res) => res.format({
+          (req, res) => res.format(req, {
             ContentType.text.toString(): (res) => res.ok('Hello World'),
             ContentType.html.toString(): (res) => res.send('<p>Hello World</p>'),
           }),
@@ -40,7 +40,7 @@ void main() {
       final app = Pharaoh()
         ..get(
           '/',
-          (req, res) => res.format({
+          (req, res) => res.format(req, {
             ContentType.text.toString(): (res) => res.ok('Hello World'),
             ContentType.html.toString(): (res) => res.send('<p>Hello World</p>'),
             '_': (res) => res.json({'message': 'Hello World'})
@@ -59,7 +59,7 @@ void main() {
       final app = Pharaoh()
         ..get(
           '/',
-          (req, res) => res.format({
+          (req, res) => res.format(req, {
             ContentType.text.toString(): (res) => res.ok('Hello World'),
             ContentType.html.toString(): (res) => res.send('<p>Hello World</p>'),
           }),
@@ -72,7 +72,7 @@ void main() {
           )
           .expectStatus(406)
           .expectContentType('application/json; charset=utf-8')
-          .expectBody('{"path":"/","method":"GET","message":"Not Acceptable"}')
+          .expectBody({"error": "Not Acceptable"})
           .test();
     });
   });

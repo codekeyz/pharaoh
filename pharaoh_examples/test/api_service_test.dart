@@ -70,9 +70,7 @@ void main() async {
               .expectStatus(404)
               .expectHeader(
                   HttpHeaders.contentTypeHeader, 'application/json; charset=utf-8')
-              .expectBody(
-                  '{"path":"/api/user/chima/repos","method":"GET","message":"Not found"}')
-              .test();
+              .expectBody({"error": "Not found"}).test();
         });
       });
 

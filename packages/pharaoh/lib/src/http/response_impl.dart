@@ -9,14 +9,9 @@ import '../view/view.dart';
 import 'cookie.dart';
 import 'message.dart';
 import 'request.dart';
-import 'request_impl.dart';
 import 'response.dart';
 
 class $Response extends Message<shelf.Body?> implements Response {
-  late final Request _reqInfo;
-
-  late final HttpRequest _httpReq;
-
   final bool ended;
 
   final int statusCode;
@@ -57,69 +52,54 @@ class $Response extends Message<shelf.Body?> implements Response {
   /// [statusCode] must be greater than or equal to 100.
   ///
   /// {@macro shelf_$Response_body_and_encoding_param}
-  $Response(
-    this._httpReq, {
+  $Response({
     shelf.Body? body,
     int? statusCode,
     this.ended = false,
-    Encoding? encoding,
-    Map<String, dynamic>? headers,
-  })  : _reqInfo = $Request.from(_httpReq),
-        statusCode = statusCode ?? 200,
-        super(shelf.Body(body, encoding), headers: headers ?? {}) {
+    Map<String, dynamic> headers = const {},
+  })  : statusCode = statusCode ?? HttpStatus.ok,
+        super(body, headers: Map<String, dynamic>.from(headers)) {
     if (this.statusCode < 100) {
       throw PharaohException('Invalid status code: $statusCode.');
     }
   }
 
-  factory $Response.from(HttpRequest request, {shelf.Body? body}) => $Response(request);
-
   @override
   $Response header(String headerKey, String headerValue) => $Response(
-        _httpReq,
         headers: headers..[headerKey] = headerValue,
         body: body,
-        encoding: encoding,
         ended: ended,
         statusCode: statusCode,
       );
 
   @override
   $Response type(ContentType type) => $Response(
-        _httpReq,
         headers: headers..[HttpHeaders.contentTypeHeader] = type.toString(),
         body: body,
         ended: ended,
         statusCode: statusCode,
-        encoding: encoding,
       );
 
   @override
   $Response status(int code) => $Response(
-        _httpReq,
         statusCode: code,
         body: body,
         ended: ended,
-        encoding: encoding,
         headers: headers,
       );
 
   @override
-  $Response redirect(
-    String url, [
-    int statusCode = HttpStatus.found,
-  ]) =>
-      $Response(
-        _httpReq,
+  $Response redirect(String url, [int statusCode = HttpStatus.found]) => $Response(
         statusCode: statusCode,
+        body: body,
         headers: headers..[HttpHeaders.locationHeader] = url,
         ended: true,
       );
 
   @override
   $Response movedPermanently(String url) => $Response(
-        _httpReq,
-        statusCode: 301,
+        statusCode: HttpStatus.movedPermanently,
+        body: body,
         headers: headers..[HttpHeaders.locationHeader] = url,
         ended: true,
       );
@@ -135,89 +115,70 @@ class $Response extends Message<shelf.Body?> implements Response {
     existingHeaders[HttpHeaders.dateHeader] = formatHttpDate(DateTime.now());
 
     return $Response(
-      _httpReq,
       ended: true,
-      statusCode: 304,
+      statusCode: HttpStatus.notModified,
       headers: existingHeaders,
     );
   }
 
   @override
-  $Response json(Object? data) {
+  $Response json(Object? data, {int? statusCode}) {
+    statusCode ??= this.statusCode;
+    if (mediaType == null) {
+      headers[HttpHeaders.contentTypeHeader] = ContentType.json.toString();
+    }
+
     late Object result;
+
     try {
       if (data is Set) data = data.toList();
       result = jsonEncode(data);
     } catch (_) {
-      final errStr = jsonEncode(makeError(message: _.toString()));
-      return type(ContentType.json).status(500).send(errStr);
+      result = jsonEncode(error(_.toString()));
+      statusCode = HttpStatus.internalServerError;
     }
 
-    final res = $Response(
-      _httpReq,
-      body: shelf.Body(result),
-      statusCode: statusCode,
-      encoding: encoding,
-      headers: headers,
-      ended: true,
-    );
-    return mediaType == null ? res.type(ContentType.json) : res;
+    body = shelf.Body(result);
+
+    return this.status(statusCode).end();
   }
 
   @override
-  $Response notFound([String? message]) {
-    return status(404).json(makeError(message: message ?? 'Not found'));
-  }
+  $Response notFound([String? message]) =>
+      json(error(message ?? 'Not found'), statusCode: HttpStatus.notFound);
 
   @override
-  $Response unauthorized({Object? data}) {
-    final error = data ?? makeError(message: 'Unauthorized');
-    return status(401).json(error);
-  }
+  $Response unauthorized({Object? data}) =>
+      json(data ?? error('Unauthorized'), statusCode: HttpStatus.unauthorized);
 
   @override
-  $Response internalServerError([String? message]) {
-    return status(500).json(makeError(message: message ?? 'Internal Server Error'));
-  }
+  $Response internalServerError([String? message]) =>
+      json(error(message ?? 'Internal Server Error'),
+          statusCode: HttpStatus.internalServerError);
 
   @override
   $Response ok([String? data]) => $Response(
-        _httpReq,
         body: shelf.Body(data, encoding),
         statusCode: statusCode,
         headers: headers,
-        encoding: encoding,
         ended: true,
       ).type(ContentType.text);
 
   @override
   $Response send(Object data) {
-    final ctype = _getContentType(data, valueWhenNull: ContentType.html);
-    return $Response(_httpReq,
-            body: shelf.Body(data),
-            encoding: encoding,
-            statusCode: statusCode,
-            headers: headers,
-            ended: true)
-        .type(ctype);
+    final result = this
+      ..headers[HttpHeaders.contentTypeHeader] =
+          _getContentType(data, valueWhenNull: ContentType.html).toString()
+      ..body = shelf.Body(data);
+    return result.end();
   }
 
   @override
-  $Response end() {
-    return $Response(
-      _httpReq,
-      body: body,
-      ended: true,
-      headers: headers,
-      statusCode: statusCode,
-      encoding: encoding,
-    );
-  }
-
-  PharaohErrorBody makeError({required String message}) => PharaohErrorBody(
-        message,
-        _reqInfo.path,
-        method: _reqInfo.method,
+  $Response end() => $Response(
+        body: body,
+        ended: true,
+        headers: headers,
+        statusCode: statusCode,
       );
 
   ContentType _getContentType(
@@ -240,40 +201,37 @@ class $Response extends Message<shelf.Body?> implements Response {
   bool _isBuffer(Object object) => object is! String;
 
   @override
-  $Response format(Map<String, Function($Response res)> options) {
-    var reqAcceptType = _reqInfo.headers[HttpHeaders.acceptHeader];
+  $Response format(Request request, Map<String, Function($Response res)> options) {
+    var reqAcceptType = request.headers[HttpHeaders.acceptHeader];
     if (reqAcceptType is Iterable) reqAcceptType = reqAcceptType.join();
     final handler = options[reqAcceptType] ?? options['_'];
 
     if (handler == null) {
-      return status(HttpStatus.notAcceptable).json(makeError(message: 'Not Acceptable'));
+      return json(error('Not Acceptable'), statusCode: HttpStatus.notAcceptable);
     }
 
     return handler.call(this);
   }
+
+  Map<String, dynamic> error(String message) => {'error': message};
 
   @override
   $Response cookie(
     String name,
     Object? value, [
     CookieOpts opts = const CookieOpts(),
-  ]) {
-    final cookie = bakeCookie(name, value, opts);
-    _cookies.add(cookie);
-    headers[HttpHeaders.setCookieHeader] = _cookies;
-    return this;
-  }
+  ]) =>
+      this
+        .._cookies.add(bakeCookie(name, value, opts))
+        ..headers[HttpHeaders.setCookieHeader] = _cookies;
 
   @override
-  $Response withCookie(Cookie cookie) {
-    _cookies.add(cookie);
-    headers[HttpHeaders.setCookieHeader] = _cookies;
-    return this;
-  }
+  $Response withCookie(Cookie cookie) => this
+    .._cookies.add(cookie)
+    ..headers[HttpHeaders.setCookieHeader] = _cookies;
 
   @override
-  Response render(String name, [Map<String, dynamic> data = const {}]) => type(
-        ContentType.html,
-      ).end()
-        ..viewToRender = ViewRenderData(name, data);
+  Response render(String name, [Map<String, dynamic> data = const {}]) => this
+    ..headers[HttpHeaders.contentTypeHeader] = ContentType.html.toString()
+    ..viewToRender = ViewRenderData(name, data);
 }
