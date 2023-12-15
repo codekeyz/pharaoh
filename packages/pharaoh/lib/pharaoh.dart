@@ -12,7 +12,7 @@ export 'src/middleware/session_mw.dart';
 export 'src/middleware/body_parser.dart';
 export 'src/middleware/cookie_parser.dart';
 export 'src/middleware/request_logger.dart';
-export 'package:spanner/spanner.dart' show HTTPMethod;
+export 'package:spanner/spanner.dart';
 
 // shelf
 export 'src/shelf_interop/adapter.dart';
