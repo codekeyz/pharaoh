@@ -55,7 +55,7 @@ final ReqResHook viewRenderHook = (ReqRes reqRes) async {
       () => viewEngine.render(viewData.name, viewData.data),
     );
     res = res.end()..body = shelf.Body(result);
-  } on TemplateNotFound catch (e) {
+  } on TemplateNotFound catch (_) {
     res = res.notFound('Template `${viewData.name}` not found');
   } catch (e) {
     throw PharaohException.value('Failed to render view ${viewData.name}', e);
