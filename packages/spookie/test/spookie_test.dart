@@ -5,11 +5,7 @@ void main() {
   group("spookie", () {
     test('should fire up the app on an ephemeral port', () async {
       final app = Pharaoh()..get('/', (req, res) => res.send('Hello World'));
-      await (await (request<Pharaoh>(app)))
-          .get('/')
-          .expectStatus(200)
-          .expectBody('Hello World')
-          .test();
+      await (await (request<Pharaoh>(app))).get('/').expectStatus(200).expectBody('Hello World').test();
     });
 
     test('should work with an active server', () async {
@@ -23,11 +19,7 @@ void main() {
 
       await app.listen(port: 0);
 
-      await (await (request<Pharaoh>(app)))
-          .put('/hello')
-          .expectStatus(200)
-          .expectBody('Hey Daddy Yo!')
-          .test();
+      await (await (request<Pharaoh>(app))).put('/hello').expectStatus(200).expectBody('Hey Daddy Yo!').test();
 
       await app.shutdown();
     });

@@ -133,17 +133,14 @@ class $Response extends Message<shelf.Body?> implements Response {
   }
 
   @override
-  $Response notFound([String? message]) =>
-      json(error(message ?? 'Not found'), statusCode: HttpStatus.notFound);
+  $Response notFound([String? message]) => json(error(message ?? 'Not found'), statusCode: HttpStatus.notFound);
 
   @override
-  $Response unauthorized({Object? data}) =>
-      json(data ?? error('Unauthorized'), statusCode: HttpStatus.unauthorized);
+  $Response unauthorized({Object? data}) => json(data ?? error('Unauthorized'), statusCode: HttpStatus.unauthorized);
 
   @override
   $Response internalServerError([String? message]) =>
-      json(error(message ?? 'Internal Server Error'),
-          statusCode: HttpStatus.internalServerError);
+      json(error(message ?? 'Internal Server Error'), statusCode: HttpStatus.internalServerError);
 
   @override
   $Response ok([String? data]) => this.end()
@@ -152,8 +149,7 @@ class $Response extends Message<shelf.Body?> implements Response {
 
   @override
   $Response send(Object data) => this.end()
-    ..headers[HttpHeaders.contentTypeHeader] =
-        _getContentType(data, valueWhenNull: ContentType.html).toString()
+    ..headers[HttpHeaders.contentTypeHeader] = _getContentType(data, valueWhenNull: ContentType.html).toString()
     ..body = shelf.Body(data);
 
   @override

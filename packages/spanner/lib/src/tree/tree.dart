@@ -141,8 +141,8 @@ class Spanner {
         return node.addChildAndReturn(key, StaticNode(key));
       } else if (part.isWildCard) {
         if (!isLastSegment) {
-          throw ArgumentError.value(fullPath, null,
-              'Route definition is not valid. Wildcard must be the end of the route');
+          throw ArgumentError.value(
+              fullPath, null, 'Route definition is not valid. Wildcard must be the end of the route');
         }
 
         return node.addChildAndReturn(key, WildcardNode());

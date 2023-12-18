@@ -22,8 +22,7 @@ mixin HandlerStore {
 
     if (requestHandlers.containsKey(method)) {
       var name = (this as dynamic).name;
-      throw ArgumentError.value(
-          '${method.name}: $name', null, 'Route entry already exists');
+      throw ArgumentError.value('${method.name}: $name', null, 'Route entry already exists');
     }
 
     requestHandlers[method] = handler;

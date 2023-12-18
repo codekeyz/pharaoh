@@ -1,0 +1,59 @@
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+name: Test Pipeline
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  analyze:
+    name: Analyze Code
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - uses: dart-lang/setup-dart@v1.3
+      - uses: bluefireteam/melos-action@v3
+
+      - name: Bootstrap
+        run: |
+          dart pub global activate melos
+          melos bootstrap
+
+      - name: Check formatting
+        run: melos format -- --set-exit-if-changed
+
+      - name: Check linting
+        run: melos analyze
+
+  test:
+    name: Test Packages
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - uses: dart-lang/setup-dart@v1.3
+      - uses: bluefireteam/melos-action@v3
+
+      - name: Bootstrap
+        run: |
+          dart pub global activate melos
+          melos bootstrap
+
+      - name: Run Unit tests
+        run: melos tests:ci
+
+      - name: Upload Coverage
+        uses: codecov/codecov-action@v3
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        with:
+          files: coverage/*_lcov.info

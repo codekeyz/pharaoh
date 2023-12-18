@@ -21,8 +21,7 @@ void main() {
           .get('/users/me')
           .expectStatus(401)
           .expectContentType('application/json; charset=utf-8')
-          .expectBodyCustom(
-              (body) => jsonDecode(body)['error'], 'No authorization token was found')
+          .expectBodyCustom((body) => jsonDecode(body)['error'], 'No authorization token was found')
           .test(),
     );
 
@@ -32,8 +31,7 @@ void main() {
           .token('some-random-token')
           .get('/users/me')
           .expectStatus(401)
-          .expectBodyCustom((body) => jsonDecode(body)['error'],
-              'Format is Authorization: Bearer [token]')
+          .expectBodyCustom((body) => jsonDecode(body)['error'], 'Format is Authorization: Bearer [token]')
           .test(),
     );
 

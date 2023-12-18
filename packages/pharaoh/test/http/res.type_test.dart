@@ -8,9 +8,7 @@ void main() {
     test('should set the Content-Type with type/subtype', () async {
       final app = Pharaoh()
         ..get('/', (req, res) {
-          return res
-              .type(ContentType.parse('application/vnd.amazon.ebook'))
-              .send('var name = "tj";');
+          return res.type(ContentType.parse('application/vnd.amazon.ebook')).send('var name = "tj";');
         });
 
       await (await request<Pharaoh>(app))

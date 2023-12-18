@@ -23,11 +23,7 @@ void main() {
           .expectStatus(200)
           .test();
 
-      await (await request(app))
-          .get('/admin')
-          .expectBody('Holy Moly 🚀')
-          .expectStatus(200)
-          .test();
+      await (await request(app)).get('/admin').expectBody('Holy Moly 🚀').expectStatus(200).test();
     });
   });
 }

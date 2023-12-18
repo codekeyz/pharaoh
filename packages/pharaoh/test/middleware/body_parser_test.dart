@@ -18,8 +18,7 @@ void main() {
         final app = Pharaoh()..post('/', (req, res) => res.json(req.body));
 
         await (await request<Pharaoh>(app))
-            .post('/', '{"name":"Chima","age":24}',
-                headers: {'Content-Type': 'application/json'})
+            .post('/', '{"name":"Chima","age":24}', headers: {'Content-Type': 'application/json'})
             .expectStatus(200)
             .expectBody({'name': 'Chima', 'age': 24})
             .test();
@@ -29,8 +28,7 @@ void main() {
         final app = Pharaoh()..post('/', (req, res) => res.json(req.body));
 
         await (await request<Pharaoh>(app))
-            .post('/', 'name%3DChima%26age%3D24',
-                headers: {'Content-Type': 'application/x-www-form-urlencoded'})
+            .post('/', 'name%3DChima%26age%3D24', headers: {'Content-Type': 'application/x-www-form-urlencoded'})
             .expectStatus(200)
             .expectBody({'name': 'Chima', 'age': '24'})
             .test();
@@ -41,21 +39,13 @@ void main() {
       test('when request body is null', () async {
         final app = Pharaoh()..post('/', (req, res) => res.json(req.body));
 
-        await (await request<Pharaoh>(app))
-            .post('/', null)
-            .expectStatus(200)
-            .expectBody('null')
-            .test();
+        await (await request<Pharaoh>(app)).post('/', null).expectStatus(200).expectBody('null').test();
       });
 
       test('when request body is empty', () async {
         final app = Pharaoh()..post('/', (req, res) => res.json(req.body));
 
-        await (await request<Pharaoh>(app))
-            .post('/', '')
-            .expectStatus(200)
-            .expectBody('null')
-            .test();
+        await (await request<Pharaoh>(app)).post('/', '').expectStatus(200).expectBody('null').test();
       });
     });
   });

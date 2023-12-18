@@ -8,8 +8,7 @@ import 'expectation.dart';
 
 typedef HttpFutureResponse = Future<http.Response>;
 
-HttpResponseExpection expectHttp(HttpFutureResponse value) =>
-    HttpResponseExpection(value);
+HttpResponseExpection expectHttp(HttpFutureResponse value) => HttpResponseExpection(value);
 
 typedef GetValueFromResponse<T> = T Function(http.Response response);
 
@@ -27,8 +26,7 @@ class HttpResponseExpection extends ExpectationBase<HttpFutureResponse, http.Res
   }
 
   HttpResponseExpection expectContentType(dynamic matcher) {
-    final MatchCase test =
-        (value: (resp) => resp.headers[HttpHeaders.contentTypeHeader], matcher: matcher);
+    final MatchCase test = (value: (resp) => resp.headers[HttpHeaders.contentTypeHeader], matcher: matcher);
     _matchcases.add(test);
     return this;
   }

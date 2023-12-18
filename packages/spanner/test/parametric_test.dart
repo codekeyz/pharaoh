@@ -15,8 +15,7 @@ void main() {
           ..addRoute(HTTPMethod.GET, '/user/<hello>.png/<user2>/hello', null);
 
         final exception = runSyncAndReturnException<ArgumentError>(router);
-        expect(exception.message,
-            contains('Route has inconsistent naming in parameter definition'));
+        expect(exception.message, contains('Route has inconsistent naming in parameter definition'));
         expect(exception.message, contains('<file>.png'));
         expect(exception.message, contains('<hello>.png'));
       });
@@ -25,14 +24,12 @@ void main() {
         router() => Spanner()..addRoute(HTTPMethod.GET, '/user/<userId><keyId>', null);
 
         final exception = runSyncAndReturnException<ArgumentError>(router);
-        expect(exception.message,
-            contains('Parameter definition is invalid. Close door neighbors'));
+        expect(exception.message, contains('Parameter definition is invalid. Close door neighbors'));
         expect(exception.invalidValue, '<userId><keyId>');
       });
 
       test('invalid parameter definition', () {
-        router() =>
-            Spanner()..addRoute(HTTPMethod.GET, '/user/<userId#@#.XDkd@#>>#>', null);
+        router() => Spanner()..addRoute(HTTPMethod.GET, '/user/<userId#@#.XDkd@#>>#>', null);
 
         final exception = runSyncAndReturnException<ArgumentError>(router);
         expect(exception.message, contains('Parameter definition is invalid'));
@@ -70,8 +67,7 @@ void main() {
       expect(node, havingParameters<StaticNode>({'file': 'aws-image'}));
 
       node = router.lookup(HTTPMethod.GET, '/user/aws-image.png/A29384/hello');
-      expect(
-          node, havingParameters<StaticNode>({'file': 'aws-image', 'user2': 'A29384'}));
+      expect(node, havingParameters<StaticNode>({'file': 'aws-image', 'user2': 'A29384'}));
 
       node = router.lookup(HTTPMethod.GET, '/a/param-static');
       expect(node, havingParameters<ParameterDefinition>({'param': 'param'}));
@@ -124,15 +120,12 @@ void main() {
 
         expect(
           runSyncAndReturnException(() => router.lookup(HTTPMethod.GET, '/@388>)#(***)')),
-          isA<ArgumentError>()
-              .having((p0) => p0.message, 'with message', 'Invalid parameter value'),
+          isA<ArgumentError>().having((p0) => p0.message, 'with message', 'Invalid parameter value'),
         );
       });
 
       test('in composite parametric definition', () async {
-        final router = Spanner()
-          ..addRoute(
-              HTTPMethod.GET, '/users/<userId|number>HELLO<paramId|number>/detail', null);
+        final router = Spanner()..addRoute(HTTPMethod.GET, '/users/<userId|number>HELLO<paramId|number>/detail', null);
 
         var result = router.lookup(HTTPMethod.GET, '/users/334HELLO387/detail');
         expect(result, havingParameters({'userId': 334, 'paramId': 387}));

@@ -11,11 +11,7 @@ void main() {
         })
         ..get('/', (req, res) => res.send(req.auth));
 
-      await (await request<Pharaoh>(app))
-          .get('/')
-          .expectStatus(200)
-          .expectBody('some-token')
-          .test();
+      await (await request<Pharaoh>(app)).get('/').expectStatus(200).expectBody('some-token').test();
     });
 
     test('should deliver res', () async {
@@ -25,11 +21,7 @@ void main() {
           return next(res.ok('Hello World'));
         });
 
-      await (await request<Pharaoh>(app))
-          .get('/')
-          .expectStatus(200)
-          .expectBody('Hello World')
-          .test();
+      await (await request<Pharaoh>(app)).get('/').expectStatus(200).expectBody('Hello World').test();
     });
 
     test('should deliver both :res and res', () async {
@@ -113,8 +105,7 @@ void main() {
 
       listResultList.clear();
 
-      final shortLivedChain =
-          testChain3.chain((req, res, next) => next(res.end())).chain(testChain2);
+      final shortLivedChain = testChain3.chain((req, res, next) => next(res.end())).chain(testChain2);
 
       await (await request(getApp(shortLivedChain))).get('/test').test();
       expect(listResultList, [3, 1, 3, 2, 1]);
