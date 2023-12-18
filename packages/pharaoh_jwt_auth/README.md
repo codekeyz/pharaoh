@@ -11,8 +11,8 @@ In your pubspec.yaml
 
 ```yaml
 dependencies:
-  pharaoh: ^0.0.5
-  pharaoh_jwt_auth: ^1.0.0
+  pharaoh: ^0.0.5+6
+  pharaoh_jwt_auth:
 ```
 
 ## Basic Usage:
