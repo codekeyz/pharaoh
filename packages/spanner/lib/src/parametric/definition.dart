@@ -10,8 +10,7 @@ final _knownDescriptors = {'number': numDescriptor};
 /// build a parametric definition from a route part
 ParameterDefinition? _buildParamDefinition(String part, bool terminal) {
   if (closeDoorParametricRegex.hasMatch(part)) {
-    throw ArgumentError.value(
-        part, null, 'Parameter definition is invalid. Close door neighbors');
+    throw ArgumentError.value(part, null, 'Parameter definition is invalid. Close door neighbors');
   }
 
   ParameterDefinition makeDefinition(RegExpMatch m, {bool end = false}) {
@@ -22,8 +21,7 @@ ParameterDefinition? _buildParamDefinition(String part, bool terminal) {
       final result = parts.sublist(1).map((e) {
         final value = e.isRegex ? regexDescriptor : _knownDescriptors[e];
         if (value == null) {
-          throw ArgumentError.value(
-              e, null, 'Parameter definition has invalid descriptor');
+          throw ArgumentError.value(e, null, 'Parameter definition has invalid descriptor');
         }
         return value;
       });

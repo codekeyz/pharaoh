@@ -64,8 +64,7 @@ class $PharaohImpl extends RouterContract with RouteDefinitionMixin implements P
       ..autoCompress = true;
     _server.listen(handleRequest);
 
-    print(
-        'Server start on PORT: ${_server.port} -> ${uri.scheme}://localhost:${_server.port}');
+    print('Server start on PORT: ${_server.port} -> ${uri.scheme}://localhost:${_server.port}');
     return this;
   }
 

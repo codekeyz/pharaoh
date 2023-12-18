@@ -33,10 +33,8 @@ void main() {
           });
 
         await (await request(app))
-            .get('/', headers: {
-              HttpHeaders.cookieHeader:
-                  'name=s%3Achima.4ytL9j25i8e59B6eCUUZdrWHdGLK3Cua%2BG1oGyurzXY'
-            })
+            .get('/',
+                headers: {HttpHeaders.cookieHeader: 'name=s%3Achima.4ytL9j25i8e59B6eCUUZdrWHdGLK3Cua%2BG1oGyurzXY'})
             .expectStatus(200)
             .expectBody('[name=chima; HttpOnly]')
             .test();
@@ -53,8 +51,7 @@ void main() {
 
         await (await request(app))
             .get('/', headers: {
-              HttpHeaders.cookieHeader:
-                  'name=s%3Achimaxyz.4ytL9j25i8e59B6eCUUZdrWHdGLK3Cua%2BG1oGyurzXY; Path=/'
+              HttpHeaders.cookieHeader: 'name=s%3Achimaxyz.4ytL9j25i8e59B6eCUUZdrWHdGLK3Cua%2BG1oGyurzXY; Path=/'
             })
             .expectStatus(200)
             .expectBody('[]')
@@ -87,11 +84,7 @@ void main() {
             return res.ok(str);
           });
 
-        await (await request<Pharaoh>(app))
-            .get('/')
-            .expectStatus(200)
-            .expectBody('[]')
-            .test();
+        await (await request<Pharaoh>(app)).get('/').expectStatus(200).expectBody('[]').test();
       });
 
       test('should default req.signedCookies to []', () async {
@@ -102,11 +95,7 @@ void main() {
             return res.ok(str);
           });
 
-        await (await request<Pharaoh>(app))
-            .get('/')
-            .expectStatus(200)
-            .expectBody('[]')
-            .test();
+        await (await request<Pharaoh>(app)).get('/').expectStatus(200).expectBody('[]').test();
       });
     });
   });

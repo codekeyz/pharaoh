@@ -15,9 +15,9 @@ dependencies:
   uuid: ^4.2.1
   spanner: ^1.0.1
   jinja: ^0.5.0
-  
+
   # We only need this to implement inter-operability for shelf
   shelf: ^1.4.1
 
 dev_dependencies:
-  spookie: ^1.0.1
+  spookie: ^1.0.2

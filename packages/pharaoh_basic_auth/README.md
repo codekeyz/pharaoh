@@ -8,8 +8,8 @@ In your pubspec.yaml
 
 ```yaml
 dependencies:
-  pharaoh: ^0.0.3
-  pharaoh_basic_auth: ^1.0.0
+  pharaoh: ^0.0.5+6
+  pharaoh_basic_auth:
 ```
 
 ## Basic Usage:

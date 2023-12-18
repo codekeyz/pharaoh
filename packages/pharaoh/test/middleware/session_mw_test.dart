@@ -149,8 +149,7 @@ void main() {
 
     test('should pass session fetch error', () async {
       const opts = CookieOpts(secret: 'foo bar baz');
-      final store =
-          _$TestStore(getFunc: (_) => throw Exception('Session store not available'));
+      final store = _$TestStore(getFunc: (_) => throw Exception('Session store not available'));
 
       final app = Pharaoh()
         ..use(cookieParser(opts: opts))
@@ -276,8 +275,7 @@ void main() {
 
           final app = Pharaoh()
             ..use(cookieParser(opts: opts))
-            ..use(session(
-                cookie: opts, store: store, rolling: true, saveUninitialized: false))
+            ..use(session(cookie: opts, store: store, rolling: true, saveUninitialized: false))
             ..get('/', (req, res) => res.end());
 
           await (await request<Pharaoh>(app))
@@ -299,8 +297,7 @@ void main() {
 
           final app = Pharaoh()
             ..use(cookieParser(opts: opts))
-            ..use(session(
-                cookie: opts, store: store, rolling: true, saveUninitialized: true))
+            ..use(session(cookie: opts, store: store, rolling: true, saveUninitialized: true))
             ..get('/', (req, res) => res.end());
 
           await (await request<Pharaoh>(app))
@@ -322,8 +319,7 @@ void main() {
 
           final app = Pharaoh()
             ..use(cookieParser(opts: opts))
-            ..use(session(
-                cookie: opts, store: store, rolling: true, saveUninitialized: false))
+            ..use(session(cookie: opts, store: store, rolling: true, saveUninitialized: false))
             ..get('/', (req, res) {
               req.session?['name'] = 'codekeyz';
               return res.end();

@@ -43,8 +43,7 @@ Middleware createStaticHandler(
 }) {
   final rootDir = Directory(rootdir);
   if (!rootDir.existsSync()) {
-    throw PharaohException.value(
-        'A directory corresponding to fileSystemPath not found', rootdir);
+    throw PharaohException.value('A directory corresponding to fileSystemPath not found', rootdir);
   }
 
   rootdir = rootDir.resolveSymbolicLinksSync();
@@ -60,10 +59,7 @@ Middleware createStaticHandler(
   return (request, res, next) async {
     if (![HTTPMethod.GET, HTTPMethod.HEAD].contains(request.method)) {
       if (fallthrough) return next();
-      return next(res
-          .status(HttpStatus.methodNotAllowed)
-          .header(HttpHeaders.acceptHeader, 'GET, HEAD')
-          .end());
+      return next(res.status(HttpStatus.methodNotAllowed).header(HttpHeaders.acceptHeader, 'GET, HEAD').end());
     }
 
     final uri = request.uri;
@@ -270,8 +266,7 @@ Response? _fileRangeResponse(
   headerUpdate[HttpHeaders.contentLengthHeader] = (end - start + 1).toString();
   headerUpdate[HttpHeaders.contentRangeHeader] = 'bytes $start-$end/$actualLength';
 
-  final body =
-      request.method == HTTPMethod.HEAD ? null : Body(file.openRead(start, end + 1));
+  final body = request.method == HTTPMethod.HEAD ? null : Body(file.openRead(start, end + 1));
   response.body = body;
 
   Response res = response;

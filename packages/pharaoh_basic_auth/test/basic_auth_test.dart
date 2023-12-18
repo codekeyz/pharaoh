@@ -47,20 +47,12 @@ void main() {
 
       test(
         'should reject on wrong credentials',
-        () async => (await request<Pharaoh>(app))
-            .auth('dude', 'stuff')
-            .get(endpoint)
-            .expectStatus(401)
-            .test(),
+        () async => (await request<Pharaoh>(app)).auth('dude', 'stuff').get(endpoint).expectStatus(401).test(),
       );
 
       test(
         'should reject on shorter prefix',
-        () async => (await request<Pharaoh>(app))
-            .auth('Admin', 'secret')
-            .get(endpoint)
-            .expectStatus(401)
-            .test(),
+        () async => (await request<Pharaoh>(app)).auth('Admin', 'secret').get(endpoint).expectStatus(401).test(),
       );
 
       test(
@@ -75,11 +67,8 @@ void main() {
 
       test(
         'should accept correct credentials',
-        () async => await (await request<Pharaoh>(app))
-            .auth('Admin', 'secret1234')
-            .get(endpoint)
-            .expectStatus(200)
-            .test(),
+        () async =>
+            await (await request<Pharaoh>(app)).auth('Admin', 'secret1234').get(endpoint).expectStatus(200).test(),
       );
     });
 
@@ -149,11 +138,7 @@ void main() {
 
         test(
           'should reject wrong credentials',
-          () async => (await request<Pharaoh>(app))
-              .auth('bla', 'blub')
-              .get(endpoint)
-              .expectStatus(401)
-              .test(),
+          () async => (await request<Pharaoh>(app)).auth('bla', 'blub').get(endpoint).expectStatus(401).test(),
         );
 
         test(

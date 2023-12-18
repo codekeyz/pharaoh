@@ -94,8 +94,7 @@ Middleware session({
 final ReqResHook sessionPreResponseHook = (ReqRes reqRes) async {
   var req = reqRes.req, res = reqRes.res;
   final session = req.session;
-  if (session != null &&
-      (session.saveUninitialized || session.resave || session.modified)) {
+  if (session != null && (session.saveUninitialized || session.resave || session.modified)) {
     await session.save();
     res = res.withCookie(session.cookie!);
   }

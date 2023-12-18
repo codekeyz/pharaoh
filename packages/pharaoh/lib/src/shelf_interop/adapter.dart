@@ -18,8 +18,7 @@ typedef ShelfMiddlewareType2 = FutureOr<shelf.Response> Function(shelf.Request);
 Middleware useShelfMiddleware(dynamic middleware) {
   if (middleware is shelf.Middleware) {
     return (req, res, next) async {
-      final shelfResponse =
-          await middleware((req) => shelf.Response.ok(req.read()))(_toShelfRequest(req));
+      final shelfResponse = await middleware((req) => shelf.Response.ok(req.read()))(_toShelfRequest(req));
       res = _fromShelfResponse((req: req, res: res), shelfResponse);
 
       next(res);
