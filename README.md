@@ -21,7 +21,7 @@ In your pubspec.yaml
 
 ```yaml
 dependencies:
-  pharaoh: ^0.0.5 # requires Dart => ^3.0.0
+  pharaoh: ^0.0.5+6 # requires Dart => ^3.0.0
 ```
 
 ## Basic Usage:
@@ -33,7 +33,13 @@ final app = Pharaoh();
 
 void main() async {
 
-  app.use(logRequests);
+  app.use((req, res, next) {
+
+    /// do something here
+
+    next();
+
+  });
 
   app.get('/foo', (req, res) => res.ok("bar"));
 
