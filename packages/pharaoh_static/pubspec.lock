@@ -220,9 +220,10 @@ packages:
   pharaoh:
     dependency: "direct main"
     description:
-      path: "../pharaoh"
-      relative: true
-    source: path
+      name: pharaoh
+      sha256: fc9a88fa7423210d7778cf6a5984c50398fea61d6aaeec8e270c3ae746b8a0c8
+      url: "https://pub.dev"
+    source: hosted
     version: "0.0.5+6"
   pool:
     dependency: transitive
@@ -297,18 +298,20 @@ packages:
     source: hosted
     version: "1.10.0"
   spanner:
-    dependency: "direct overridden"
+    dependency: transitive
     description:
-      path: "../spanner"
-      relative: true
-    source: path
+      name: spanner
+      sha256: d513394e304a41ed2d00831fb879a13c6ed5e9331ef7b5f3f194817ce947e318
+      url: "https://pub.dev"
+    source: hosted
     version: "1.0.1"
   spookie:
     dependency: "direct dev"
     description:
-      path: "../spookie"
-      relative: true
-    source: path
+      name: spookie
+      sha256: "104e26d82224aa81103e2bad74a512605cc3cf644dd7169df5691715d4dc410e"
+      url: "https://pub.dev"
+    source: hosted
     version: "1.0.2"
   sprintf:
     dependency: transitive
