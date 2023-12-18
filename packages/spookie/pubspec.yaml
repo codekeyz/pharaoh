@@ -1,6 +1,6 @@
 name: spookie
 description: SuperAgent driven library for testing Dart HTTP servers.
-version: 1.0.1
+version: 1.0.2
 repository: https://github.com/codekeyz/pharaoh/tree/main/packages/spookie
 
 environment:
