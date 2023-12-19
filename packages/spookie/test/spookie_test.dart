@@ -69,6 +69,32 @@ void main() {
           .expectJsonBody({'firstname': 'Foo', 'lastname': 'Bar'}).test();
     });
 
+    test('when expectHeaders', () async {
+      final app = Pharaoh()
+        ..get('/', (req, res) => res.cookie('user', '204').json({'firstname': 'Foo', 'lastname': 'Bar'}));
+
+      await (await (request<Pharaoh>(app)))
+          .get('/')
+          .expectStatus(200)
+          .expectHeaders(allOf(
+            containsPair(HttpHeaders.setCookieHeader, 'user=204; Path=/'),
+            containsPair(HttpHeaders.contentLengthHeader, '36'),
+            containsPair(HttpHeaders.contentTypeHeader, 'application/json; charset=utf-8'),
+          ))
+          .test();
+    });
+
+    test('when custom', () async {
+      final app = Pharaoh()
+        ..get('/', (req, res) => res.cookie('user', '204').json({'firstname': 'Foo', 'lastname': 'Bar'}));
+
+      await (await (request<Pharaoh>(app)))
+          .get('/')
+          .expectStatus(200)
+          .custom((res) => res.request?.method, equals('GET'))
+          .test();
+    });
+
     test('when expectContentType', () async {
       final app = Pharaoh()..get('/', (req, res) => res.ok('Pookie & Reyrey'));
 
@@ -89,6 +115,43 @@ void main() {
       final app = Pharaoh()..get('/', (req, res) => res.json('Pookie & Reyrey', statusCode: 500));
 
       await (await (request<Pharaoh>(app))).get('/').expectHeader(HttpHeaders.contentLengthHeader, '17').test();
+    });
+
+    group('with methods', () {
+      test('when auth', () async {
+        final app = Pharaoh()..get('/', (req, res) => res.ok(jsonEncode(req.headers[HttpHeaders.authorizationHeader])));
+
+        await (await (request<Pharaoh>(app))).auth('foo', 'bar').get('/').expectBody(['Basic Zm9vOmJhcg==']).test();
+      });
+
+      test('when token', () async {
+        final app = Pharaoh()..get('/', (req, res) => res.ok(jsonEncode(req.headers[HttpHeaders.authorizationHeader])));
+
+        await (await (request<Pharaoh>(app)))
+            .token('#K#KKDJ#JJ#*8**##')
+            .get('/')
+            .expectBody(['Bearer #K#KKDJ#JJ#*8**##']).test();
+      });
+
+      test('when delete', () async {
+        final app = Pharaoh()
+          ..delete('/', (req, res) => res.ok(jsonEncode(req.headers[HttpHeaders.authorizationHeader])));
+
+        await (await (request<Pharaoh>(app)))
+            .token('#K#KKDJ#JJ#*8**##')
+            .delete('/')
+            .expectBody(['Bearer #K#KKDJ#JJ#*8**##']).test();
+      });
+
+      test('when patch', () async {
+        final app = Pharaoh()
+          ..patch('/', (req, res) => res.ok(jsonEncode(req.headers[HttpHeaders.authorizationHeader])));
+
+        await (await (request<Pharaoh>(app)))
+            .token('#K#KKDJ#JJ#*8**##')
+            .patch('/')
+            .expectBody(['Bearer #K#KKDJ#JJ#*8**##']).test();
+      });
     });
   });
 }
