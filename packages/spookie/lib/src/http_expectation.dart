@@ -53,6 +53,17 @@ class HttpResponseExpection extends ExpectationBase<HttpFutureResponse, http.Res
     return this;
   }
 
+  HttpResponseExpection expectJsonBody(dynamic matcher) {
+    _matchcases.add((
+      value: (res) => res.headers,
+      matcher: containsPair(HttpHeaders.contentTypeHeader, 'application/json; charset=utf-8')
+    ));
+
+    final MatchCase value = (value: (resp) => jsonDecode(resp.body), matcher: matcher);
+    _matchcases.add(value);
+    return this;
+  }
+
   HttpResponseExpection expectBodyCustom<T>(
     T Function(String body) getValue,
     dynamic matcher,
