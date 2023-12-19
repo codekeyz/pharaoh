@@ -2,11 +2,16 @@ import 'utils.dart';
 
 typedef ParameterDescriptor<T> = T Function(dynamic value);
 
+class SpannerRouteValidatorError extends ArgumentError {
+  SpannerRouteValidatorError(dynamic value, {String message = 'Invalid parameter value'})
+      : super.value(value, null, message);
+}
+
 ParameterDescriptor<num> numDescriptor = (input) {
   input = input.toString();
   final value = num.tryParse(input);
   if (value != null) return value;
-  throw ArgumentError.value(input, null, 'Invalid parameter value');
+  throw SpannerRouteValidatorError(input);
 };
 
 ParameterDescriptor regexDescriptor = (input) {
@@ -15,5 +20,5 @@ ParameterDescriptor regexDescriptor = (input) {
     if (regex.hasMatch(input.toString())) return input;
   } catch (_) {}
 
-  throw ArgumentError.value(input, null, 'Invalid parameter value');
+  throw SpannerRouteValidatorError(input);
 };

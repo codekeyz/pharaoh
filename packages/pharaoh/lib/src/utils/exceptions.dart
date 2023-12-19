@@ -53,13 +53,3 @@ class PharaohErrorBody {
         "message": message,
       };
 }
-
-class PharaohValidationError extends PharaohException {
-  PharaohValidationError(
-    String message,
-    String invalidValue,
-  ) : super.value(message, invalidValue);
-
-  @override
-  String get parentName => 'Pharaoh Validation Error';
-}

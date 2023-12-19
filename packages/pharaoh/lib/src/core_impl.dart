@@ -88,7 +88,7 @@ class $PharaohImpl extends RouterContract with RouteDefinitionMixin implements P
 
     if (_onErrorCb == null) {
       var response = Response.new().internalServerError('$requestError');
-      if (requestError is PharaohValidationError) {
+      if (requestError is SpannerRouteValidatorError) {
         response = response.status(HttpStatus.unprocessableEntity);
       }
       return forward(httpReq, (response as $Response));
