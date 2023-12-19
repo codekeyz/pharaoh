@@ -1,6 +1,7 @@
-import 'package:spanner/spanner.dart';
 import 'package:spanner/src/parametric/definition.dart';
+import 'package:spanner/src/parametric/descriptor.dart';
 import 'package:spanner/src/tree/node.dart';
+import 'package:spanner/src/tree/tree.dart';
 import 'package:test/test.dart';
 
 import 'helpers/test_utils.dart';
@@ -108,6 +109,12 @@ void main() {
 
     group('when descriptors', () {
       test('in single parametric definition', () {
+        final router = Spanner()..addRoute(HTTPMethod.GET, '/users/<userId|(^\\w+)|number>/detail', null);
+
+        expect(router.lookup(HTTPMethod.GET, '/users/24/detail'), havingParameters({'userId': 24}));
+      });
+
+      test('should error when invalid params', () {
         final router = Spanner()
           ..addRoute(HTTPMethod.GET, '/users/<userId|(^\\w+)|number>/detail', null)
           ..addRoute(HTTPMethod.GET, '/<userId|(^\\w+)>', null);
@@ -120,7 +127,7 @@ void main() {
 
         expect(
           runSyncAndReturnException(() => router.lookup(HTTPMethod.GET, '/@388>)#(***)')),
-          isA<ArgumentError>().having((p0) => p0.message, 'with message', 'Invalid parameter value'),
+          isA<SpannerRouteValidatorError>().having((p0) => p0.message, 'with message', 'Invalid parameter value'),
         );
       });
 

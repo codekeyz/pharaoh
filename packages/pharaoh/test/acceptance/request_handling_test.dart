@@ -8,7 +8,8 @@ void main() {
       ..post('/users/<userId>', (req, res) => res.json(req.params))
       ..get('/home/chima', (req, res) => res.ok('Okay 🚀'))
       ..delete('/home/chima', (req, res) => res.ok('Item deleted'))
-      ..post('/home/strange', (req, res) => res.ok('Post something 🚀'));
+      ..post('/home/strange', (req, res) => res.ok('Post something 🚀'))
+      ..get('/chima/<userId|number>', (req, res) => res.ok('Foo Bar'));
 
     await (await request(app)).get('/home/chima').expectStatus(200).expectBody('Okay 🚀').test();
 
@@ -28,6 +29,11 @@ void main() {
         .expectBody({"error": "Route not found: /something-new-is-here"}).test();
 
     await (await request(app)).delete('/home/chima').expectStatus(200).expectBody('Item deleted').test();
+
+    await (await request(app))
+        .get('/chima/asbc')
+        .expectStatus(422)
+        .expectBody({'error': 'Invalid argument: Invalid parameter value: \"asbc\"'}).test();
   });
 
   group('execute middleware and request', () {

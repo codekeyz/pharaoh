@@ -1,6 +1,6 @@
 name: spanner
 description: Generic HTTP Router implementation, internally uses a Radix Tree (aka compact Prefix Tree), supports route params, wildcards.
-version: 1.0.1
+version: 1.0.1+1
 repository: https://github.com/Pharaoh-Framework/pharaoh/tree/main/packages/spanner
 
 environment:
