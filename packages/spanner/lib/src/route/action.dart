@@ -16,10 +16,6 @@ mixin HandlerStore {
   IndexedValue? getHandler(HTTPMethod method) => requestHandlers[method];
 
   void addRoute<T>(HTTPMethod method, IndexedValue<T> handler) {
-    if (method == HTTPMethod.ALL) {
-      throw ArgumentError('HTTPMethod.all not supported for `addRoute`');
-    }
-
     if (requestHandlers.containsKey(method)) {
       var name = (this as dynamic).name;
       throw ArgumentError.value('${method.name}: $name', null, 'Route entry already exists');
