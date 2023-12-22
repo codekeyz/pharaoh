@@ -143,6 +143,11 @@ class WildcardNode extends StaticNode {
   bool get terminal => true;
 
   @override
+  IndexedValue? getHandler(HTTPMethod method) {
+    return super.getHandler(method) ?? super.getHandler(HTTPMethod.ALL);
+  }
+
+  @override
   Node addChildAndReturn(key, node) {
     throw ArgumentError('Wildcard cannot have a child');
   }
