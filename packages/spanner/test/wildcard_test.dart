@@ -9,7 +9,7 @@ void main() {
       var result = router.lookup(HTTPMethod.GET, '/hello-world');
       expect(result!.values, ['mee-moo']);
 
-      result = router.lookup(HTTPMethod.GET, '/hello');
+      result = router.lookup(HTTPMethod.DELETE, '/hello');
       expect(result?.values, ['mee-moo']);
 
       result = router.lookup(HTTPMethod.POST, '/hello');
