@@ -1,9 +1,11 @@
 import 'dart:io';
 
-import 'package:spanner/spanner.dart';
+import 'package:http_parser/http_parser.dart';
+import 'package:pharaoh/pharaoh.dart';
 
-import '../middleware/session_mw.dart';
-import '../utils/exceptions.dart';
+import 'message.dart';
+
+part 'request_impl.dart';
 
 class RequestContext {
   static const String phar = 'phar';
@@ -28,7 +30,13 @@ HTTPMethod getHttpMethod(HttpRequest req) => switch (req.method) {
       _ => throw PharaohException('Method ${req.method} not yet supported')
     };
 
-abstract interface class Request<T> {
+abstract class Request<T> extends Message<T> {
+  static RequestImpl from(HttpRequest request) => RequestImpl._(request);
+
+  late final HttpRequest actual;
+
+  Request(super.body, {super.headers = const {}});
+
   Uri get uri;
 
   String get path;
@@ -43,7 +51,7 @@ abstract interface class Request<T> {
 
   String get protocolVersion;
 
-  dynamic get auth;
+  dynamic auth;
 
   HTTPMethod get method;
 
@@ -61,5 +69,11 @@ abstract interface class Request<T> {
 
   T? get body;
 
+  DateTime? get ifModifiedSince;
+
   Object? operator [](String name);
+
+  void operator []=(String name, dynamic value);
+
+  void setParams(String key, String value);
 }

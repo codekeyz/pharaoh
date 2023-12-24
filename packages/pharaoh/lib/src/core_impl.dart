@@ -76,39 +76,37 @@ class $PharaohImpl extends RouterContract with RouteDefinitionMixin implements P
     httpReq.response.headers.chunkedTransferEncoding = false;
     httpReq.response.headers.clear();
 
-    final request = $Request.from(httpReq);
+    final request = Request.from(httpReq);
+    final response = Response.create();
 
     late Object requestError;
     try {
-      final result = await resolveAndExecuteHandlers(request);
+      final result = await resolveAndExecuteHandlers(request, response);
       return forward(httpReq, result.res);
     } catch (error) {
       requestError = error;
     }
 
     if (_onErrorCb == null) {
-      var response = Response.new().internalServerError('$requestError');
+      var errorResponse = response.internalServerError(requestError.toString());
       if (requestError is SpannerRouteValidatorError) {
-        response = response.status(HttpStatus.unprocessableEntity);
+        errorResponse = response.status(HttpStatus.unprocessableEntity);
       }
-      return forward(httpReq, (response as $Response));
+      return forward(httpReq, errorResponse);
     }
 
     final result = await _onErrorCb!.call(requestError, request);
-    return forward(httpReq, (result as $Response));
+    return forward(httpReq, result);
   }
 
-  Future<ReqRes> resolveAndExecuteHandlers($Request req) async {
-    final res = $Response();
+  Future<ReqRes> resolveAndExecuteHandlers(Request req, Response res) async {
     ReqRes reqRes = (req: req, res: res);
 
     Response routeNotFound() => res.notFound("Route not found: ${req.path}");
 
     final routeResult = spanner.lookup(req.method, req.path);
     final resolvedHandlers = routeResult?.values.cast<Middleware>() ?? [];
-    if (routeResult == null || resolvedHandlers.isEmpty) {
-      return reqRes.merge(routeNotFound());
-    }
+    if (routeResult == null || resolvedHandlers.isEmpty) return reqRes.merge(routeNotFound());
 
     /// update request params with params resolved from spanner
     for (final param in routeResult.params.entries) {
@@ -130,7 +128,7 @@ class $PharaohImpl extends RouterContract with RouteDefinitionMixin implements P
     return reqRes;
   }
 
-  Future<void> forward(HttpRequest request, $Response res_) async {
+  Future<void> forward(HttpRequest request, Response res_) async {
     var coding = res_.headers['transfer-encoding'];
 
     final statusCode = res_.statusCode;

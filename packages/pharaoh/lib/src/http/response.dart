@@ -1,26 +1,27 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'cookie.dart';
-import 'request.dart';
-import 'response_impl.dart';
+import 'package:pharaoh/pharaoh.dart';
+import 'package:http_parser/http_parser.dart';
+
 import '../shelf_interop/shelf.dart' as shelf;
+
+import 'message.dart';
+
+part 'response_impl.dart';
 
 final applicationOctetStreamType = ContentType('application', 'octet-stream');
 
-abstract interface class Response {
+abstract class Response extends Message<shelf.Body?> {
+  Response(super.body, {super.headers = const {}});
+
   /// Constructs an HTTP Response
-  factory Response({
-    int? statusCode,
-    Object? body,
-    Encoding? encoding,
-    Map<String, dynamic> headers = const {},
-  }) =>
-      $Response(
-        body: shelf.Body(body, encoding),
-        headers: headers,
-        statusCode: statusCode,
+  static Response create({int? statusCode, Object? body, Encoding? encoding, Map<String, dynamic>? headers}) =>
+      ResponseImpl._(
+        body: body == null ? null : Body(body),
         ended: false,
+        statusCode: statusCode,
+        headers: headers ?? {},
       );
 
   Response header(String headerKey, String headerValue);
@@ -61,4 +62,10 @@ abstract interface class Response {
   Response render(String name, [Map<String, dynamic> data = const {}]);
 
   Response end();
+
+  bool get ended;
+
+  int get statusCode;
+
+  ViewRenderData? get viewToRender;
 }

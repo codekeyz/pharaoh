@@ -10,7 +10,7 @@ const _tokenNotFound = 'No authorization token was found';
 Middleware jwtAuth({required FutureOr<JWTKey> Function() secret}) {
   return (req, res, next) async {
     void reject(String message) {
-      next(res.unauthorized(data: res.error(message)));
+      next(res.unauthorized(data: message));
     }
 
     final _ = req.headers[HttpHeaders.authorizationHeader];

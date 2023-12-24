@@ -1,28 +1,16 @@
-import 'dart:io';
+part of 'request.dart';
 
-import 'package:http_parser/http_parser.dart';
-import 'package:spanner/spanner.dart';
-
-import '../middleware/session_mw.dart';
-import 'message.dart';
-import 'request.dart';
-
-class $Request extends Message<dynamic> implements Request<dynamic> {
-  final HttpRequest _req;
+class RequestImpl extends Request<dynamic> {
   final Map<String, dynamic> _params = {};
   final Map<String, dynamic> _context = {};
 
-  $Request._(this._req) : super(_req, headers: {}) {
-    req.headers.forEach((name, values) => headers[name] = values);
+  RequestImpl._(HttpRequest _req) : super(_req, headers: {}) {
+    actual = _req;
+    actual.headers.forEach((name, values) => headers[name] = values);
     headers.remove(HttpHeaders.transferEncodingHeader);
   }
 
-  factory $Request.from(HttpRequest request) => $Request._(request);
-
-  HttpRequest get req => _req;
-
-  void putInContext(String key, Object object) => _context[key] = object;
-
+  @override
   void setParams(String key, String value) => _params[key] = value;
 
   /// If this is non-`null` and the requested resource hasn't been modified
@@ -34,6 +22,7 @@ class $Request extends Message<dynamic> implements Request<dynamic> {
   ///
   /// Throws [FormatException], if incoming HTTP request has an invalid
   /// If-Modified-Since header.
+  @override
   DateTime? get ifModifiedSince {
     if (_ifModifiedSinceCache != null) return _ifModifiedSinceCache;
     if (!headers.containsKey('if-modified-since')) return null;
@@ -44,31 +33,31 @@ class $Request extends Message<dynamic> implements Request<dynamic> {
   DateTime? _ifModifiedSinceCache;
 
   @override
-  Uri get uri => _req.uri;
+  Uri get uri => actual.uri;
 
   @override
-  String get path => _req.uri.path;
+  String get path => actual.uri.path;
 
   @override
-  String get ipAddr => _req.connectionInfo?.remoteAddress.address ?? 'Unknown';
+  String get ipAddr => actual.connectionInfo?.remoteAddress.address ?? 'Unknown';
 
   @override
-  HTTPMethod get method => getHttpMethod(_req);
+  HTTPMethod get method => getHttpMethod(actual);
 
   @override
   Map<String, dynamic> get params => _params;
 
   @override
-  Map<String, dynamic> get query => _req.uri.queryParameters;
+  Map<String, dynamic> get query => actual.uri.queryParameters;
 
   @override
-  String? get hostname => _req.headers.host;
+  String? get hostname => actual.headers.host;
 
   @override
-  String get protocol => _req.requestedUri.scheme;
+  String get protocol => actual.requestedUri.scheme;
 
   @override
-  String get protocolVersion => _req.protocolVersion;
+  String get protocolVersion => actual.protocolVersion;
 
   @override
   List<Cookie> get cookies => _context[RequestContext.cookies] ?? [];
@@ -85,6 +74,7 @@ class $Request extends Message<dynamic> implements Request<dynamic> {
   @override
   Object? operator [](String name) => _context[name];
 
+  @override
   void operator []=(String name, dynamic value) {
     _context[name] = value;
   }

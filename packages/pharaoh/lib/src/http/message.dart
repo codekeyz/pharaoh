@@ -12,10 +12,7 @@ abstract class Message<T> {
 
   MediaType? _contentTypeCache;
 
-  Message(
-    this.body, {
-    required this.headers,
-  });
+  Message(this.body, {required this.headers});
 
   /// This is parsed from the Content-Type header in [headers]. It contains only
   /// the MIME type, without any Content-Type parameters.

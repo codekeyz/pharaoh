@@ -1,8 +1,8 @@
-import '../http/request_impl.dart';
-import '../http/response_impl.dart';
+import '../http/request.dart';
+import '../http/response.dart';
 import '../router/router_handler.dart';
 
-void _logRequest($Request req, $Response res, NextFunction next) async {
+void _logRequest(Request req, Response res, NextFunction next) async {
   final logLines = """
 -------------------------------------------------------
 Path:             ${req.path}

@@ -10,7 +10,7 @@ Middleware cookieParser({CookieOpts opts = const CookieOpts()}) {
   opts.validate();
 
   return (req, res, next) {
-    final rawcookies = req.req.cookies;
+    final rawcookies = req.actual.cookies;
     if (rawcookies.isEmpty) return next();
 
     final unSignedCookies = rawcookies.where((e) => !e.signed).toList();
