@@ -76,7 +76,7 @@ class $PharaohImpl extends RouterContract with RouteDefinitionMixin implements P
     httpReq.response.headers.chunkedTransferEncoding = false;
     httpReq.response.headers.clear();
 
-    final request = RequestImpl.from(httpReq);
+    final request = Request.from(httpReq);
 
     late Object requestError;
     try {

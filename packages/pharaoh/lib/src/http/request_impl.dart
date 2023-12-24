@@ -10,8 +10,6 @@ class RequestImpl extends Request<dynamic> {
     headers.remove(HttpHeaders.transferEncodingHeader);
   }
 
-  factory RequestImpl.from(HttpRequest request) => RequestImpl._(request);
-
   @override
   void setParams(String key, String value) => _params[key] = value;
 

@@ -31,6 +31,8 @@ HTTPMethod getHttpMethod(HttpRequest req) => switch (req.method) {
     };
 
 abstract class Request<T> extends Message<T> {
+  static RequestImpl from(HttpRequest request) => RequestImpl._(request);
+
   late final HttpRequest actual;
 
   Request(super.body, {super.headers = const {}});
