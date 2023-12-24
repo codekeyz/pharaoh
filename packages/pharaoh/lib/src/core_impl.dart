@@ -77,29 +77,29 @@ class $PharaohImpl extends RouterContract with RouteDefinitionMixin implements P
     httpReq.response.headers.clear();
 
     final request = Request.from(httpReq);
+    final response = Response.create();
 
     late Object requestError;
     try {
-      final result = await resolveAndExecuteHandlers(request);
+      final result = await resolveAndExecuteHandlers(request, response);
       return forward(httpReq, result.res);
     } catch (error) {
       requestError = error;
     }
 
     if (_onErrorCb == null) {
-      var response = Response.create().internalServerError(requestError.toString());
+      var errorResponse = response.internalServerError(requestError.toString());
       if (requestError is SpannerRouteValidatorError) {
-        response = response.status(HttpStatus.unprocessableEntity);
+        errorResponse = response.status(HttpStatus.unprocessableEntity);
       }
-      return forward(httpReq, response);
+      return forward(httpReq, errorResponse);
     }
 
     final result = await _onErrorCb!.call(requestError, request);
     return forward(httpReq, result);
   }
 
-  Future<ReqRes> resolveAndExecuteHandlers(Request req) async {
-    final res = Response.create();
+  Future<ReqRes> resolveAndExecuteHandlers(Request req, Response res) async {
     ReqRes reqRes = (req: req, res: res);
 
     Response routeNotFound() => res.notFound("Route not found: ${req.path}");
