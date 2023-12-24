@@ -87,7 +87,7 @@ class $PharaohImpl extends RouterContract with RouteDefinitionMixin implements P
     }
 
     if (_onErrorCb == null) {
-      var response = Response.create(body: '$requestError', statusCode: 500);
+      var response = Response.create().internalServerError(requestError.toString());
       if (requestError is SpannerRouteValidatorError) {
         response = response.status(HttpStatus.unprocessableEntity);
       }
@@ -106,9 +106,7 @@ class $PharaohImpl extends RouterContract with RouteDefinitionMixin implements P
 
     final routeResult = spanner.lookup(req.method, req.path);
     final resolvedHandlers = routeResult?.values.cast<Middleware>() ?? [];
-    if (routeResult == null || resolvedHandlers.isEmpty) {
-      return reqRes.merge(routeNotFound());
-    }
+    if (routeResult == null || resolvedHandlers.isEmpty) return reqRes.merge(routeNotFound());
 
     /// update request params with params resolved from spanner
     for (final param in routeResult.params.entries) {

@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import '../http/request_impl.dart';
-import '../http/response_impl.dart';
+import '../http/request.dart';
+import '../http/response.dart';
 import '../router/router_handler.dart';
 import '../utils/exceptions.dart';
 import 'shelf.dart' as shelf;
@@ -39,8 +39,8 @@ Middleware useShelfMiddleware(dynamic middleware) {
   throw PharaohException.value('Unknown Shelf Middleware Type', middleware);
 }
 
-shelf.Request _toShelfRequest($Request req) {
-  final httpReq = req.req;
+shelf.Request _toShelfRequest(Request req) {
+  final httpReq = req.actual;
 
   var headers = <String, List<String>>{};
   httpReq.headers.forEach((k, v) {
@@ -57,13 +57,14 @@ shelf.Request _toShelfRequest($Request req) {
   );
 }
 
-$Response _fromShelfResponse(ReqRes reqRes, shelf.Response response) {
+Response _fromShelfResponse(ReqRes reqRes, shelf.Response response) {
   Map<String, dynamic> headers = reqRes.res.headers;
   response.headers.forEach((key, value) => headers[key] = value);
-  return $Response(
-    body: shelf.Body(response.read(), response.encoding),
+
+  return Response.create(
+    body: response.read(),
+    encoding: response.encoding,
     headers: headers,
     statusCode: response.statusCode,
-    ended: false,
   );
 }

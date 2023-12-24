@@ -1,29 +1,27 @@
 import 'dart:async';
 
 import '../http/request.dart';
-import '../http/request_impl.dart';
 import '../http/response.dart';
-import '../http/response_impl.dart';
 import '../utils/exceptions.dart';
 
-typedef ReqRes = ({$Request req, $Response res});
+typedef ReqRes = ({Request req, Response res});
 
 typedef NextFunction<Next> = dynamic Function([dynamic result, Next? chain]);
 
-typedef Middleware = Function($Request req, $Response res, NextFunction next);
+typedef Middleware = Function(Request req, Response res, NextFunction next);
 
 typedef RequestHandler = FutureOr<dynamic> Function(Request req, Response res);
 
 typedef ReqResHook = FutureOr<ReqRes> Function(ReqRes reqRes);
 
 extension ReqResExtension on ReqRes {
-  ReqRes merge(dynamic val) => switch (val.runtimeType) {
-        $Request => (req: val, res: this.res),
-        $Response => (req: this.req, res: val),
-        ReqRes => val,
-        Null => this,
-        _ => throw PharaohException.value('Invalid Type used on merge', val)
-      };
+  ReqRes merge(dynamic val) {
+    if (val == null) return this;
+    if (val is Request) return (req: val, res: this.res);
+    if (val is Response) return (req: this.req, res: val);
+    if (val is ReqRes) return val;
+    throw PharaohException.value('Invalid Type used on merge', val);
+  }
 }
 
 extension HandlerChainExtension on Middleware {

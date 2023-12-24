@@ -21,7 +21,7 @@ void main() {
           .get('/users/me')
           .expectStatus(401)
           .expectContentType('application/json; charset=utf-8')
-          .expectBodyCustom((body) => jsonDecode(body)['error'], 'No authorization token was found')
+          .expectBody('"No authorization token was found"')
           .test(),
     );
 
@@ -31,25 +31,19 @@ void main() {
           .token('some-random-token')
           .get('/users/me')
           .expectStatus(401)
-          .expectBodyCustom((body) => jsonDecode(body)['error'], 'Format is Authorization: Bearer [token]')
+          .expectBody('"Format is Authorization: Bearer [token]"')
           .test(),
     );
 
     test(
       'should reject on expired token',
       () async {
-        final jwt = JWT(
-          {
-            'id': 34345,
-            'user': {"name": 'Foo', 'lastname': 'Bar'}
-          },
-          issuer: 'https://github.com/jonasroussel/dart_jsonwebtoken',
-        );
-        final token = jwt.sign(
-          secretKey,
-          algorithm: JWTAlgorithm.HS256,
-          expiresIn: Duration(seconds: 1),
-        );
+        final jwt = JWT({
+          'id': 34345,
+          'user': {"name": 'Foo', 'lastname': 'Bar'}
+        }, issuer: 'https://github.com/jonasroussel/dart_jsonwebtoken');
+
+        final token = jwt.sign(secretKey, algorithm: JWTAlgorithm.HS256, expiresIn: Duration(seconds: 1));
 
         await Future.delayed(const Duration(seconds: 1));
 
@@ -57,7 +51,7 @@ void main() {
             .token(token)
             .get('/users/me')
             .expectStatus(401)
-            .expectBodyCustom((body) => jsonDecode(body)['error'], 'jwt expired')
+            .expectBody('"jwt expired"')
             .test();
       },
     );
@@ -65,16 +59,11 @@ void main() {
     test(
       'should accept on valid authorization header',
       () async {
-        final jwt = JWT(
-          {
-            'id': 123,
-            'server': {
-              'id': '3e4fc296',
-              'loc': 'euw-2',
-            }
-          },
-          issuer: 'https://github.com/jonasroussel/dart_jsonwebtoken',
-        );
+        final jwt = JWT({
+          'id': 123,
+          'server': {'id': '3e4fc296', 'loc': 'euw-2'}
+        }, issuer: 'https://github.com/jonasroussel/dart_jsonwebtoken');
+
         final token = jwt.sign(secretKey);
 
         await (await request<Pharaoh>(app))

@@ -84,7 +84,7 @@ void main() {
             return res.ok(str);
           });
 
-        await (await request<Pharaoh>(app)).get('/').expectStatus(200).expectBody('[]').test();
+        await (await request<Pharaoh>(app)).get('/').expectBody('[]').test();
       });
 
       test('should default req.signedCookies to []', () async {

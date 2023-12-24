@@ -24,23 +24,7 @@ void main() {
       await (await request<Pharaoh>(app)).get('/').expectStatus(200).expectBody('Hello World').test();
     });
 
-    test('should deliver both :res and res', () async {
-      final app = Pharaoh()
-        ..use((req, res, next) {
-          req[RequestContext.auth] = 'World';
-          return next((req: req, res: res.cookie('name', 'tobi')));
-        })
-        ..get('/', (req, res) => res.ok('Hello ${req.auth}'));
-
-      await (await request<Pharaoh>(app))
-          .get('/')
-          .expectHeader('set-cookie', 'name=tobi; Path=/')
-          .expectStatus(200)
-          .expectBody('Hello World')
-          .test();
-    });
-
-    test('should deliver both :res and res', () async {
+    test('should deliver both :req and :res', () async {
       final app = Pharaoh()
         ..use((req, res, next) {
           req[RequestContext.auth] = 'World';

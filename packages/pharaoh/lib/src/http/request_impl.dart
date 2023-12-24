@@ -24,6 +24,7 @@ class RequestImpl extends Request<dynamic> {
   ///
   /// Throws [FormatException], if incoming HTTP request has an invalid
   /// If-Modified-Since header.
+  @override
   DateTime? get ifModifiedSince {
     if (_ifModifiedSinceCache != null) return _ifModifiedSinceCache;
     if (!headers.containsKey('if-modified-since')) return null;

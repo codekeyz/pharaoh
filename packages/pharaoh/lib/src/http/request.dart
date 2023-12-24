@@ -49,7 +49,7 @@ abstract class Request<T> extends Message<T> {
 
   String get protocolVersion;
 
-  dynamic get auth;
+  dynamic auth;
 
   HTTPMethod get method;
 
@@ -66,6 +66,8 @@ abstract class Request<T> extends Message<T> {
   Session? get session;
 
   T? get body;
+
+  DateTime? get ifModifiedSince;
 
   Object? operator [](String name);
 
