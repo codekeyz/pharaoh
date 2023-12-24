@@ -1,18 +1,7 @@
-import 'dart:convert';
-import 'dart:io';
+part of 'response.dart';
 
-import 'package:http_parser/http_parser.dart';
-
-import '../shelf_interop/shelf.dart' as shelf;
-import '../utils/exceptions.dart';
-import '../view/view.dart';
-import 'cookie.dart';
-import 'message.dart';
-import 'request.dart';
-import 'response.dart';
-
-class $Response extends Message<shelf.Body?> implements Response {
-  final bool ended;
+class ResponseImpl extends Response {
+  bool ended = false;
 
   final int statusCode;
 
@@ -50,9 +39,7 @@ class $Response extends Message<shelf.Body?> implements Response {
   /// Constructs an HTTP $Response with the given [statusCode].
   ///
   /// [statusCode] must be greater than or equal to 100.
-  ///
-  /// {@macro shelf_$Response_body_and_encoding_param}
-  $Response({
+  ResponseImpl._({
     shelf.Body? body,
     int? statusCode,
     this.ended = false,
@@ -65,7 +52,7 @@ class $Response extends Message<shelf.Body?> implements Response {
   }
 
   @override
-  $Response header(String headerKey, String headerValue) => $Response(
+  ResponseImpl header(String headerKey, String headerValue) => ResponseImpl._(
         headers: headers..[headerKey] = headerValue,
         body: body,
         ended: ended,
@@ -73,7 +60,7 @@ class $Response extends Message<shelf.Body?> implements Response {
       );
 
   @override
-  $Response type(ContentType type) => $Response(
+  ResponseImpl type(ContentType type) => ResponseImpl._(
         headers: headers..[HttpHeaders.contentTypeHeader] = type.toString(),
         body: body,
         ended: ended,
@@ -81,7 +68,7 @@ class $Response extends Message<shelf.Body?> implements Response {
       );
 
   @override
-  $Response status(int code) => $Response(
+  ResponseImpl status(int code) => ResponseImpl._(
         statusCode: code,
         body: body,
         ended: ended,
@@ -89,19 +76,19 @@ class $Response extends Message<shelf.Body?> implements Response {
       );
 
   @override
-  $Response redirect(String url, [int statusCode = HttpStatus.found]) => this.end()
+  ResponseImpl redirect(String url, [int statusCode = HttpStatus.found]) => this.end()
     ..headers[HttpHeaders.locationHeader] = url
     ..status(statusCode);
 
   @override
-  $Response movedPermanently(String url) => redirect(url, HttpStatus.movedPermanently);
+  ResponseImpl movedPermanently(String url) => redirect(url, HttpStatus.movedPermanently);
 
   @override
-  $Response notModified({Map<String, dynamic>? headers}) {
+  ResponseImpl notModified({Map<String, dynamic>? headers}) {
     final existingHeaders = this.headers;
     if (headers != null) headers.forEach((key, val) => existingHeaders[key] = val);
 
-    return $Response(
+    return ResponseImpl._(
       ended: true,
       statusCode: HttpStatus.notModified,
       headers: existingHeaders
@@ -111,7 +98,7 @@ class $Response extends Message<shelf.Body?> implements Response {
   }
 
   @override
-  $Response json(Object? data, {int? statusCode}) {
+  ResponseImpl json(Object? data, {int? statusCode}) {
     statusCode ??= this.statusCode;
     if (mediaType == null) {
       headers[HttpHeaders.contentTypeHeader] = ContentType.json.toString();
@@ -133,27 +120,27 @@ class $Response extends Message<shelf.Body?> implements Response {
   }
 
   @override
-  $Response notFound([String? message]) => json(error(message ?? 'Not found'), statusCode: HttpStatus.notFound);
+  ResponseImpl notFound([String? message]) => json(error(message ?? 'Not found'), statusCode: HttpStatus.notFound);
 
   @override
-  $Response unauthorized({Object? data}) => json(data ?? error('Unauthorized'), statusCode: HttpStatus.unauthorized);
+  ResponseImpl unauthorized({Object? data}) => json(data ?? error('Unauthorized'), statusCode: HttpStatus.unauthorized);
 
   @override
-  $Response internalServerError([String? message]) =>
+  ResponseImpl internalServerError([String? message]) =>
       json(error(message ?? 'Internal Server Error'), statusCode: HttpStatus.internalServerError);
 
   @override
-  $Response ok([String? data]) => this.end()
+  ResponseImpl ok([String? data]) => this.end()
     ..headers[HttpHeaders.contentTypeHeader] = ContentType.text.toString()
     ..body = shelf.Body(data, encoding);
 
   @override
-  $Response send(Object data) => this.end()
+  ResponseImpl send(Object data) => this.end()
     ..headers[HttpHeaders.contentTypeHeader] = _getContentType(data, valueWhenNull: ContentType.html).toString()
     ..body = shelf.Body(data);
 
   @override
-  $Response end() => $Response(
+  ResponseImpl end() => ResponseImpl._(
         body: body,
         ended: true,
         headers: headers,
@@ -180,7 +167,7 @@ class $Response extends Message<shelf.Body?> implements Response {
   bool _isBuffer(Object object) => object is! String;
 
   @override
-  $Response format(Request request, Map<String, Function($Response res)> options) {
+  ResponseImpl format(Request request, Map<String, Function(ResponseImpl res)> options) {
     var reqAcceptType = request.headers[HttpHeaders.acceptHeader];
     if (reqAcceptType is Iterable) reqAcceptType = reqAcceptType.join();
     final handler = options[reqAcceptType] ?? options['_'];
@@ -195,7 +182,7 @@ class $Response extends Message<shelf.Body?> implements Response {
   Map<String, dynamic> error(String message) => {'error': message};
 
   @override
-  $Response cookie(
+  ResponseImpl cookie(
     String name,
     Object? value, [
     CookieOpts opts = const CookieOpts(),
@@ -205,7 +192,7 @@ class $Response extends Message<shelf.Body?> implements Response {
         ..headers[HttpHeaders.setCookieHeader] = _cookies;
 
   @override
-  $Response withCookie(Cookie cookie) => this
+  ResponseImpl withCookie(Cookie cookie) => this
     .._cookies.add(cookie)
     ..headers[HttpHeaders.setCookieHeader] = _cookies;
 

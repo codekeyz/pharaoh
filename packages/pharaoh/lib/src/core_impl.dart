@@ -76,7 +76,7 @@ class $PharaohImpl extends RouterContract with RouteDefinitionMixin implements P
     httpReq.response.headers.chunkedTransferEncoding = false;
     httpReq.response.headers.clear();
 
-    final request = $Request.from(httpReq);
+    final request = RequestImpl.from(httpReq);
 
     late Object requestError;
     try {
@@ -87,19 +87,19 @@ class $PharaohImpl extends RouterContract with RouteDefinitionMixin implements P
     }
 
     if (_onErrorCb == null) {
-      var response = Response.new().internalServerError('$requestError');
+      var response = Response.create(body: '$requestError', statusCode: 500);
       if (requestError is SpannerRouteValidatorError) {
         response = response.status(HttpStatus.unprocessableEntity);
       }
-      return forward(httpReq, (response as $Response));
+      return forward(httpReq, response);
     }
 
     final result = await _onErrorCb!.call(requestError, request);
-    return forward(httpReq, (result as $Response));
+    return forward(httpReq, result);
   }
 
-  Future<ReqRes> resolveAndExecuteHandlers($Request req) async {
-    final res = $Response();
+  Future<ReqRes> resolveAndExecuteHandlers(Request req) async {
+    final res = Response.create();
     ReqRes reqRes = (req: req, res: res);
 
     Response routeNotFound() => res.notFound("Route not found: ${req.path}");
@@ -130,7 +130,7 @@ class $PharaohImpl extends RouterContract with RouteDefinitionMixin implements P
     return reqRes;
   }
 
-  Future<void> forward(HttpRequest request, $Response res_) async {
+  Future<void> forward(HttpRequest request, Response res_) async {
     var coding = res_.headers['transfer-encoding'];
 
     final statusCode = res_.statusCode;
