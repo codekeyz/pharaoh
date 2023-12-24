@@ -14,7 +14,7 @@ void main() {
 
     test('should use onError callback if provided', () async {
       final app = Pharaoh()
-        ..onError((error, req) => Response.create(statusCode: 500).ok('An error occurred just now'))
+        ..onError((error, req) => Response.create(statusCode: 500, body: 'An error occurred just now'))
         ..get('/', (req, res) => throw ArgumentError('Some weird error'));
 
       await (await request(app)).get('/').expectStatus(500).expectBody('An error occurred just now').test();
