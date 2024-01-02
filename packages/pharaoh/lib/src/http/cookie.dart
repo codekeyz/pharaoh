@@ -75,21 +75,21 @@ extension CookieExtension on Cookie {
 
   String get decodedValue => Uri.decodeComponent(value);
 
+  bool get signed => decodedValue.startsWith('s:');
+
   String get actualStr {
     var value = decodedValue;
     if (signed) value = value.substring(2); // s:foo-bar-baz --> foo-bar-bar
     return value;
   }
 
+  bool get jsonEncoded => actualStr.startsWith('j:');
+
   dynamic get actualObj {
     if (!jsonEncoded) return actualStr;
     final value = actualStr.substring(2); // j:foo-bar-baz --> foo-bar-bar
     return jsonDecode(value);
   }
-
-  bool get signed => decodedValue.startsWith('s:');
-
-  bool get jsonEncoded => actualStr.startsWith('j:');
 }
 
 Cookie bakeCookie(String name, Object? value, CookieOpts opts) {
