@@ -36,6 +36,15 @@ void main() {
         expect(exception.message, contains('Parameter definition is invalid'));
         expect(exception.invalidValue, '<userId#@#.XDkd@#>>#>');
       });
+
+      test('duplicate routes', () {
+        router() => Spanner()
+          ..addRoute(HTTPMethod.GET, '/user', null)
+          ..addRoute(HTTPMethod.GET, '/user', null);
+
+        final exception = runSyncAndReturnException<ArgumentError>(router);
+        expect(exception.message, contains('Route entry already exists'));
+      });
     });
 
     test('with request.url contains dash', () {
