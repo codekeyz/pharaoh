@@ -41,7 +41,7 @@ void main() {
     group('genId option', () {
       test('should provide default generator', () async {
         final app = Pharaoh()
-          ..use(session(secret: 'foo bar fuz'))
+          ..use(sessionMdw(secret: 'foo bar fuz'))
           ..get('/', (req, res) => res.end());
 
         await (await request<Pharaoh>(app))
@@ -53,7 +53,7 @@ void main() {
 
       test('should allow custom function', () async {
         final app = Pharaoh()
-          ..use(session(secret: 'foo bar fuz', genId: (req) => 'mangoes'))
+          ..use(sessionMdw(secret: 'foo bar fuz', genId: (req) => 'mangoes'))
           ..get('/', (req, res) => res.end());
 
         await (await request<Pharaoh>(app))
@@ -68,7 +68,7 @@ void main() {
     group('name option', () {
       test('should default to pharaoh.sid', () async {
         final app = Pharaoh()
-          ..use(session(secret: 'foo bar fuz'))
+          ..use(sessionMdw(secret: 'foo bar fuz'))
           ..get('/', (req, res) => res.end());
 
         await (await request<Pharaoh>(app))
@@ -80,7 +80,7 @@ void main() {
 
       test('should set the cookie name', () async {
         final app = Pharaoh()
-          ..use(session(secret: 'foo bar fuz', name: 'session_id'))
+          ..use(sessionMdw(secret: 'foo bar fuz', name: 'session_id'))
           ..get('/', (req, res) => res.end());
 
         await (await request<Pharaoh>(app))
@@ -98,7 +98,7 @@ void main() {
           req[RequestContext.session] = session;
 
           next((req));
-        }.chain(session(secret: '')))
+        }.chain(sessionMdw(secret: '')))
         ..get('/', (req, res) => res.end());
 
       await (await request<Pharaoh>(app))
@@ -112,7 +112,7 @@ void main() {
     test(
       'should error without secret',
       () => expect(
-        () => Pharaoh().use(session()),
+        () => Pharaoh().use(sessionMdw()),
         throwsA(isA<PharaohException>().having(
           (e) => e.message,
           'message',
@@ -124,7 +124,7 @@ void main() {
     test('should use secret from cookie options if provided', () async {
       const opts = CookieOpts(secret: 'foo bar baz');
       final app = Pharaoh()
-        ..use(session(cookie: opts))
+        ..use(sessionMdw(cookie: opts))
         ..get('/', (req, res) => res.end());
 
       await (await request<Pharaoh>(app))
@@ -136,7 +136,7 @@ void main() {
 
     test('should create a new session', () async {
       final app = Pharaoh()
-        ..use(session(secret: 'foo bar baz'))
+        ..use(sessionMdw(secret: 'foo bar baz'))
         ..get('/', (req, res) => res.json(req.session));
 
       await (await request<Pharaoh>(app))
@@ -153,7 +153,7 @@ void main() {
 
       final app = Pharaoh()
         ..use(cookieParser(opts: opts))
-        ..use(session(cookie: opts, store: store))
+        ..use(sessionMdw(cookie: opts, store: store))
         ..get('/', (req, res) => res.end());
 
       await (await request<Pharaoh>(app))
@@ -172,7 +172,7 @@ void main() {
 
       final app = Pharaoh()
         ..use(cookieParser(opts: opts))
-        ..use(session(cookie: opts, store: store))
+        ..use(sessionMdw(cookie: opts, store: store))
         ..get('/', (req, res) {
           req.session?['message'] = 'Hello World';
           return res.ok('Message: ${req.session?['message']}');
@@ -198,7 +198,7 @@ void main() {
       test('should default to true', () async {
         final store = InMemoryStore();
         final app = Pharaoh()
-          ..use(session(secret: 'foo bar fuz', store: store))
+          ..use(sessionMdw(secret: 'foo bar fuz', store: store))
           ..get('/', (req, res) => res.end());
 
         await (await request<Pharaoh>(app))
@@ -213,7 +213,7 @@ void main() {
       test('should prevent save of uninitialized session', () async {
         final store = InMemoryStore();
         final app = Pharaoh()
-          ..use(session(secret: 'foo bar fuz', store: store, saveUninitialized: false))
+          ..use(sessionMdw(secret: 'foo bar fuz', store: store, saveUninitialized: false))
           ..get('/', (req, res) => res.end());
 
         await (await request<Pharaoh>(app))
@@ -228,7 +228,7 @@ void main() {
       test('should still save modified session', () async {
         final store = InMemoryStore();
         final app = Pharaoh()
-          ..use(session(secret: 'foo bar fuz', store: store, saveUninitialized: false))
+          ..use(sessionMdw(secret: 'foo bar fuz', store: store, saveUninitialized: false))
           ..get('/', (req, res) {
             req.session?['name'] = 'Chima';
             req.session?['world'] = 'World';
@@ -250,7 +250,7 @@ void main() {
           setFunc: (_, __) => throw Exception('Boom shakalaka'),
         );
         final app = Pharaoh()
-          ..use(session(secret: 'foo bar fuz', store: store, saveUninitialized: false))
+          ..use(sessionMdw(secret: 'foo bar fuz', store: store, saveUninitialized: false))
           ..get('/', (req, res) {
             req.session?['name'] = 'Chima';
             req.session?['world'] = 'World';
@@ -275,7 +275,7 @@ void main() {
 
           final app = Pharaoh()
             ..use(cookieParser(opts: opts))
-            ..use(session(cookie: opts, store: store, rolling: true, saveUninitialized: false))
+            ..use(sessionMdw(cookie: opts, store: store, rolling: true, saveUninitialized: false))
             ..get('/', (req, res) => res.end());
 
           await (await request<Pharaoh>(app))
@@ -297,7 +297,7 @@ void main() {
 
           final app = Pharaoh()
             ..use(cookieParser(opts: opts))
-            ..use(session(cookie: opts, store: store, rolling: true, saveUninitialized: true))
+            ..use(sessionMdw(cookie: opts, store: store, rolling: true, saveUninitialized: true))
             ..get('/', (req, res) => res.end());
 
           await (await request<Pharaoh>(app))
@@ -319,7 +319,7 @@ void main() {
 
           final app = Pharaoh()
             ..use(cookieParser(opts: opts))
-            ..use(session(cookie: opts, store: store, rolling: true, saveUninitialized: false))
+            ..use(sessionMdw(cookie: opts, store: store, rolling: true, saveUninitialized: false))
             ..get('/', (req, res) {
               req.session?['name'] = 'codekeyz';
               return res.end();

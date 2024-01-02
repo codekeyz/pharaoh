@@ -302,14 +302,14 @@ packages:
       path: "../spanner"
       relative: true
     source: path
-    version: "1.0.1+1"
+    version: "1.0.1+2"
   spookie:
     dependency: "direct dev"
     description:
       path: "../spookie"
       relative: true
     source: path
-    version: "1.0.2"
+    version: "1.0.2+1"
   sprintf:
     dependency: transitive
     description:
