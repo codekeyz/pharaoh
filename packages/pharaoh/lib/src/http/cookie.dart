@@ -77,11 +77,7 @@ extension CookieExtension on Cookie {
 
   bool get signed => decodedValue.startsWith('s:');
 
-  String get actualStr {
-    var value = decodedValue;
-    if (signed) value = value.substring(2); // s:foo-bar-baz --> foo-bar-bar
-    return value;
-  }
+  String get actualStr => signed ? decodedValue.substring(2) : decodedValue; // s:foo-bar-baz --> foo-bar-bar
 
   bool get jsonEncoded => actualStr.startsWith('j:');
 

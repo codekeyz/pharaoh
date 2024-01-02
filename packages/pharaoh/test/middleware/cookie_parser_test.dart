@@ -1,8 +1,6 @@
 import 'dart:io';
 
-import 'package:pharaoh/src/core.dart';
-import 'package:pharaoh/src/http/cookie.dart';
-import 'package:pharaoh/src/middleware/cookie_parser.dart';
+import 'package:pharaoh/pharaoh.dart';
 import 'package:spookie/spookie.dart';
 
 void main() {
@@ -96,6 +94,51 @@ void main() {
           });
 
         await (await request<Pharaoh>(app)).get('/').expectStatus(200).expectBody('[]').test();
+      });
+    });
+
+    group('when json-encoded value', () {
+      test('should parse when signed', () async {
+        final cookieOpts = CookieOpts(signed: true, secret: 'foo-bar-mee-moo');
+        final cookie = bakeCookie('user', {'foo': 'bar', 'mee': 'mee'}, cookieOpts);
+
+        expect(cookie.toString(),
+            'user=s%3Aj%3A%7B%22foo%22%3A%22bar%22%2C%22mee%22%3A%22mee%22%7D.sxYOqZyRsCeSGNGzAR5UG3Hv%2BW%2BiXl9TQPlbbdBLMF0; Path=/');
+
+        expect(cookie.signed, isTrue);
+
+        expect(cookie.jsonEncoded, isTrue);
+
+        final app = Pharaoh()
+          ..use(cookieParser(opts: cookieOpts))
+          ..get('/', (req, res) => res.json(req.signedCookies.first.actualObj));
+
+        await (await request(app))
+            .get('/', headers: {HttpHeaders.cookieHeader: cookie.toString()})
+            .expectStatus(200)
+            .expectJsonBody({'foo': 'bar', 'mee': 'mee'})
+            .test();
+      });
+
+      test('should parse when un-signed', () async {
+        final cookieOpts = CookieOpts(signed: false);
+        final cookie = bakeCookie('user', {'foo': 'bar', 'mee': 'mee'}, cookieOpts);
+
+        expect(cookie.toString(), 'user=j%3A%7B%22foo%22%3A%22bar%22%2C%22mee%22%3A%22mee%22%7D; Path=/');
+
+        expect(cookie.signed, isFalse);
+
+        expect(cookie.jsonEncoded, isTrue);
+
+        final app = Pharaoh()
+          ..use(cookieParser(opts: cookieOpts))
+          ..get('/', (req, res) => res.json(req.cookies.first.actualObj));
+
+        await (await request(app))
+            .get('/', headers: {HttpHeaders.cookieHeader: cookie.toString()})
+            .expectStatus(200)
+            .expectJsonBody({'foo': 'bar', 'mee': 'mee'})
+            .test();
       });
     });
   });
