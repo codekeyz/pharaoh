@@ -69,7 +69,7 @@ class Session {
   DateTime? get expiry => cookie?.expires;
 }
 
-abstract interface class SessionStore {
+abstract class SessionStore {
   FutureOr<List<Session>> get sessions;
 
   FutureOr<void> clear();
