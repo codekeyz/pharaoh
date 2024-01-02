@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:pharaoh/pharaoh.dart';
 import 'package:spookie/spookie.dart';
 
@@ -49,5 +51,13 @@ void main() {
         }
       });
     });
+  });
+
+  test('when redirect', () async {
+    final app = Pharaoh()
+      ..get('/hello', (req, res) => res.ok('Hello World'))
+      ..get('/users', (req, res) => res.redirect('/hello'));
+
+    await (await request<Pharaoh>(app)).get('/users').expectStatus(HttpStatus.ok).expectBody('Hello World').test();
   });
 }
