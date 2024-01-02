@@ -21,3 +21,4 @@ dependencies:
 
 dev_dependencies:
   spookie:
+  lints: ^3.0.0
