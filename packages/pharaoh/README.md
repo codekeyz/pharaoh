@@ -48,7 +48,7 @@ void main() async {
 
 ```
 
-See the [Pharaoh Examples](https://github.com/Pharaoh-Framework/pharaoh/tree/main/pharaoh_examples) directory for more practical use-cases.
+See the [Pharaoh Examples](https://github.com/codekeyz/pharaoh/tree/main/pharaoh_examples) directory for more practical use-cases.
 
 ## Philosophy
 
