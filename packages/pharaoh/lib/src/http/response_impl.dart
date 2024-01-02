@@ -76,9 +76,10 @@ class ResponseImpl extends Response {
       );
 
   @override
-  ResponseImpl redirect(String url, [int statusCode = HttpStatus.found]) => this.end()
-    ..headers[HttpHeaders.locationHeader] = url
-    ..status(statusCode);
+  ResponseImpl redirect(String url, [int statusCode = HttpStatus.found]) {
+    headers[HttpHeaders.locationHeader] = url;
+    return this.status(statusCode).end();
+  }
 
   @override
   ResponseImpl movedPermanently(String url) => redirect(url, HttpStatus.movedPermanently);
@@ -147,10 +148,7 @@ class ResponseImpl extends Response {
         statusCode: statusCode,
       );
 
-  ContentType _getContentType(
-    Object data, {
-    required ContentType valueWhenNull,
-  }) {
+  ContentType _getContentType(Object data, {required ContentType valueWhenNull}) {
     final isBuffer = _isBuffer(data);
     final mType = mediaType;
     if (mType == null) {
