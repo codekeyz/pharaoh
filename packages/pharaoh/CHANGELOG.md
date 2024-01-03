@@ -1,3 +1,10 @@
+# 0.0.6
+
+- bugfix: wildcard search in node by @codekeyz in https://github.com/codekeyz/pharaoh/pull/98
+- chore: make request response extensible by @codekeyz in https://github.com/codekeyz/pharaoh/pull/99
+- bugfix: fix json-encode in cookieParser by @codekeyz in https://github.com/codekeyz/pharaoh/pull/100
+- bugfix: fix response redirects by @codekeyz in https://github.com/codekeyz/pharaoh/pull/103
+
 # 0.0.5
 
 - Added new router implementation
