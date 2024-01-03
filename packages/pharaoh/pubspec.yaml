@@ -7,8 +7,8 @@ environment:
   sdk: ^3.0.0
 
 dependencies:
+  meta:
   spanner: ^1.0.1+2
-  meta: ^1.11.0
   mime: ^1.0.4
   collection: ^1.18.0
   http_parser: ^4.0.2
