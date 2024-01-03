@@ -1,9 +1,9 @@
 # 0.0.5
 
-* Added new router implementation
-* Added cookie-parser & session management
-* Added content negotiation -> `res.format`
-* Separated query parameters from route parameters  
+- Added new router implementation
+- Added cookie-parser & session management
+- Added content negotiation -> `res.format`
+- Separated query parameters from route parameters
 
 # 0.0.4
 
