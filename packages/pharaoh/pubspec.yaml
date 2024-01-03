@@ -1,6 +1,6 @@
 name: pharaoh
 description: Fast, unopinionated, minimalist web framework for Dart. Heavily inspired by ExpressJS
-version: 0.0.5+9
+version: 0.0.6
 repository: https://github.com/Pharaoh-Framework/pharaoh
 
 environment:
