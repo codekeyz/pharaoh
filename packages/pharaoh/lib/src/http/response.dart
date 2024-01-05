@@ -38,6 +38,8 @@ abstract class Response extends Message<shelf.Body?> {
 
   Response status(int code);
 
+  Response withBody(Object object);
+
   /// [data] should be json-encodable
   Response json(Object? data, {int? statusCode});
 
