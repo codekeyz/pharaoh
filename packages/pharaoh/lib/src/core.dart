@@ -22,7 +22,7 @@ import 'shelf_interop/shelf.dart' as shelf;
 
 part 'core_impl.dart';
 
-typedef OnErrorCallback = FutureOr<Response> Function(Object error, Request req);
+typedef OnErrorCallback = FutureOr<Response> Function(Object error, Request req, Response res);
 
 abstract class Pharaoh implements RouterContract {
   factory Pharaoh() => $PharaohImpl();

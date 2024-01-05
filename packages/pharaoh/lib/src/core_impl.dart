@@ -95,7 +95,7 @@ class $PharaohImpl extends RouterContract with RouteDefinitionMixin implements P
       return forward(httpReq, errorResponse);
     }
 
-    final result = await _onErrorCb!.call(requestError, request);
+    final result = await _onErrorCb!.call(requestError, request, response);
     return forward(httpReq, result);
   }
 

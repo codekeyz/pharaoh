@@ -76,6 +76,9 @@ class ResponseImpl extends Response {
       );
 
   @override
+  Response withBody(Object object) => this..body = shelf.Body(object);
+
+  @override
   ResponseImpl redirect(String url, [int statusCode = HttpStatus.found]) {
     headers[HttpHeaders.locationHeader] = url;
     return this.status(statusCode).end();
