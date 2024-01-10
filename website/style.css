@@ -1,0 +1,15 @@
+* {
+  box-sizing: border-box;
+  font-family: Inter;
+}
+
+.body {
+  max-width: 1000px;
+  margin: auto;
+}
+
+@media only screen and (max-width: 600px) {
+  body {
+    padding: 15px;
+  }
+}
