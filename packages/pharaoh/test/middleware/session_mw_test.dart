@@ -94,7 +94,8 @@ void main() {
     test('should do nothing if req.session exists', () async {
       final app = Pharaoh()
         ..use((req, res, next) {
-          final session = Session('id')..cookie = bakeCookie('phar', 'adf', CookieOpts());
+          final session = Session('id')
+            ..cookie = bakeCookie('phar', 'adf', CookieOpts());
           req[RequestContext.session] = session;
 
           next((req));
@@ -149,7 +150,8 @@ void main() {
 
     test('should pass session fetch error', () async {
       const opts = CookieOpts(secret: 'foo bar baz');
-      final store = _$TestStore(getFunc: (_) => throw Exception('Session store not available'));
+      final store = _$TestStore(
+          getFunc: (_) => throw Exception('Session store not available'));
 
       final app = Pharaoh()
         ..use(cookieParser(opts: opts))
@@ -162,7 +164,10 @@ void main() {
                 'pharaoh.sid=s%3A4badf56b-ab39-4d77-8992-934c995772da.vqiT1VnWppTRhR2pr4F4vb9Oxrbn67E0n0txjKD0qJ4; Path=/'
           })
           .expectStatus(500)
-          .expectBody({"error": "Exception: Session store not available"})
+          .expectJsonBody(containsPair(
+            'error',
+            "Exception: Session store not available",
+          ))
           .test();
     });
 
@@ -213,7 +218,8 @@ void main() {
       test('should prevent save of uninitialized session', () async {
         final store = InMemoryStore();
         final app = Pharaoh()
-          ..use(sessionMdw(secret: 'foo bar fuz', store: store, saveUninitialized: false))
+          ..use(sessionMdw(
+              secret: 'foo bar fuz', store: store, saveUninitialized: false))
           ..get('/', (req, res) => res.end());
 
         await (await request<Pharaoh>(app))
@@ -228,7 +234,8 @@ void main() {
       test('should still save modified session', () async {
         final store = InMemoryStore();
         final app = Pharaoh()
-          ..use(sessionMdw(secret: 'foo bar fuz', store: store, saveUninitialized: false))
+          ..use(sessionMdw(
+              secret: 'foo bar fuz', store: store, saveUninitialized: false))
           ..get('/', (req, res) {
             req.session?['name'] = 'Chima';
             req.session?['world'] = 'World';
@@ -250,7 +257,8 @@ void main() {
           setFunc: (_, __) => throw Exception('Boom shakalaka'),
         );
         final app = Pharaoh()
-          ..use(sessionMdw(secret: 'foo bar fuz', store: store, saveUninitialized: false))
+          ..use(sessionMdw(
+              secret: 'foo bar fuz', store: store, saveUninitialized: false))
           ..get('/', (req, res) {
             req.session?['name'] = 'Chima';
             req.session?['world'] = 'World';
@@ -261,7 +269,8 @@ void main() {
         await (await request<Pharaoh>(app))
             .get('/')
             .expectStatus(500)
-            .expectBody({"error": "Exception: Boom shakalaka"}).test();
+            .expectJsonBody(containsPair('error', "Exception: Boom shakalaka"))
+            .test();
       });
     });
 
@@ -275,7 +284,11 @@ void main() {
 
           final app = Pharaoh()
             ..use(cookieParser(opts: opts))
-            ..use(sessionMdw(cookie: opts, store: store, rolling: true, saveUninitialized: false))
+            ..use(sessionMdw(
+                cookie: opts,
+                store: store,
+                rolling: true,
+                saveUninitialized: false))
             ..get('/', (req, res) => res.end());
 
           await (await request<Pharaoh>(app))
@@ -297,7 +310,11 @@ void main() {
 
           final app = Pharaoh()
             ..use(cookieParser(opts: opts))
-            ..use(sessionMdw(cookie: opts, store: store, rolling: true, saveUninitialized: true))
+            ..use(sessionMdw(
+                cookie: opts,
+                store: store,
+                rolling: true,
+                saveUninitialized: true))
             ..get('/', (req, res) => res.end());
 
           await (await request<Pharaoh>(app))
@@ -319,7 +336,11 @@ void main() {
 
           final app = Pharaoh()
             ..use(cookieParser(opts: opts))
-            ..use(sessionMdw(cookie: opts, store: store, rolling: true, saveUninitialized: false))
+            ..use(sessionMdw(
+                cookie: opts,
+                store: store,
+                rolling: true,
+                saveUninitialized: false))
             ..get('/', (req, res) {
               req.session?['name'] = 'codekeyz';
               return res.end();

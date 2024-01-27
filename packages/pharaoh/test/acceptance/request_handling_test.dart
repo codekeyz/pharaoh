@@ -11,11 +11,22 @@ void main() {
       ..post('/home/strange', (req, res) => res.ok('Post something 🚀'))
       ..get('/chima/<userId|number>', (req, res) => res.ok('Foo Bar'));
 
-    await (await request(app)).get('/home/chima').expectStatus(200).expectBody('Okay 🚀').test();
+    await (await request(app))
+        .get('/home/chima')
+        .expectStatus(200)
+        .expectBody('Okay 🚀')
+        .test();
 
-    await (await request(app)).post('/home/strange', {}).expectStatus(200).expectBody('Post something 🚀').test();
+    await (await request(app))
+        .post('/home/strange', {})
+        .expectStatus(200)
+        .expectBody('Post something 🚀')
+        .test();
 
-    await (await request(app)).get('/users/204').expectStatus(200).expectBody({'userId': '204'}).test();
+    await (await request(app))
+        .get('/users/204')
+        .expectStatus(200)
+        .expectBody({'userId': '204'}).test();
 
     await (await request(app))
         .post('/users/204398938948374797', {})
@@ -26,31 +37,49 @@ void main() {
     await (await request(app))
         .get('/something-new-is-here')
         .expectStatus(404)
-        .expectBody({"error": "Route not found: /something-new-is-here"}).test();
+        .expectBody(
+            {"error": "Route not found: /something-new-is-here"}).test();
 
-    await (await request(app)).delete('/home/chima').expectStatus(200).expectBody('Item deleted').test();
+    await (await request(app))
+        .delete('/home/chima')
+        .expectStatus(200)
+        .expectBody('Item deleted')
+        .test();
 
     await (await request(app))
         .get('/chima/asbc')
         .expectStatus(422)
-        .expectBody({'error': 'Invalid argument: Invalid parameter value: \"asbc\"'}).test();
+        .expectJsonBody(containsPair(
+          'error',
+          'Invalid argument: Invalid parameter value: \"asbc\"',
+        ))
+        .test();
   });
 
   group('execute middleware and request', () {
     test('on base path /', () async {
       final app = Pharaoh()
         ..use((req, res, next) => next(req..setParams('foo', 'bar')))
-        ..get('/', (req, res) => res.json({...req.params, "name": 'Hello World'}));
+        ..get('/',
+            (req, res) => res.json({...req.params, "name": 'Hello World'}));
 
-      await (await request(app)).get('/').expectStatus(200).expectBody({'foo': 'bar', 'name': 'Hello World'}).test();
+      await (await request(app))
+          .get('/')
+          .expectStatus(200)
+          .expectBody({'foo': 'bar', 'name': 'Hello World'}).test();
     });
 
     test('of level 1', () async {
       final app = Pharaoh()
         ..use((req, res, next) => next(req..setParams('name', 'Chima')))
-        ..get('/foo/bar', (req, res) => res.ok('Name: ${req.params['name']} 🚀'));
+        ..get(
+            '/foo/bar', (req, res) => res.ok('Name: ${req.params['name']} 🚀'));
 
-      await (await request(app)).get('/foo/bar').expectStatus(200).expectBody('Name: Chima 🚀').test();
+      await (await request(app))
+          .get('/foo/bar')
+          .expectStatus(200)
+          .expectBody('Name: Chima 🚀')
+          .test();
     });
 
     test('of level 2', () async {
@@ -59,7 +88,10 @@ void main() {
         ..use((req, res, next) => next(req..setParams('age', '14')))
         ..get('/foo/bar', (req, res) => res.json(req.params));
 
-      await (await request(app)).get('/foo/bar').expectStatus(200).expectBody({'name': 'Chima', 'age': '14'}).test();
+      await (await request(app))
+          .get('/foo/bar')
+          .expectStatus(200)
+          .expectBody({'name': 'Chima', 'age': '14'}).test();
     });
 
     test('of level 3', () async {
@@ -94,7 +126,11 @@ void main() {
         ..use((req, res, next) => next(res.ok('Say hello')))
         ..get('/foo/bar', (req, res) => res.json(req.params));
 
-      await (await request(app)).get('/foo/bar').expectStatus(200).expectBody('Say hello').test();
+      await (await request(app))
+          .get('/foo/bar')
+          .expectStatus(200)
+          .expectBody('Say hello')
+          .test();
     });
 
     test('should execute route groups', () async {
@@ -110,11 +146,22 @@ void main() {
 
       app.group('/api/v1', router);
 
-      await (await request(app)).get('/users/chima').expectStatus(200).expectBody({'userId': 'chima'}).test();
+      await (await request(app))
+          .get('/users/chima')
+          .expectStatus(200)
+          .expectBody({'userId': 'chima'}).test();
 
-      await (await request(app)).get('/api/v1').expectStatus(200).expectBody('Group working').test();
+      await (await request(app))
+          .get('/api/v1')
+          .expectStatus(200)
+          .expectBody('Group working')
+          .test();
 
-      await (await request(app)).delete('/api/v1/say-hello').expectStatus(200).expectBody('Hello World').test();
+      await (await request(app))
+          .delete('/api/v1/say-hello')
+          .expectStatus(200)
+          .expectBody('Hello World')
+          .test();
     });
   });
 }

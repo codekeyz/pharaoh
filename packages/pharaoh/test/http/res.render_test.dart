@@ -27,7 +27,11 @@ void main() {
     });
 
     test('should render template with variables', () async {
-      app = app..get('/', (req, res) => res.render('welcome', {'username': 'Spookie'}));
+      app = app
+        ..get(
+          '/',
+          (req, res) => res.render('welcome', {'username': 'Spookie'}),
+        );
 
       await (await request(app))
           .get('/')
@@ -55,8 +59,10 @@ void main() {
       await (await request(app))
           .get('/')
           .expectStatus(500)
-          .expectContentType('application/json; charset=utf-8')
-          .expectBody({'error': 'Pharaoh Error(s): No view engine found'}).test();
+          .expectJsonBody(
+            containsPair('error', 'Pharaoh Error(s): No view engine found'),
+          )
+          .test();
     });
   });
 }
