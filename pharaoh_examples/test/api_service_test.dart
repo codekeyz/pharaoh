@@ -1,32 +1,31 @@
-import 'dart:io';
-
 import 'package:pharaoh_examples/api_service/index.dart' as apisvc;
 import 'package:spookie/spookie.dart';
 
 void main() async {
   group('api_service_example', () {
-    setUpAll(() => Future.sync(() => apisvc.main([0])));
+    late Spookie appTester;
+
+    setUpAll(() async {
+      apisvc.main([0]);
+      appTester = await request(apisvc.app);
+    });
 
     tearDownAll(() => apisvc.app.shutdown());
 
     group('should return json error message', () {
       test('when `api-key` not provided', () async {
-        await (await request(apisvc.app))
+        await appTester
             .get('/api/users')
             .expectStatus(400)
-            .expectHeader(HttpHeaders.contentTypeHeader,
-                'application/json; charset=utf-8')
-            .expectBody('"API key required"')
+            .expectJsonBody('API key required')
             .test();
       });
 
       test('when `api-key` is invalid', () async {
-        await (await request(apisvc.app))
+        await appTester
             .get('/api/users?api-key=asfas')
             .expectStatus(401)
-            .expectHeader(HttpHeaders.contentTypeHeader,
-                'application/json; charset=utf-8')
-            .expectBody('"Invalid API key"')
+            .expectJsonBody('Invalid API key')
             .test();
       });
     });
@@ -39,12 +38,10 @@ void main() async {
           {'name': 'jane'}
         ];
 
-        await (await request(apisvc.app))
+        await appTester
             .get('/api/users?api-key=foo')
             .expectStatus(200)
-            .expectHeader(HttpHeaders.contentTypeHeader,
-                'application/json; charset=utf-8')
-            .expectBody(result)
+            .expectJsonBody(result)
             .test();
       });
 
@@ -55,22 +52,18 @@ void main() async {
             {'name': 'stylus', 'url': "https://github.com/learnboost/stylus"},
           ];
 
-          await (await request(apisvc.app))
+          await appTester
               .get('/api/user/tobi/repos?api-key=foo')
               .expectStatus(200)
-              .expectHeader(HttpHeaders.contentTypeHeader,
-                  'application/json; charset=utf-8')
-              .expectBody(result)
+              .expectJsonBody(result)
               .test();
         });
 
         test('should return notFound when :name not found', () async {
-          await (await request(apisvc.app))
+          await appTester
               .get('/api/user/chima/repos?api-key=foo')
               .expectStatus(404)
-              .expectHeader(HttpHeaders.contentTypeHeader,
-                  'application/json; charset=utf-8')
-              .expectBody({"error": "Not found"}).test();
+              .expectJsonBody({"error": "Not found"}).test();
         });
       });
 
@@ -81,12 +74,10 @@ void main() async {
           {'name': 'cluster', 'url': "https://github.com/learnboost/cluster"},
         ];
 
-        await (await request(apisvc.app))
+        await appTester
             .get('/api/repos?api-key=foo')
             .expectStatus(200)
-            .expectHeader(HttpHeaders.contentTypeHeader,
-                'application/json; charset=utf-8')
-            .expectBody(result)
+            .expectJsonBody(result)
             .test();
       });
     });
