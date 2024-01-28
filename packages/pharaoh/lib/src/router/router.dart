@@ -3,7 +3,10 @@ import 'package:spanner/spanner.dart';
 import 'router_contract.dart';
 import 'router_handler.dart';
 
-typedef _PendingRouteIntent = (HTTPMethod method, ({String path, Middleware handler}));
+typedef _PendingRouteIntent = (
+  HTTPMethod method,
+  ({String path, Middleware handler})
+);
 
 class GroupRouter extends RouterContract {
   final List<_PendingRouteIntent> _pendingRouteIntents = [];
@@ -89,7 +92,8 @@ class GroupRouter extends RouterContract {
   }
 
   @override
-  GroupRouter on(String path, Middleware func, {HTTPMethod method = HTTPMethod.ALL}) {
+  GroupRouter on(String path, Middleware func,
+      {HTTPMethod method = HTTPMethod.ALL}) {
     if (method == HTTPMethod.ALL) path = '$path/*';
     _pendingRouteIntents.add((method, (path: path, handler: func)));
     return this;

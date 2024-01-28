@@ -14,7 +14,8 @@ void main() async {
         await (await request(apisvc.app))
             .get('/api/users')
             .expectStatus(400)
-            .expectHeader(HttpHeaders.contentTypeHeader, 'application/json; charset=utf-8')
+            .expectHeader(HttpHeaders.contentTypeHeader,
+                'application/json; charset=utf-8')
             .expectBody('"API key required"')
             .test();
       });
@@ -23,7 +24,8 @@ void main() async {
         await (await request(apisvc.app))
             .get('/api/users?api-key=asfas')
             .expectStatus(401)
-            .expectHeader(HttpHeaders.contentTypeHeader, 'application/json; charset=utf-8')
+            .expectHeader(HttpHeaders.contentTypeHeader,
+                'application/json; charset=utf-8')
             .expectBody('"Invalid API key"')
             .test();
       });
@@ -40,7 +42,8 @@ void main() async {
         await (await request(apisvc.app))
             .get('/api/users?api-key=foo')
             .expectStatus(200)
-            .expectHeader(HttpHeaders.contentTypeHeader, 'application/json; charset=utf-8')
+            .expectHeader(HttpHeaders.contentTypeHeader,
+                'application/json; charset=utf-8')
             .expectBody(result)
             .test();
       });
@@ -55,7 +58,8 @@ void main() async {
           await (await request(apisvc.app))
               .get('/api/user/tobi/repos?api-key=foo')
               .expectStatus(200)
-              .expectHeader(HttpHeaders.contentTypeHeader, 'application/json; charset=utf-8')
+              .expectHeader(HttpHeaders.contentTypeHeader,
+                  'application/json; charset=utf-8')
               .expectBody(result)
               .test();
         });
@@ -64,7 +68,8 @@ void main() async {
           await (await request(apisvc.app))
               .get('/api/user/chima/repos?api-key=foo')
               .expectStatus(404)
-              .expectHeader(HttpHeaders.contentTypeHeader, 'application/json; charset=utf-8')
+              .expectHeader(HttpHeaders.contentTypeHeader,
+                  'application/json; charset=utf-8')
               .expectBody({"error": "Not found"}).test();
         });
       });
@@ -79,7 +84,8 @@ void main() async {
         await (await request(apisvc.app))
             .get('/api/repos?api-key=foo')
             .expectStatus(200)
-            .expectHeader(HttpHeaders.contentTypeHeader, 'application/json; charset=utf-8')
+            .expectHeader(HttpHeaders.contentTypeHeader,
+                'application/json; charset=utf-8')
             .expectBody(result)
             .test();
       });

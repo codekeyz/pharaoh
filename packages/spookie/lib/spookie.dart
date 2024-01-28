@@ -98,7 +98,8 @@ class _$SpookieImpl extends Spookie {
     Object? body,
   }) =>
       expectHttp(
-        http.delete(getUri(path), headers: mergeHeaders(headers ?? {}), body: body),
+        http.delete(getUri(path),
+            headers: mergeHeaders(headers ?? {}), body: body),
       );
 
   @override
@@ -108,7 +109,8 @@ class _$SpookieImpl extends Spookie {
     Object? body,
   }) =>
       expectHttp(
-        http.patch(getUri(path), headers: mergeHeaders(headers ?? {}), body: body),
+        http.patch(getUri(path),
+            headers: mergeHeaders(headers ?? {}), body: body),
       );
 
   @override
@@ -118,7 +120,8 @@ class _$SpookieImpl extends Spookie {
     Object? body,
   }) =>
       expectHttp(
-        http.put(getUri(path), headers: mergeHeaders(headers ?? {}), body: body),
+        http.put(getUri(path),
+            headers: mergeHeaders(headers ?? {}), body: body),
       );
 
   @override

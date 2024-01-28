@@ -31,8 +31,10 @@ void main() {
           });
 
         await (await request(app))
-            .get('/',
-                headers: {HttpHeaders.cookieHeader: 'name=s%3Achima.4ytL9j25i8e59B6eCUUZdrWHdGLK3Cua%2BG1oGyurzXY'})
+            .get('/', headers: {
+              HttpHeaders.cookieHeader:
+                  'name=s%3Achima.4ytL9j25i8e59B6eCUUZdrWHdGLK3Cua%2BG1oGyurzXY'
+            })
             .expectStatus(200)
             .expectBody('[name=chima; HttpOnly]')
             .test();
@@ -49,7 +51,8 @@ void main() {
 
         await (await request(app))
             .get('/', headers: {
-              HttpHeaders.cookieHeader: 'name=s%3Achimaxyz.4ytL9j25i8e59B6eCUUZdrWHdGLK3Cua%2BG1oGyurzXY; Path=/'
+              HttpHeaders.cookieHeader:
+                  'name=s%3Achimaxyz.4ytL9j25i8e59B6eCUUZdrWHdGLK3Cua%2BG1oGyurzXY; Path=/'
             })
             .expectStatus(200)
             .expectBody('[]')
@@ -82,7 +85,11 @@ void main() {
             return res.ok(str);
           });
 
-        await (await request<Pharaoh>(app)).get('/').expectStatus(200).expectBody('[]').test();
+        await (await request<Pharaoh>(app))
+            .get('/')
+            .expectStatus(200)
+            .expectBody('[]')
+            .test();
       });
 
       test('should default req.signedCookies to []', () async {
@@ -93,14 +100,19 @@ void main() {
             return res.ok(str);
           });
 
-        await (await request<Pharaoh>(app)).get('/').expectStatus(200).expectBody('[]').test();
+        await (await request<Pharaoh>(app))
+            .get('/')
+            .expectStatus(200)
+            .expectBody('[]')
+            .test();
       });
     });
 
     group('when json-encoded value', () {
       test('should parse when signed', () async {
         final cookieOpts = CookieOpts(signed: true, secret: 'foo-bar-mee-moo');
-        final cookie = bakeCookie('user', {'foo': 'bar', 'mee': 'mee'}, cookieOpts);
+        final cookie =
+            bakeCookie('user', {'foo': 'bar', 'mee': 'mee'}, cookieOpts);
 
         expect(cookie.toString(),
             'user=s%3Aj%3A%7B%22foo%22%3A%22bar%22%2C%22mee%22%3A%22mee%22%7D.sxYOqZyRsCeSGNGzAR5UG3Hv%2BW%2BiXl9TQPlbbdBLMF0; Path=/');
@@ -122,9 +134,11 @@ void main() {
 
       test('should parse when un-signed', () async {
         final cookieOpts = CookieOpts(signed: false);
-        final cookie = bakeCookie('user', {'foo': 'bar', 'mee': 'mee'}, cookieOpts);
+        final cookie =
+            bakeCookie('user', {'foo': 'bar', 'mee': 'mee'}, cookieOpts);
 
-        expect(cookie.toString(), 'user=j%3A%7B%22foo%22%3A%22bar%22%2C%22mee%22%3A%22mee%22%7D; Path=/');
+        expect(cookie.toString(),
+            'user=j%3A%7B%22foo%22%3A%22bar%22%2C%22mee%22%3A%22mee%22%7D; Path=/');
 
         expect(cookie.signed, isFalse);
 

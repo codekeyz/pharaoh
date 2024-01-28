@@ -43,7 +43,8 @@ void main() {
           'user': {"name": 'Foo', 'lastname': 'Bar'}
         }, issuer: 'https://github.com/jonasroussel/dart_jsonwebtoken');
 
-        final token = jwt.sign(secretKey, algorithm: JWTAlgorithm.HS256, expiresIn: Duration(seconds: 1));
+        final token = jwt.sign(secretKey,
+            algorithm: JWTAlgorithm.HS256, expiresIn: Duration(seconds: 1));
 
         await Future.delayed(const Duration(seconds: 1));
 
