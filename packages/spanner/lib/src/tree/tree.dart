@@ -37,7 +37,8 @@ class Spanner {
 
   List<RouteEntry> get routes => _getRoutes(_root);
 
-  String get routeStr => routes.map((e) => '${e.method.name} ${e.path}').join('\n');
+  String get routeStr =>
+      routes.map((e) => '${e.method.name} ${e.path}').join('\n');
 
   void addRoute<T>(HTTPMethod method, String path, T handler) {
     final indexedHandler = (index: _nextIndex, value: handler);
@@ -82,7 +83,10 @@ class Spanner {
       if (wildCardNode != null) return wildCardNode..terminal = true;
 
       wildCardNode = WildcardNode();
-      (rootNode as StaticNode).addChildAndReturn(WildcardNode.key, wildCardNode);
+      (rootNode as StaticNode).addChildAndReturn(
+        WildcardNode.key,
+        wildCardNode,
+      );
       return wildCardNode..terminal = true;
     }
 
@@ -142,7 +146,10 @@ class Spanner {
       } else if (part.isWildCard) {
         if (!isLastSegment) {
           throw ArgumentError.value(
-              fullPath, null, 'Route definition is not valid. Wildcard must be the end of the route');
+            fullPath,
+            null,
+            'Route definition is not valid. Wildcard must be the end of the route',
+          );
         }
 
         return node.addChildAndReturn(key, WildcardNode());
@@ -150,7 +157,8 @@ class Spanner {
 
       final paramNode = node.paramNode;
       if (paramNode == null) {
-        final defn = ParameterDefinition.from(routePart, terminal: isLastSegment);
+        final defn =
+            ParameterDefinition.from(routePart, terminal: isLastSegment);
         final newNode = node.addChildAndReturn(key, ParametricNode(defn));
         if (isLastSegment) return defn;
 
@@ -182,7 +190,10 @@ class Spanner {
 
     if (path == BASE_PATH) {
       rootNode as StaticNode;
-      return RouteResult(resolvedParams, getResults(rootNode.getHandler(method)));
+      return RouteResult(
+        resolvedParams,
+        getResults(rootNode.getHandler(method)),
+      );
     }
 
     final debugLog = StringBuffer("\n");
@@ -239,12 +250,16 @@ class Spanner {
 
         final hasChild = parametricNode.hasChild(routePart);
         if (hasChild) {
-          devlog('- Found Static for             ->              $routePart');
+          devlog(
+            '- Found Static for             ->              $routePart',
+          );
           rootNode = parametricNode.getChild(routePart);
           continue;
         }
 
-        devlog('- Finding Defn for $routePart        -> terminal?    $isLastPart');
+        devlog(
+          '- Finding Defn for $routePart        -> terminal?    $isLastPart',
+        );
 
         final definition = parametricNode.findMatchingDefinition(
           method,
@@ -262,9 +277,12 @@ class Spanner {
             final definition = parametricNode.definitions.first;
             if (definition is CompositeParameterDefinition) break;
 
-            final remainingPath = routeSegments.sublist(i).join('/');
+            /// if we have more path segments, do not pass it as a parameteric value
+            final partsLeft = routeSegments.sublist(i);
+            if (partsLeft.length > 1) break;
+
             final name = parametricNode.definitions.first.name;
-            resolvedParams[name] = remainingPath;
+            resolvedParams[name] = partsLeft.join('/');
 
             return RouteResult(
               resolvedParams,
@@ -312,7 +330,8 @@ class Spanner {
   String _cleanPath(String path) {
     if ([BASE_PATH, WildcardNode.key].contains(path)) return path;
     if (!path.startsWith(BASE_PATH)) {
-      throw ArgumentError.value(path, null, 'Route registration must start with `/`');
+      throw ArgumentError.value(
+          path, null, 'Route registration must start with `/`');
     }
     if (config.ignoreDuplicateSlashes) {
       path = path.replaceAll(RegExp(r'/+'), '/');
@@ -325,7 +344,8 @@ class Spanner {
 
   List<String> _getRouteSegments(String route) => route.split('/');
 
-  String _getNodeKey(String part) => part.isParametric ? ParametricNode.key : part;
+  String _getNodeKey(String part) =>
+      part.isParametric ? ParametricNode.key : part;
 }
 
 class RouteResult {
@@ -346,7 +366,8 @@ List<RouteEntry> _getRoutes(Node node) {
   final routes = <RouteEntry>[];
 
   void iterateNode(Node node, String prefix) {
-    final hasTerminalInParametricNode = node is ParametricNode && node.hasTerminal;
+    final hasTerminalInParametricNode =
+        node is ParametricNode && node.hasTerminal;
     if (node.terminal || hasTerminalInParametricNode) {
       final entries = _getNodeEntries(node, prefix);
       routes.addAll(entries);
@@ -374,10 +395,12 @@ Iterable<RouteEntry> _getNodeEntries(Node node, String prefix) {
       final methods = (node as StaticNode).methods;
       return methods.map<RouteEntry>((e) => (method: e, path: prefix));
     case ParametricNode:
-      final definitions = (node as ParametricNode).definitions.where((e) => e.terminal);
+      final definitions =
+          (node as ParametricNode).definitions.where((e) => e.terminal);
       final entries = <RouteEntry>[];
       for (final defn in definitions) {
-        final result = defn.methods.map<RouteEntry>((e) => (method: e, path: prefix));
+        final result =
+            defn.methods.map<RouteEntry>((e) => (method: e, path: prefix));
         entries.addAll(result);
       }
       return entries;

@@ -56,7 +56,8 @@ class CookieOpts {
 
   void validate() {
     if (signed && secret == null) {
-      throw PharaohException.value('CookieOpts("secret") required for signed cookies');
+      throw PharaohException.value(
+          'CookieOpts("secret") required for signed cookies');
     }
   }
 }
@@ -77,7 +78,9 @@ extension CookieExtension on Cookie {
 
   bool get signed => decodedValue.startsWith('s:');
 
-  String get actualStr => signed ? decodedValue.substring(2) : decodedValue; // s:foo-bar-baz --> foo-bar-bar
+  String get actualStr => signed
+      ? decodedValue.substring(2)
+      : decodedValue; // s:foo-bar-baz --> foo-bar-bar
 
   bool get jsonEncoded => actualStr.startsWith('j:');
 

@@ -43,7 +43,8 @@ extension HandlerChainExtension on Middleware {
       );
 }
 
-Middleware useRequestHandler(RequestHandler handler) => (req, res, next_) async {
+Middleware useRequestHandler(RequestHandler handler) =>
+    (req, res, next_) async {
       final result = await handler(req, res);
       next_(result);
     };

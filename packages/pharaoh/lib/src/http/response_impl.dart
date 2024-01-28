@@ -85,18 +85,22 @@ class ResponseImpl extends Response {
   }
 
   @override
-  ResponseImpl movedPermanently(String url) => redirect(url, HttpStatus.movedPermanently);
+  ResponseImpl movedPermanently(String url) =>
+      redirect(url, HttpStatus.movedPermanently);
 
   @override
   ResponseImpl notModified({Map<String, dynamic>? headers}) {
     final existingHeaders = this.headers;
-    if (headers != null) headers.forEach((key, val) => existingHeaders[key] = val);
+    if (headers != null) {
+      headers.forEach((key, val) => existingHeaders[key] = val);
+    }
 
     return ResponseImpl._(
       ended: true,
       statusCode: HttpStatus.notModified,
       headers: existingHeaders
-        ..removeWhere((name, _) => name.toLowerCase() == HttpHeaders.contentLengthHeader)
+        ..removeWhere(
+            (name, _) => name.toLowerCase() == HttpHeaders.contentLengthHeader)
         ..[HttpHeaders.dateHeader] = formatHttpDate(DateTime.now()),
     );
   }
@@ -124,14 +128,17 @@ class ResponseImpl extends Response {
   }
 
   @override
-  ResponseImpl notFound([String? message]) => json(error(message ?? 'Not found'), statusCode: HttpStatus.notFound);
+  ResponseImpl notFound([String? message]) =>
+      json(error(message ?? 'Not found'), statusCode: HttpStatus.notFound);
 
   @override
-  ResponseImpl unauthorized({Object? data}) => json(data ?? error('Unauthorized'), statusCode: HttpStatus.unauthorized);
+  ResponseImpl unauthorized({Object? data}) =>
+      json(data ?? error('Unauthorized'), statusCode: HttpStatus.unauthorized);
 
   @override
   ResponseImpl internalServerError([String? message]) =>
-      json(error(message ?? 'Internal Server Error'), statusCode: HttpStatus.internalServerError);
+      json(error(message ?? 'Internal Server Error'),
+          statusCode: HttpStatus.internalServerError);
 
   @override
   ResponseImpl ok([String? data]) => this.end()
@@ -139,9 +146,11 @@ class ResponseImpl extends Response {
     ..body = shelf.Body(data, encoding);
 
   @override
-  ResponseImpl send(Object data) => this.end()
-    ..headers[HttpHeaders.contentTypeHeader] = _getContentType(data, valueWhenNull: ContentType.html).toString()
-    ..body = shelf.Body(data);
+  ResponseImpl send(Object data) {
+    return this.end()
+      ..headers[HttpHeaders.contentTypeHeader] ??= ContentType.binary.toString()
+      ..body = shelf.Body(data);
+  }
 
   @override
   ResponseImpl end() => ResponseImpl._(
@@ -151,30 +160,21 @@ class ResponseImpl extends Response {
         statusCode: statusCode,
       );
 
-  ContentType _getContentType(Object data, {required ContentType valueWhenNull}) {
-    final isBuffer = _isBuffer(data);
-    final mType = mediaType;
-    if (mType == null) {
-      return isBuffer ? applicationOctetStreamType : valueWhenNull;
-    }
-
-    /// Always use charset :utf-8 unless
-    /// we have to deal with buffers.
-    final charset = isBuffer ? mType.parameters['charset'] : 'utf-8';
-    return ContentType.parse('${mType.mimeType}; charset=$charset');
-  }
-
-  /// TODO research on how to tell if an object is a buffer
-  bool _isBuffer(Object object) => object is! String;
-
   @override
-  ResponseImpl format(Request request, Map<String, Function(ResponseImpl res)> options) {
+  ResponseImpl format(
+    Request request,
+    Map<String, Function(ResponseImpl res)> options,
+  ) {
     var reqAcceptType = request.headers[HttpHeaders.acceptHeader];
     if (reqAcceptType is Iterable) reqAcceptType = reqAcceptType.join();
+
     final handler = options[reqAcceptType] ?? options['_'];
 
     if (handler == null) {
-      return json(error('Not Acceptable'), statusCode: HttpStatus.notAcceptable);
+      return json(
+        error('Not Acceptable'),
+        statusCode: HttpStatus.notAcceptable,
+      );
     }
 
     return handler.call(this);
@@ -198,7 +198,8 @@ class ResponseImpl extends Response {
     ..headers[HttpHeaders.setCookieHeader] = _cookies;
 
   @override
-  Response render(String name, [Map<String, dynamic> data = const {}]) => this.end()
-    ..viewToRender = ViewRenderData(name, data)
-    ..headers[HttpHeaders.contentTypeHeader] = ContentType.html.toString();
+  Response render(String name, [Map<String, dynamic> data = const {}]) =>
+      this.end()
+        ..viewToRender = ViewRenderData(name, data)
+        ..headers[HttpHeaders.contentTypeHeader] = ContentType.html.toString();
 }

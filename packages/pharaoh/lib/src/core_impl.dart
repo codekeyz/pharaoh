@@ -1,6 +1,8 @@
 part of 'core.dart';
 
-class $PharaohImpl extends RouterContract with RouteDefinitionMixin implements Pharaoh {
+class $PharaohImpl extends RouterContract
+    with RouteDefinitionMixin
+    implements Pharaoh {
   late final HttpServer _server;
 
   OnErrorCallback? _onErrorCb;
@@ -60,11 +62,12 @@ class $PharaohImpl extends RouterContract with RouteDefinitionMixin implements P
 
   @override
   Future<Pharaoh> listen({int port = 3000}) async {
-    _server = await HttpServer.bind('0.0.0.0', port, shared: true)
+    _server = await HttpServer.bind(InternetAddress.anyIPv4, port, shared: true)
       ..autoCompress = true;
     _server.listen(handleRequest);
 
-    print('Server start on PORT: ${_server.port} -> ${uri.scheme}://localhost:${_server.port}');
+    print(
+        'Server start on PORT: ${_server.port} -> ${uri.scheme}://localhost:${_server.port}');
     return this;
   }
 
@@ -79,20 +82,26 @@ class $PharaohImpl extends RouterContract with RouteDefinitionMixin implements P
     final request = Request.from(httpReq);
     final response = Response.create();
 
-    late Object requestError;
+    late ({Object error, StackTrace trace}) requestError;
+
     try {
       final result = await resolveAndExecuteHandlers(request, response);
       return forward(httpReq, result.res);
-    } catch (error) {
-      requestError = error;
+    } catch (error, trace) {
+      requestError = (error: error, trace: trace);
     }
 
     if (_onErrorCb == null) {
-      var errorResponse = response.internalServerError(requestError.toString());
-      if (requestError is SpannerRouteValidatorError) {
-        errorResponse = response.status(HttpStatus.unprocessableEntity);
-      }
-      return forward(httpReq, errorResponse);
+      final status = requestError.error is SpannerRouteValidatorError
+          ? HttpStatus.unprocessableEntity
+          : HttpStatus.internalServerError;
+      return forward(
+        httpReq,
+        response.json({
+          'error': requestError.error.toString(),
+          'trace': requestError.trace.toString()
+        }, statusCode: status),
+      );
     }
 
     final result = await _onErrorCb!.call(requestError, request, response);
@@ -106,7 +115,9 @@ class $PharaohImpl extends RouterContract with RouteDefinitionMixin implements P
 
     final routeResult = spanner.lookup(req.method, req.path);
     final resolvedHandlers = routeResult?.values.cast<Middleware>() ?? [];
-    if (routeResult == null || resolvedHandlers.isEmpty) return reqRes.merge(routeNotFound());
+    if (routeResult == null || resolvedHandlers.isEmpty) {
+      return reqRes.merge(routeNotFound());
+    }
 
     /// update request params with params resolved from spanner
     for (final param in routeResult.params.entries) {
@@ -147,7 +158,8 @@ class $PharaohImpl extends RouterContract with RouteDefinitionMixin implements P
         res_.mimeType != 'multipart/byteranges') {
       // If the response isn't chunked yet and there's no other way to tell its
       // length, enable `dart:io`'s chunked encoding.
-      request.response.headers.set(HttpHeaders.transferEncodingHeader, 'chunked');
+      request.response.headers
+          .set(HttpHeaders.transferEncodingHeader, 'chunked');
     }
 
     // headers to write to the response
@@ -159,12 +171,14 @@ class $PharaohImpl extends RouterContract with RouteDefinitionMixin implements P
       request.response.headers.add(_XPoweredByHeader, 'Pharaoh');
     }
     if (!hders.containsKey(HttpHeaders.dateHeader)) {
-      request.response.headers.add(HttpHeaders.dateHeader, DateTime.now().toUtc());
+      request.response.headers
+          .add(HttpHeaders.dateHeader, DateTime.now().toUtc());
     }
     if (!hders.containsKey(HttpHeaders.contentLengthHeader)) {
       final contentLength = res_.contentLength;
       if (contentLength != null) {
-        request.response.headers.add(HttpHeaders.contentLengthHeader, contentLength);
+        request.response.headers
+            .add(HttpHeaders.contentLengthHeader, contentLength);
       }
     }
 

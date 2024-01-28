@@ -72,7 +72,8 @@ class ParametricNode extends Node {
 
   final List<ParameterDefinition> _definitions = [];
 
-  List<ParameterDefinition> get definitions => UnmodifiableListView(_definitions);
+  List<ParameterDefinition> get definitions =>
+      UnmodifiableListView(_definitions);
 
   ParametricNode(ParameterDefinition defn) {
     _definitions.add(defn);
@@ -81,7 +82,8 @@ class ParametricNode extends Node {
   bool get hasTerminal => _definitions.any((e) => e.terminal);
 
   void addNewDefinition(ParameterDefinition defn) {
-    final existing = _definitions.firstWhereOrNull((e) => e.isExactExceptName(defn));
+    final existing =
+        _definitions.firstWhereOrNull((e) => e.isExactExceptName(defn));
 
     if (existing != null) {
       if (existing.name != defn.name) {

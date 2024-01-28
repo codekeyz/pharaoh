@@ -8,7 +8,9 @@ void main() {
     test('should not override previous Content-Types', () async {
       final app = Pharaoh()
         ..get('/', (req, res) {
-          return res.type(ContentType.parse('application/vnd.example+json')).json({"hello": "world"});
+          return res
+              .type(ContentType.parse('application/vnd.example+json'))
+              .json({"hello": "world"});
         });
 
       await (await request<Pharaoh>(app))
@@ -25,7 +27,9 @@ void main() {
       await (await request<Pharaoh>(app))
           .get('/')
           .expectStatus(500)
-          .expectBody({'error': "Converting object to an encodable object failed: Never"})
+          .expectBody({
+            'error': "Converting object to an encodable object failed: Never"
+          })
           .expectContentType('application/json; charset=utf-8')
           .test();
     });
@@ -89,7 +93,8 @@ void main() {
 
     group('when given a collection type', () {
       test('<List> should respond with json', () async {
-        final app = Pharaoh()..use((req, res, next) => next(res.json(["foo", "bar", "baz"])));
+        final app = Pharaoh()
+          ..use((req, res, next) => next(res.json(["foo", "bar", "baz"])));
 
         await (await request<Pharaoh>(app))
             .get('/')
@@ -100,7 +105,9 @@ void main() {
       });
 
       test('<Map> should respond with json', () async {
-        final app = Pharaoh()..use((req, res, next) => next(res.json({"name": "Foo bar", "age": 23.45})));
+        final app = Pharaoh()
+          ..use((req, res, next) =>
+              next(res.json({"name": "Foo bar", "age": 23.45})));
 
         await (await request<Pharaoh>(app))
             .get('/')
@@ -111,7 +118,8 @@ void main() {
       });
 
       test('<Set> should respond with json', () async {
-        final app = Pharaoh()..use((req, res, next) => next(res.json({"Chima", "Foo", "Bar"})));
+        final app = Pharaoh()
+          ..use((req, res, next) => next(res.json({"Chima", "Foo", "Bar"})));
 
         await (await request<Pharaoh>(app))
             .get('/')

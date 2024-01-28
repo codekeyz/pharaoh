@@ -36,7 +36,8 @@ final class Executor {
   }
 
   Future<void> _resetStream() async {
-    void newStream() => _streamCtrl = StreamController<Middleware>()..add(_handler);
+    void newStream() =>
+        _streamCtrl = StreamController<Middleware>()..add(_handler);
     final ctrl = _streamCtrl;
     if (ctrl == null) return newStream();
     if (ctrl.hasListener && ctrl.isClosed) await ctrl.close();

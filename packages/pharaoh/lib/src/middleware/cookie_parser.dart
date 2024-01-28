@@ -22,7 +22,9 @@ Middleware cookieParser({CookieOpts opts = const CookieOpts()}) {
 
       for (final cookie in signedCookies) {
         var realValue = unsignValue(cookie.actualStr, secret);
-        if (realValue != null) verifiedCookies.add(cookie..value = Uri.encodeComponent(realValue));
+        if (realValue != null) {
+          verifiedCookies.add(cookie..value = Uri.encodeComponent(realValue));
+        }
       }
       signedCookies = verifiedCookies;
     }

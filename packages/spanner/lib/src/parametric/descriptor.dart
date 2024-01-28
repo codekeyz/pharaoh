@@ -3,7 +3,8 @@ import 'utils.dart';
 typedef ParameterDescriptor<T> = T Function(dynamic value);
 
 class SpannerRouteValidatorError extends ArgumentError {
-  SpannerRouteValidatorError(dynamic value, {String message = 'Invalid parameter value'})
+  SpannerRouteValidatorError(dynamic value,
+      {String message = 'Invalid parameter value'})
       : super.value(value, null, message);
 }
 

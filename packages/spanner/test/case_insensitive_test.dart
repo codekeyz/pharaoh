@@ -8,7 +8,8 @@ import 'helpers/test_utils.dart';
 void main() {
   test('case insensitive static routes of level 1', () {
     final config = const RouterConfig(caseSensitive: false);
-    final router = Spanner(config: config)..addRoute(HTTPMethod.GET, '/woo', 'Hello World');
+    final router = Spanner(config: config)
+      ..addRoute(HTTPMethod.GET, '/woo', 'Hello World');
 
     final result = router.lookup(HTTPMethod.GET, '/woo');
     expect(result, isStaticNode('woo'));
@@ -17,7 +18,8 @@ void main() {
 
   test('case insensitive static routes of level 2', () {
     final config = const RouterConfig(caseSensitive: false);
-    final router = Spanner(config: config)..addRoute(HTTPMethod.GET, '/foo/woo', 'Foo Bar');
+    final router = Spanner(config: config)
+      ..addRoute(HTTPMethod.GET, '/foo/woo', 'Foo Bar');
 
     final result = router.lookup(HTTPMethod.GET, '/foo/woo');
     expect(result, isStaticNode('woo'));
@@ -26,7 +28,8 @@ void main() {
 
   test('case insensitive static routes of level 3', () {
     final config = const RouterConfig(caseSensitive: false);
-    final router = Spanner(config: config)..addRoute(HTTPMethod.GET, '/foo/bar/woo', 'foo bar');
+    final router = Spanner(config: config)
+      ..addRoute(HTTPMethod.GET, '/foo/bar/woo', 'foo bar');
 
     final result = router.lookup(HTTPMethod.GET, '/Foo/bAR/WoO');
     expect(result, isStaticNode('woo'));
@@ -35,7 +38,8 @@ void main() {
 
   test('parametric case insensitive', () {
     final config = const RouterConfig(caseSensitive: false);
-    final router = Spanner(config: config)..addRoute(HTTPMethod.GET, '/foo/<param>', 'fam zing');
+    final router = Spanner(config: config)
+      ..addRoute(HTTPMethod.GET, '/foo/<param>', 'fam zing');
 
     final result = router.lookup(HTTPMethod.GET, '/Foo/bAR');
     expect(result, havingParameters<ParameterDefinition>({'param': 'bAR'}));
@@ -44,7 +48,8 @@ void main() {
 
   test('parametric case insensitive with capital letter', () {
     final config = const RouterConfig(caseSensitive: false);
-    final router = Spanner(config: config)..addRoute(HTTPMethod.GET, '/foo/<Param>', 'on colos');
+    final router = Spanner(config: config)
+      ..addRoute(HTTPMethod.GET, '/foo/<Param>', 'on colos');
 
     final result = router.lookup(HTTPMethod.GET, '/Foo/bAR');
     expect(result, havingParameters<ParameterDefinition>({'Param': 'bAR'}));
@@ -53,14 +58,17 @@ void main() {
 
   test('case insensitive with capital letter in static path with param', () {
     final config = const RouterConfig(caseSensitive: false);
-    final router = Spanner(config: config)..addRoute(HTTPMethod.GET, '/Foo/bar/<param>', 'merry c');
+    final router = Spanner(config: config)
+      ..addRoute(HTTPMethod.GET, '/Foo/bar/<param>', 'merry c');
 
     final result = router.lookup(HTTPMethod.GET, '/foo/bar/baZ');
     expect(result, havingParameters<ParameterDefinition>({'param': 'baZ'}));
     expect(result, hasValues(['merry c']));
   });
 
-  test('case insensitive with multiple paths containing capital letter in static path with param', () {
+  test(
+      'case insensitive with multiple paths containing capital letter in static path with param',
+      () {
     final config = const RouterConfig(caseSensitive: false);
     final router = Spanner(config: config)
       ..addRoute(HTTPMethod.GET, '/Foo/bar/<param>', null)
@@ -78,7 +86,8 @@ void main() {
 
   test('case insensitive with multiple mixed-case params', () {
     final config = const RouterConfig(caseSensitive: false);
-    final router = Spanner(config: config)..addRoute(HTTPMethod.GET, '/foo/<param1>/<param2>', null);
+    final router = Spanner(config: config)
+      ..addRoute(HTTPMethod.GET, '/foo/<param1>/<param2>', null);
 
     expect(
       router.lookup(HTTPMethod.GET, '/FOO/My/bAR'),
@@ -109,11 +118,14 @@ void main() {
     );
   });
 
-  test('case insensitive with multiple mixed-case params within same slash couple', () {
+  test(
+      'case insensitive with multiple mixed-case params within same slash couple',
+      () {
     final config = const RouterConfig(caseSensitive: false);
     final router = Spanner(config: config)
       ..addRoute(HTTPMethod.GET, '/users/<userId>', null)
-      ..addRoute(HTTPMethod.GET, '/users/user-<userId>.png<roomId>.dmg', 'kanzo')
+      ..addRoute(
+          HTTPMethod.GET, '/users/user-<userId>.png<roomId>.dmg', 'kanzo')
       ..addRoute(HTTPMethod.GET, '/foo/<param1>-<param2>', null);
 
     var result = router.lookup(HTTPMethod.GET, '/FOO/My-bAR');
@@ -131,7 +143,8 @@ void main() {
 
   test('parametric case insensitive with a static part', () {
     final config = const RouterConfig(caseSensitive: false);
-    final router = Spanner(config: config)..addRoute(HTTPMethod.GET, '/foo/my-<param>', null);
+    final router = Spanner(config: config)
+      ..addRoute(HTTPMethod.GET, '/foo/my-<param>', null);
 
     expect(
       router.lookup(HTTPMethod.GET, '/Foo/MY-bAR'),

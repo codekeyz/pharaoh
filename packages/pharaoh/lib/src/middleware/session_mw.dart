@@ -69,7 +69,8 @@ Middleware sessionMdw({
     if (!req.path.startsWith(opts.path)) return next();
     if (req.session?.valid ?? false) return next();
 
-    final reqSid = req.signedCookies.firstWhereOrNull((e) => e.name == name)?.value;
+    final reqSid =
+        req.signedCookies.firstWhereOrNull((e) => e.name == name)?.value;
     if (reqSid != null) {
       var result = await sessionStore.get(reqSid);
       if (result != null && result.valid) {
@@ -94,7 +95,8 @@ Middleware sessionMdw({
 final ReqResHook sessionPreResponseHook = (ReqRes reqRes) async {
   var req = reqRes.req, res = reqRes.res;
   final session = req.session;
-  if (session != null && (session.saveUninitialized || session.resave || session.modified)) {
+  if (session != null &&
+      (session.saveUninitialized || session.resave || session.modified)) {
     await session.save();
     res = res.withCookie(session.cookie!);
   }

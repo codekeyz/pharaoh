@@ -47,7 +47,8 @@ void main() {
         try {
           await (await request<Pharaoh>(app)).get('/').test();
         } catch (e) {
-          expect((e as StateError).message, 'Response has no Location header for redirect');
+          expect((e as StateError).message,
+              'Response has no Location header for redirect');
         }
       });
     });
@@ -58,6 +59,10 @@ void main() {
       ..get('/hello', (req, res) => res.ok('Hello World'))
       ..get('/users', (req, res) => res.redirect('/hello'));
 
-    await (await request<Pharaoh>(app)).get('/users').expectStatus(HttpStatus.ok).expectBody('Hello World').test();
+    await (await request<Pharaoh>(app))
+        .get('/users')
+        .expectStatus(HttpStatus.ok)
+        .expectBody('Hello World')
+        .test();
   });
 }

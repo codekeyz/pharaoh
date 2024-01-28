@@ -7,13 +7,13 @@ void main() {
   group('res.format(Map<String, Function(Response)> options)', () {
     test('should respond using :accept provided', () async {
       final app = Pharaoh()
-        ..get(
-          '/',
-          (req, res) => res.format(req, {
-            ContentType.text.toString(): (res) => res.ok('Hello World'),
-            ContentType.html.toString(): (res) => res.send('<p>Hello World</p>'),
-          }),
-        );
+        ..get('/', (req, res) {
+          return res.format(req, {
+            'text/plain; charset=utf-8': (res) => res.ok('Hello World'),
+            'text/html; charset=utf-8': (res) =>
+                res.type(ContentType.html).send('<p>Hello World</p>'),
+          });
+        });
 
       await (await request<Pharaoh>(app))
           .get(
@@ -42,7 +42,8 @@ void main() {
           '/',
           (req, res) => res.format(req, {
             ContentType.text.toString(): (res) => res.ok('Hello World'),
-            ContentType.html.toString(): (res) => res.send('<p>Hello World</p>'),
+            ContentType.html.toString(): (res) =>
+                res.send('<p>Hello World</p>'),
             '_': (res) => res.json({'message': 'Hello World'})
           }),
         );
@@ -61,7 +62,8 @@ void main() {
           '/',
           (req, res) => res.format(req, {
             ContentType.text.toString(): (res) => res.ok('Hello World'),
-            ContentType.html.toString(): (res) => res.send('<p>Hello World</p>'),
+            ContentType.html.toString(): (res) =>
+                res.send('<p>Hello World</p>'),
           }),
         );
 

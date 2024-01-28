@@ -14,7 +14,8 @@ void main() {
   });
 
   test('should pass a param', () async {
-    final app = Pharaoh()..get('/<username>', (req, res) => res.json(req.params));
+    final app = Pharaoh()
+      ..get('/<username>', (req, res) => res.json(req.params));
 
     await (await request<Pharaoh>(app))
         .get('/heyOnuoha')

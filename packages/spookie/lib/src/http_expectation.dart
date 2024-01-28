@@ -8,25 +8,31 @@ import 'expectation.dart';
 
 typedef HttpFutureResponse = Future<http.Response>;
 
-HttpResponseExpection expectHttp(HttpFutureResponse value) => HttpResponseExpection(value);
+HttpResponseExpection expectHttp(HttpFutureResponse value) =>
+    HttpResponseExpection(value);
 
 typedef GetValueFromResponse<T> = T Function(http.Response response);
 
 typedef MatchCase = ({GetValueFromResponse value, dynamic matcher});
 
-class HttpResponseExpection extends ExpectationBase<HttpFutureResponse, http.Response> {
+class HttpResponseExpection
+    extends ExpectationBase<HttpFutureResponse, http.Response> {
   HttpResponseExpection(super.value);
 
   final List<MatchCase> _matchcases = [];
 
   HttpResponseExpection expectHeader(String header, dynamic matcher) {
-    final MatchCase test = (value: (resp) => resp.headers[header], matcher: matcher);
+    final MatchCase test =
+        (value: (resp) => resp.headers[header], matcher: matcher);
     _matchcases.add(test);
     return this;
   }
 
   HttpResponseExpection expectContentType(dynamic matcher) {
-    final MatchCase test = (value: (resp) => resp.headers[HttpHeaders.contentTypeHeader], matcher: matcher);
+    final MatchCase test = (
+      value: (resp) => resp.headers[HttpHeaders.contentTypeHeader],
+      matcher: matcher
+    );
     _matchcases.add(test);
     return this;
   }
@@ -56,10 +62,12 @@ class HttpResponseExpection extends ExpectationBase<HttpFutureResponse, http.Res
   HttpResponseExpection expectJsonBody(dynamic matcher) {
     _matchcases.add((
       value: (res) => res.headers,
-      matcher: containsPair(HttpHeaders.contentTypeHeader, 'application/json; charset=utf-8')
+      matcher: containsPair(
+          HttpHeaders.contentTypeHeader, 'application/json; charset=utf-8')
     ));
 
-    final MatchCase value = (value: (resp) => jsonDecode(resp.body), matcher: matcher);
+    final MatchCase value =
+        (value: (resp) => jsonDecode(resp.body), matcher: matcher);
     _matchcases.add(value);
     return this;
   }
