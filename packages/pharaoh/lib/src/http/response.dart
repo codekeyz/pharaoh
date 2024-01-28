@@ -10,19 +10,23 @@ import 'message.dart';
 
 part 'response_impl.dart';
 
-final applicationOctetStreamType = ContentType('application', 'octet-stream');
-
 abstract class Response extends Message<shelf.Body?> {
   Response(super.body, {super.headers = const {}});
 
   /// Constructs an HTTP Response
-  static Response create({int? statusCode, Object? body, Encoding? encoding, Map<String, dynamic>? headers}) =>
-      ResponseImpl._(
-        body: body == null ? null : Body(body),
-        ended: false,
-        statusCode: statusCode,
-        headers: headers ?? {},
-      );
+  static Response create({
+    int? statusCode,
+    Object? body,
+    Encoding? encoding,
+    Map<String, dynamic>? headers,
+  }) {
+    return ResponseImpl._(
+      body: body == null ? null : Body(body),
+      ended: false,
+      statusCode: statusCode,
+      headers: headers ?? {},
+    );
+  }
 
   Response header(String headerKey, String headerValue);
 
@@ -30,7 +34,8 @@ abstract class Response extends Message<shelf.Body?> {
   ///
   /// [name] and [value] must be composed of valid characters according to RFC
   /// 6265.
-  Response cookie(String name, Object? value, [CookieOpts opts = const CookieOpts()]);
+  Response cookie(String name, Object? value,
+      [CookieOpts opts = const CookieOpts()]);
 
   Response withCookie(Cookie cookie);
 
