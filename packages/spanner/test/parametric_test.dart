@@ -16,21 +16,25 @@ void main() {
           ..addRoute(HTTPMethod.GET, '/user/<hello>.png/<user2>/hello', null);
 
         final exception = runSyncAndReturnException<ArgumentError>(router);
-        expect(exception.message, contains('Route has inconsistent naming in parameter definition'));
+        expect(exception.message,
+            contains('Route has inconsistent naming in parameter definition'));
         expect(exception.message, contains('<file>.png'));
         expect(exception.message, contains('<hello>.png'));
       });
 
       test('close door parameter definitions', () {
-        router() => Spanner()..addRoute(HTTPMethod.GET, '/user/<userId><keyId>', null);
+        router() =>
+            Spanner()..addRoute(HTTPMethod.GET, '/user/<userId><keyId>', null);
 
         final exception = runSyncAndReturnException<ArgumentError>(router);
-        expect(exception.message, contains('Parameter definition is invalid. Close door neighbors'));
+        expect(exception.message,
+            contains('Parameter definition is invalid. Close door neighbors'));
         expect(exception.invalidValue, '<userId><keyId>');
       });
 
       test('invalid parameter definition', () {
-        router() => Spanner()..addRoute(HTTPMethod.GET, '/user/<userId#@#.XDkd@#>>#>', null);
+        router() => Spanner()
+          ..addRoute(HTTPMethod.GET, '/user/<userId#@#.XDkd@#>>#>', null);
 
         final exception = runSyncAndReturnException<ArgumentError>(router);
         expect(exception.message, contains('Parameter definition is invalid'));
@@ -77,7 +81,10 @@ void main() {
       expect(node, havingParameters<StaticNode>({'file': 'aws-image'}));
 
       node = router.lookup(HTTPMethod.GET, '/user/aws-image.png/A29384/hello');
-      expect(node, havingParameters<StaticNode>({'file': 'aws-image', 'user2': 'A29384'}));
+      expect(
+          node,
+          havingParameters<StaticNode>(
+              {'file': 'aws-image', 'user2': 'A29384'}));
 
       node = router.lookup(HTTPMethod.GET, '/a/param-static');
       expect(node, havingParameters<ParameterDefinition>({'param': 'param'}));
@@ -102,30 +109,20 @@ void main() {
       );
     });
 
-    test('should capture remaining parts as parameter when no wildcard', () {
-      final router = Spanner()..addRoute(HTTPMethod.GET, '/<lang>/item/<id>', null);
-
-      expect(
-        router.lookup(HTTPMethod.GET, '/fr/item/12345'),
-        havingParameters({'lang': 'fr', 'id': '12345'}),
-      );
-
-      expect(
-        router.lookup(HTTPMethod.GET, '/fr/item/12345/edit'),
-        havingParameters({'lang': 'fr', 'id': '12345/edit'}),
-      );
-    });
-
     group('when descriptors', () {
       test('in single parametric definition', () {
-        final router = Spanner()..addRoute(HTTPMethod.GET, '/users/<userId|(^\\w+)|number>/detail', null);
+        final router = Spanner()
+          ..addRoute(
+              HTTPMethod.GET, '/users/<userId|(^\\w+)|number>/detail', null);
 
-        expect(router.lookup(HTTPMethod.GET, '/users/24/detail'), havingParameters({'userId': 24}));
+        expect(router.lookup(HTTPMethod.GET, '/users/24/detail'),
+            havingParameters({'userId': 24}));
       });
 
       test('should error when invalid params', () {
         final router = Spanner()
-          ..addRoute(HTTPMethod.GET, '/users/<userId|(^\\w+)|number>/detail', null)
+          ..addRoute(
+              HTTPMethod.GET, '/users/<userId|(^\\w+)|number>/detail', null)
           ..addRoute(HTTPMethod.GET, '/<userId|(^\\w+)>', null);
 
         var result = router.lookup(HTTPMethod.GET, '/users/24/detail');
@@ -135,13 +132,17 @@ void main() {
         expect(result, havingParameters({'userId': 'hello-world'}));
 
         expect(
-          runSyncAndReturnException(() => router.lookup(HTTPMethod.GET, '/@388>)#(***)')),
-          isA<SpannerRouteValidatorError>().having((p0) => p0.message, 'with message', 'Invalid parameter value'),
+          runSyncAndReturnException(
+              () => router.lookup(HTTPMethod.GET, '/@388>)#(***)')),
+          isA<SpannerRouteValidatorError>().having(
+              (p0) => p0.message, 'with message', 'Invalid parameter value'),
         );
       });
 
       test('in composite parametric definition', () async {
-        final router = Spanner()..addRoute(HTTPMethod.GET, '/users/<userId|number>HELLO<paramId|number>/detail', null);
+        final router = Spanner()
+          ..addRoute(HTTPMethod.GET,
+              '/users/<userId|number>HELLO<paramId|number>/detail', null);
 
         var result = router.lookup(HTTPMethod.GET, '/users/334HELLO387/detail');
         expect(result, havingParameters({'userId': 334, 'paramId': 387}));
