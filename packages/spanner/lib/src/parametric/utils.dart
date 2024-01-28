@@ -45,8 +45,6 @@ RegExp buildRegexFromTemplate(String template) {
     },
   );
 
-  /// TODO(codekeyz) figure out if we need to pass the case sensitivity flag
-  /// from the wider context down here or it's safe to keep it case insensitive.
   return RegExp(regexPattern, caseSensitive: false);
 }
 
@@ -74,5 +72,6 @@ extension ParametricDefinitionsExtension on List<ParameterDefinition> {
     sort((a, b) => nullCount[a.hashCode]!.compareTo(nullCount[b.hashCode]!));
   }
 
-  Iterable get methods => map((e) => e.methods).reduce((val, e) => {...val, ...e});
+  Iterable get methods =>
+      map((e) => e.methods).reduce((val, e) => {...val, ...e});
 }
