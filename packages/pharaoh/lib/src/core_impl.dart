@@ -81,26 +81,28 @@ class $PharaohImpl extends RouterContract
 
     final request = Request.from(httpReq);
     final response = Response.create();
-
-    late ({Object error, StackTrace trace}) requestError;
+    late PharaohError requestError;
 
     try {
       final result = await resolveAndExecuteHandlers(request, response);
       return forward(httpReq, result.res);
     } catch (error, trace) {
-      requestError = (error: error, trace: trace);
+      requestError = (exception: error, trace: trace);
     }
 
     if (_onErrorCb == null) {
-      final status = requestError.error is SpannerRouteValidatorError
+      final status = requestError.exception is SpannerRouteValidatorError
           ? HttpStatus.unprocessableEntity
           : HttpStatus.internalServerError;
       return forward(
         httpReq,
-        response.json({
-          'error': requestError.error.toString(),
-          'trace': requestError.trace.toString()
-        }, statusCode: status),
+        response.json(
+          {
+            'error': requestError.exception.toString(),
+            'trace': requestError.trace.toString()
+          },
+          statusCode: status,
+        ),
       );
     }
 
