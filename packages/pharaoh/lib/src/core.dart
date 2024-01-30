@@ -22,8 +22,13 @@ import 'shelf_interop/shelf.dart' as shelf;
 
 part 'core_impl.dart';
 
+typedef PharaohError = ({Object exception, StackTrace trace});
+
 typedef OnErrorCallback = FutureOr<Response> Function(
-    Object error, Request req, Response res);
+  PharaohError error,
+  Request req,
+  Response res,
+);
 
 abstract class Pharaoh implements RouterContract {
   factory Pharaoh() => $PharaohImpl();
