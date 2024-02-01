@@ -22,7 +22,7 @@ void main() {
 
         await app.listen(port: 5050);
 
-        await Spookie.fromUri(app.uri)
+        await Spookie.uri(app.uri)
             .post('/hello', {})
             .expectBody('Active Server')
             .expectStatus(200)

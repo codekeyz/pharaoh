@@ -8,10 +8,10 @@ export 'package:test/test.dart';
 typedef HttpRequestHandler = Function(HttpRequest req);
 
 abstract interface class Spookie {
-  factory Spookie.fromServer(HttpServer server) =>
+  factory Spookie.server(HttpServer server) =>
       _$SpookieImpl(getServerUri(server));
 
-  factory Spookie.fromUri(Uri uri) => _$SpookieImpl(uri);
+  factory Spookie.uri(Uri uri) => _$SpookieImpl(uri);
 
   Spookie auth(String user, String pass);
 
@@ -151,7 +151,7 @@ class SpookieAgent {
 
     _server = await HttpServer.bind(InternetAddress.anyIPv4, 0)
       ..listen(app);
-    return _instance = Spookie.fromServer(_server!);
+    return _instance = Spookie.server(_server!);
   }
 }
 
