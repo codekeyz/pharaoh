@@ -18,12 +18,17 @@ void main() {
 
       test('should work with an active server', () async {
         final app = Pharaoh()
-          ..post('/hello', (req, res) => res.ok('Hello World'));
-        await (await (request<Pharaoh>(app))).get('/').expectStatus(404).test();
-        await (await (request<Pharaoh>(app)))
+          ..post('/hello', (req, res) => res.ok('Active Server'));
+
+        await app.listen(port: 5050);
+
+        await Spookie.fromUri(app.uri)
             .post('/hello', {})
+            .expectBody('Active Server')
             .expectStatus(200)
             .test();
+
+        await app.shutdown();
       });
 
       test('should work with remote server', () async {

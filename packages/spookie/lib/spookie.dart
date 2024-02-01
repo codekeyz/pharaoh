@@ -5,12 +5,13 @@ import 'src/http_expectation.dart';
 
 export 'package:test/test.dart';
 
-typedef TestApp = Function(HttpRequest req);
+typedef HttpRequestHandler = Function(HttpRequest req);
 
 abstract interface class Spookie {
-  late final HttpServer _server;
+  factory Spookie.fromServer(HttpServer server) =>
+      _$SpookieImpl(getServerUri(server));
 
-  Spookie._(HttpServer server) : _server = server;
+  factory Spookie.fromUri(Uri uri) => _$SpookieImpl(uri);
 
   Spookie auth(String user, String pass);
 
@@ -46,14 +47,14 @@ abstract interface class Spookie {
   });
 }
 
-class _$SpookieImpl extends Spookie {
-  Uri get serverUri => getServerUri(_server);
+class _$SpookieImpl implements Spookie {
+  final Uri baseUri;
 
-  _$SpookieImpl(super.server) : super._() {
+  _$SpookieImpl(this.baseUri) {
     _headers.clear();
   }
 
-  Uri getUri(String path) => Uri.parse('$serverUri$path');
+  Uri getUri(String path) => baseUri.replace(path: path);
 
   final Map<String, String> _headers = {};
 
@@ -139,18 +140,18 @@ class _$SpookieImpl extends Spookie {
 }
 
 class SpookieAgent {
-  static _$SpookieImpl? _instance;
+  static Spookie? _instance;
+  static HttpServer? _server;
 
-  static Future<Spookie> create(TestApp app) async {
+  static Future<Spookie> create(HttpRequestHandler app) async {
     if (_instance != null) {
-      await _instance!._server.close();
-      _instance = null;
+      await _server?.close();
+      _server = null;
     }
 
-    final server = await HttpServer.bind('127.0.0.1', 0)
+    _server = await HttpServer.bind(InternetAddress.anyIPv4, 0)
       ..listen(app);
-    _instance = _$SpookieImpl(server);
-    return _instance!;
+    return _instance = Spookie.fromServer(_server!);
   }
 }
 
@@ -171,7 +172,6 @@ Uri getServerUri(HttpServer server) {
   return Uri(scheme: 'http', host: server.address.address, port: server.port);
 }
 
-Future<Spookie> request<T>(T app) async {
-  final tester = await SpookieAgent.create((app as dynamic).handleRequest);
-  return tester;
+Future<Spookie> request<T extends Object>(T app) async {
+  return SpookieAgent.create((app as dynamic).handleRequest);
 }
