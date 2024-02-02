@@ -174,9 +174,12 @@ class Spanner {
   }
 
   RouteResult? lookup(HTTPMethod method, String path, {bool debug = false}) {
+    final uri = Uri.parse(Uri.decodeFull(path));
+    path = uri.path;
+
     Node rootNode = _root;
 
-    Map<String, dynamic> resolvedParams = {};
+    Map<String, dynamic> resolvedParams = {...uri.queryParameters};
     List<IndexedValue> resolvedHandlers = [...rootNode.middlewares];
 
     List<dynamic> getResults(IndexedValue? handler) {
@@ -203,11 +206,9 @@ class Spanner {
       debugLog.writeln(message);
     }
 
-    String route = _cleanPath(path);
+    devlog('Finding node for ---------  ${method.name} $path ------------\n');
 
-    devlog('Finding node for ---------  ${method.name} $route ------------\n');
-
-    final routeSegments = _getRouteSegments(route);
+    final routeSegments = uri.pathSegments;
 
     for (int i = 0; i < routeSegments.length; i++) {
       final String currPart = routeSegments[i];
@@ -237,7 +238,7 @@ class Spanner {
         final parametricNode = rootNode.paramNode;
         if (parametricNode == null) {
           devlog('x Found no static node for part       ->         $routePart');
-          devlog('x Route is not registered             ->         $route');
+          devlog('x Route is not registered             ->         $path');
 
           final wc = rootNode.wildcardNode;
           if (wc == null) {
