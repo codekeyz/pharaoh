@@ -174,8 +174,17 @@ class Spanner {
   }
 
   RouteResult? lookup(HTTPMethod method, dynamic route, {bool debug = false}) {
-    final uri = route is Uri ? route : Uri.parse(route);
-    final path = uri.path;
+    final String path = route is Uri ? route.path : route.toString();
+    List<String> routeSegments = const [];
+
+    if (route is Uri) {
+      routeSegments = route.pathSegments;
+    } else {
+      final parts = path.split('/');
+      if (parts.first.isEmpty) parts.removeAt(0);
+      if (parts.last.isEmpty) parts.removeLast();
+      routeSegments = parts;
+    }
 
     Node rootNode = _root;
 
@@ -207,8 +216,6 @@ class Spanner {
     }
 
     devlog('Finding node for ---------  ${method.name} $path ------------\n');
-
-    final routeSegments = uri.pathSegments;
 
     for (int i = 0; i < routeSegments.length; i++) {
       final String currPart = routeSegments[i];
@@ -353,14 +360,11 @@ class RouteResult {
   final Map<String, dynamic> params;
   final List<dynamic> values;
 
+  /// this is either a Node or Parametric Definition
   @visibleForTesting
   final dynamic actual;
 
-  const RouteResult(
-    this.params,
-    this.values, {
-    this.actual,
-  });
+  const RouteResult(this.params, this.values, {this.actual});
 }
 
 List<RouteEntry> _getRoutes(Node node) {
