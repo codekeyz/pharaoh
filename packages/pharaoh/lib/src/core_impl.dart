@@ -115,7 +115,7 @@ class $PharaohImpl extends RouterContract
 
     Response routeNotFound() => res.notFound("Route not found: ${req.path}");
 
-    final routeResult = spanner.lookup(req.method, req.path);
+    final routeResult = spanner.lookup(req.method, req.uri);
     final resolvedHandlers = routeResult?.values.cast<Middleware>() ?? [];
     if (routeResult == null || resolvedHandlers.isEmpty) {
       return reqRes.merge(routeNotFound());

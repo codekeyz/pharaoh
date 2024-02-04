@@ -173,13 +173,13 @@ class Spanner {
     }
   }
 
-  RouteResult? lookup(HTTPMethod method, String path, {bool debug = false}) {
-    final uri = Uri.parse(Uri.decodeFull(path));
-    path = uri.path;
+  RouteResult? lookup(HTTPMethod method, dynamic route, {bool debug = false}) {
+    final uri = route is Uri ? route : Uri.parse(route);
+    final path = uri.path;
 
     Node rootNode = _root;
 
-    Map<String, dynamic> resolvedParams = {...uri.queryParameters};
+    Map<String, dynamic> resolvedParams = {};
     List<IndexedValue> resolvedHandlers = [...rootNode.middlewares];
 
     List<dynamic> getResults(IndexedValue? handler) {
