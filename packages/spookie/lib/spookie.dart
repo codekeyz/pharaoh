@@ -50,11 +50,12 @@ abstract interface class Spookie {
 class _$SpookieImpl implements Spookie {
   final Uri baseUri;
 
-  _$SpookieImpl(this.baseUri) {
-    _headers.clear();
-  }
+  _$SpookieImpl(this.baseUri);
 
-  Uri getUri(String path) => baseUri.replace(path: path);
+  Uri getUri(String p) {
+    final uri = Uri.parse(p);
+    return baseUri.replace(path: uri.path, query: uri.query);
+  }
 
   final Map<String, String> _headers = {};
 

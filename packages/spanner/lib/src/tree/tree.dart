@@ -173,7 +173,19 @@ class Spanner {
     }
   }
 
-  RouteResult? lookup(HTTPMethod method, String path, {bool debug = false}) {
+  RouteResult? lookup(HTTPMethod method, dynamic route, {bool debug = false}) {
+    final path = route is Uri ? route.path : route.toString();
+    late List<String> routeSegments;
+
+    if (route is Uri) {
+      routeSegments = route.pathSegments;
+    } else {
+      final parts = path.split('/');
+      if (parts.first.isEmpty) parts.removeAt(0);
+      if (parts.last.isEmpty) parts.removeLast();
+      routeSegments = parts;
+    }
+
     Node rootNode = _root;
 
     Map<String, dynamic> resolvedParams = {};
@@ -203,11 +215,7 @@ class Spanner {
       debugLog.writeln(message);
     }
 
-    String route = _cleanPath(path);
-
-    devlog('Finding node for ---------  ${method.name} $route ------------\n');
-
-    final routeSegments = _getRouteSegments(route);
+    devlog('Finding node for ---------  ${method.name} $path ------------\n');
 
     for (int i = 0; i < routeSegments.length; i++) {
       final String currPart = routeSegments[i];
@@ -237,7 +245,7 @@ class Spanner {
         final parametricNode = rootNode.paramNode;
         if (parametricNode == null) {
           devlog('x Found no static node for part       ->         $routePart');
-          devlog('x Route is not registered             ->         $route');
+          devlog('x Route is not registered             ->         $path');
 
           final wc = rootNode.wildcardNode;
           if (wc == null) {
@@ -352,14 +360,11 @@ class RouteResult {
   final Map<String, dynamic> params;
   final List<dynamic> values;
 
+  /// this is either a Node or Parametric Definition
   @visibleForTesting
   final dynamic actual;
 
-  const RouteResult(
-    this.params,
-    this.values, {
-    this.actual,
-  });
+  const RouteResult(this.params, this.values, {this.actual});
 }
 
 List<RouteEntry> _getRoutes(Node node) {

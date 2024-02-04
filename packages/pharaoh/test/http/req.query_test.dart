@@ -9,7 +9,7 @@ void main() {
       await (await request<Pharaoh>(app))
           .get('/?value1=1&value2=2')
           .expectStatus(200)
-          .expectBody({"value1": "1", "value2": "2"}).test();
+          .expectJsonBody({"value1": "1", "value2": "2"}).test();
     });
   });
 
@@ -20,6 +20,6 @@ void main() {
     await (await request<Pharaoh>(app))
         .get('/heyOnuoha')
         .expectStatus(200)
-        .expectBody({"username": "heyOnuoha"}).test();
+        .expectJsonBody({"username": "heyOnuoha"}).test();
   });
 }
