@@ -174,8 +174,8 @@ class Spanner {
   }
 
   RouteResult? lookup(HTTPMethod method, dynamic route, {bool debug = false}) {
-    final String path = route is Uri ? route.path : route.toString();
-    List<String> routeSegments = const [];
+    final path = route is Uri ? route.path : route.toString();
+    late List<String> routeSegments;
 
     if (route is Uri) {
       routeSegments = route.pathSegments;
