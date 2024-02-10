@@ -1,6 +1,6 @@
 # spookie 🎌
 
-I wrote this to work just like https://www.npmjs.com/package/supertest
+Easy & composable tests for your API's. I wrote this to work just like https://www.npmjs.com/package/supertest
 
 ## Installing:
 
@@ -8,16 +8,10 @@ In your pubspec.yaml
 
 ```yaml
 dev_dependencies:
-  spookie: ^1.0.1
+  spookie:
 ```
 
 ## Basic Usage:
-
-You can use `spookie` to test any framework or library that uses the Dart HttpServer underneath.
-
-Your class just need to have a `handleRequest` method that accepts an `HttpRequest` type object.
-
-Example testing of [Pharaoh](https://pub.dev/packages/pharaoh) using `spookie`
 
 ```dart
 import 'package:pharaoh/pharaoh.dart';
@@ -25,22 +19,26 @@ import 'package:spookie/spookie.dart';
 
 void main() async {
 
-   test('should not override previous Content-Types', () async {
-      final app = Pharaoh().get('/', (req, res) {
+  final app = Pharaoh().get('/', (req, res) {
         return res
             .type(ContentType.parse('application/vnd.example+json'))
             .json({"hello": "world"});
       });
 
-      await (await request<Pharaoh>(app))
-          .get('/')
+  await app.listen(port: 5000);
+
+
+  test('should not override previous Content-Types', () async {
+
+      await Spookie.uri(Uri.parse('http://localhost:5000')).get('/')
           .expectStatus(200)
           .expectContentType('application/vnd.example+json')
           .expectBody('{"hello":"world"}')
           .test();
-    });
 
+  });
 }
+
 ```
 
 ## Tests

@@ -32,7 +32,13 @@ final app = Pharaoh();
 
 void main() async {
 
-  app.use(logRequests);
+  app.use((req, res, next) {
+
+    /// do something here
+
+    next();
+
+  });
 
   app.get('/foo', (req, res) => res.ok("bar"));
 
