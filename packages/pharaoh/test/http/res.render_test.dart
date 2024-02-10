@@ -1,18 +1,31 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:pharaoh/pharaoh.dart';
 import 'package:spookie/spookie.dart';
 
+class TestViewEngine extends ViewEngine {
+  final knownTemplates = ['welcome'];
+
+  @override
+  String get name => 'FoobarViewEngine';
+
+  @override
+  FutureOr<String> render(String template, Map<String, dynamic> data) {
+    if (!knownTemplates.contains(template)) {
+      throw Exception('Not found');
+    }
+
+    return data.isEmpty
+        ? 'Hello World'
+        : data.entries.map((e) => '${e.key}:${e.value}').join('\n');
+  }
+}
+
 void main() {
   late Pharaoh app;
 
-  setUp(() => app = Pharaoh()
-    ..viewEngine = JinjaViewEngine(Environment(
-      autoReload: false,
-      trimBlocks: true,
-      leftStripBlocks: true,
-      loader: FileSystemLoader(paths: ['public']),
-    )));
+  setUp(() async => app = Pharaoh()..viewEngine = TestViewEngine());
 
   group('res.render', () {
     test('should render template', () async {
@@ -20,9 +33,9 @@ void main() {
 
       await (await request(app))
           .get('/')
-          .expectBody('Hello ')
+          .expectBody('Hello World')
           .expectStatus(200)
-          .expectContentType(ContentType.html.toString())
+          .expectContentType('text/html; charset=utf-8')
           .test();
     });
 
@@ -36,8 +49,8 @@ void main() {
       await (await request(app))
           .get('/')
           .expectStatus(200)
-          .expectBody('Hello Spookie')
-          .expectContentType(ContentType.html.toString())
+          .expectBody('username:Spookie')
+          .expectContentType('text/html; charset=utf-8')
           .test();
     });
 
@@ -46,12 +59,16 @@ void main() {
 
       await (await request(app))
           .get('/')
-          .expectStatus(404)
-          .expectContentType(ContentType.html.toString())
-          .expectBody({'error': 'Template `products` not found'}).test();
+          .expectStatus(500)
+          .expectContentType('application/json; charset=utf-8')
+          .expectJsonBody(containsPair(
+            'error',
+            "Pharaoh Error: Failed to render view products ---> Instance of \'_Exception\'",
+          ))
+          .test();
     });
 
-    test('should err when template not found', () async {
+    test('should err when no view engine', () async {
       app = app
         ..viewEngine = null
         ..get('/', (req, res) => res.render('products'));
@@ -59,9 +76,10 @@ void main() {
       await (await request(app))
           .get('/')
           .expectStatus(500)
-          .expectJsonBody(
-            containsPair('error', 'Pharaoh Error(s): No view engine found'),
-          )
+          .expectJsonBody(containsPair(
+            'error',
+            'Pharaoh Error(s): No view engine found',
+          ))
           .test();
     });
   });
