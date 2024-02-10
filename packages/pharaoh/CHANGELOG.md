@@ -1,3 +1,11 @@
+# 0.0.6+2
+
+- chore: Pass response to onError cb by @codekeyz in https://github.com/codekeyz/pharaoh/pull/105
+- chore: Pass stack-trace along with Exception by @codekeyz in https://github.com/codekeyz/pharaoh/pull/108
+- chore: Add actual type for pharaoh error by @codekeyz in https://github.com/codekeyz/pharaoh/pull/109
+- feat: Allow passing uri directly to Spookie by @codekeyz in https://github.com/codekeyz/pharaoh/pull/111
+- bugfix: pass path & query correctly from Spookie by @codekeyz in https://github.com/codekeyz/pharaoh/pull/112
+
 # 0.0.6
 
 - bugfix: wildcard search in node by @codekeyz in https://github.com/codekeyz/pharaoh/pull/98
