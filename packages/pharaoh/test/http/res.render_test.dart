@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:pharaoh/pharaoh.dart';
 import 'package:spookie/spookie.dart';
