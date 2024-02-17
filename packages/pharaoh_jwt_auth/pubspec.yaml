@@ -1,7 +1,7 @@
 name: pharaoh_jwt_auth
 description: Pharaoh middleware that validates a JsonWebToken (JWT) and set the req.auth with the attributes
 version: 1.0.0+2
-repository: https://github.com/codekeyz/pharaoh/packages/pharaoh_jwt_auth
+repository: https://github.com/codekeyz/pharaoh/tree/main/packages/pharaoh_jwt_auth
 
 environment:
   sdk: ^3.0.0
