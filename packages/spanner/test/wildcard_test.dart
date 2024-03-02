@@ -15,10 +15,14 @@ void main() {
         [3, 5],
       );
 
-      final results = ['/api', '/api/users', '/api/users/hello/details/home']
-          .map((e) => router.lookup(HTTPMethod.GET, e)?.values.join(', '))
-          .toList();
-      expect(results, ['3', '3', '3']);
+      var result = router.lookup(HTTPMethod.GET, '/api');
+      expect(result?.values, [3]);
+
+      result = router.lookup(HTTPMethod.GET, '/api/users');
+      expect(result?.values, [3]);
+
+      result = router.lookup(HTTPMethod.GET, '/api/users/chima/details/home');
+      expect(result?.values, [3, 'mee-moo']);
     });
 
     test('when wildcard with HTTPMethod.ALL', () {
@@ -74,16 +78,39 @@ void main() {
       expect(result?.values, ['ange-lina']);
     });
 
+    test('issue', () {
+      final router = Spanner()
+        ..addRoute(HTTPMethod.GET, '/hello/chima', 'haah')
+        ..addRoute(HTTPMethod.GET, '/hello/*', 'bar')
+        ..addRoute(HTTPMethod.GET, '/<userId>/hello', 'var')
+        ..addRoute(HTTPMethod.GET, '/*', 'mee');
+
+      var result = router.lookup(HTTPMethod.GET, '/hello/chima');
+      expect(result?.values, ['haah']);
+
+      result = router.lookup(HTTPMethod.GET, '/hello/come');
+      expect(result?.values, ['bar']);
+
+      result = router.lookup(HTTPMethod.GET, '/holycrap');
+      expect(result?.values, ['mee']);
+
+      result = router.lookup(HTTPMethod.GET, '/holycrap/hello');
+      expect(result?.values, ['var']);
+
+      result = router.lookup(HTTPMethod.GET, '/holycrap/hello/goat');
+      expect(result?.values, ['mee']);
+    });
+
     test('contain param and wildcard together', () {
       final router = Spanner()
         ..addRoute(HTTPMethod.GET, '/<lang>/item/<id>', 'id-man')
-        ..addRoute(HTTPMethod.GET, '/<lang>/*', 'wee-wee');
+        ..addRoute(HTTPMethod.GET, '/*', 'wildcard');
 
       var result = router.lookup(HTTPMethod.GET, '/fr/item/12345');
       expect(result?.values, ['id-man']);
 
-      result = router.lookup(HTTPMethod.GET, '/fr/ajsdkflajsdfj');
-      expect(result?.values, ['wee-wee']);
+      result = router.lookup(HTTPMethod.GET, '/fr/item/ajsdkflajsdfj/how');
+      expect(result?.values, ['wildcard']);
     });
   });
 }

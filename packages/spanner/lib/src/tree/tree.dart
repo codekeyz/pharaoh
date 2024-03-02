@@ -45,13 +45,12 @@ class Spanner {
 
     dynamic result = _on(path);
 
-    /// parametric nodes being terminal is determined its definitions
-    if (result is StaticNode || result is WildcardNode) {
+    if (result is ParameterDefinition) {
+      result.addRoute(method, indexedHandler);
+    } else {
       (result as StaticNode)
         ..addRoute(method, indexedHandler)
         ..terminal = true;
-    } else if (result is ParameterDefinition) {
-      result.addRoute(method, indexedHandler);
     }
 
     _currentIndex = _nextIndex;
@@ -191,6 +190,10 @@ class Spanner {
     Map<String, dynamic> resolvedParams = {};
     List<IndexedValue> resolvedHandlers = [...rootNode.middlewares];
 
+    /// keep track of last wildcard we encounter along route. We'll resort to this
+    /// incase we don't find the route we were looking for.
+    WildcardNode? wildcardNode = rootNode.wildcardNode;
+
     List<dynamic> getResults(IndexedValue? handler) {
       final resultingHandlers = [
         if (handler != null) handler,
@@ -201,7 +204,6 @@ class Spanner {
     }
 
     if (path == BASE_PATH) {
-      rootNode as StaticNode;
       return RouteResult(
         resolvedParams,
         getResults(rootNode.getHandler(method)),
@@ -231,29 +233,30 @@ class Spanner {
         rootNode = wildcard;
       }
 
-      void extractNodeMdws(StaticNode node) {
+      void extractNodeMiddlewares(StaticNode node) {
         final mdws = node.middlewares;
-        if (mdws.isEmpty) return;
-        resolvedHandlers.addAll(mdws);
+        if (mdws.isNotEmpty) resolvedHandlers.addAll(mdws);
       }
 
       if (hasChild) {
         rootNode = rootNode.getChild(routePart);
-        extractNodeMdws(rootNode as StaticNode);
-        devlog('- Found Static for             ->              $routePart');
+        extractNodeMiddlewares(rootNode as StaticNode);
+        final wcNode = rootNode.wildcardNode;
+        if (wcNode != null) wildcardNode = wcNode;
+
+        devlog('- Found Static for                ->         $routePart');
       } else {
         final parametricNode = rootNode.paramNode;
         if (parametricNode == null) {
-          devlog('x Found no static node for part       ->         $routePart');
-          devlog('x Route is not registered             ->         $path');
+          devlog('x Found no Static Node for part   ->         $routePart');
+          devlog('x Route is not found              ->         $path');
 
-          final wc = rootNode.wildcardNode;
-          if (wc == null) {
-            return RouteResult(resolvedParams, getResults(null), actual: null);
+          if (wildcardNode != null) {
+            useWildcard(wildcardNode);
+            break;
           }
 
-          useWildcard(wc);
-          break;
+          return RouteResult(resolvedParams, getResults(null), actual: null);
         }
 
         final hasChild = parametricNode.hasChild(routePart);
@@ -262,6 +265,8 @@ class Spanner {
             '- Found Static for             ->              $routePart',
           );
           rootNode = parametricNode.getChild(routePart);
+          final wcNode = rootNode.wildcardNode;
+          if (rootNode.wildcardNode != null) wildcardNode = wcNode;
           continue;
         }
 
@@ -278,10 +283,12 @@ class Spanner {
         devlog('    * parametric defn:         ${definition.toString()}');
 
         if (definition == null) {
-          final wc = rootNode.wildcardNode;
-          if (wc != null) {
-            useWildcard(wc);
-          } else if (parametricNode.definitions.length == 1) {
+          if (wildcardNode != null) {
+            useWildcard(wildcardNode);
+            break;
+          }
+
+          if (parametricNode.definitions.length == 1) {
             final definition = parametricNode.definitions.first;
             if (definition is CompositeParameterDefinition) break;
 

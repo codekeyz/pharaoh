@@ -40,8 +40,7 @@ abstract class Node with EquatableMixin, HandlerStore {
   }
 
   Node addChildAndReturn(String key, Node node) {
-    _children[key] = node;
-    return node;
+    return _children[key] = node;
   }
 }
 
@@ -68,6 +67,14 @@ class ParametricNode extends Node {
   @override
   void addRoute<T>(HTTPMethod method, IndexedValue<T> handler) {
     throw ArgumentError('Parametric Node cannot have routes');
+  }
+
+  @override
+  Node addChildAndReturn(String key, Node node) {
+    if (node is WildcardNode) {
+      throw ArgumentError('Parametric Node cannot have wildcard');
+    }
+    return super.addChildAndReturn(key, node);
   }
 
   final List<ParameterDefinition> _definitions = [];
