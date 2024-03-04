@@ -10,7 +10,7 @@ import 'message.dart';
 
 part 'response_impl.dart';
 
-abstract class Response extends Message<shelf.Body?> {
+abstract class Response extends Message<shelf.ShelfBody?> {
   Response(super.body, {super.headers = const {}});
 
   /// Constructs an HTTP Response
@@ -21,7 +21,7 @@ abstract class Response extends Message<shelf.Body?> {
     Map<String, dynamic>? headers,
   }) {
     return ResponseImpl._(
-      body: body == null ? null : Body(body),
+      body: body == null ? null : ShelfBody(body),
       ended: false,
       statusCode: statusCode,
       headers: headers ?? {},

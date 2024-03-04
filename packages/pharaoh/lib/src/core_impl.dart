@@ -151,7 +151,7 @@ class $PharaohImpl extends RouterContract
       //
       // TODO(codekeyz): Do this more cleanly when sdk#27886 is fixed.
       final newStream = chunkedCoding.decoder.bind(res_.body!.read());
-      res_.body = shelf.Body(newStream);
+      res_.body = shelf.ShelfBody(newStream);
       request.headers.set(HttpHeaders.transferEncodingHeader, 'chunked');
     } else if (statusCode >= 200 &&
         statusCode != 204 &&

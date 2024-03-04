@@ -44,6 +44,6 @@ abstract class Message<T> {
 
   int? get contentLength {
     final content = body;
-    return content is Body ? content.contentLength : null;
+    return content is ShelfBody ? content.contentLength : null;
   }
 }

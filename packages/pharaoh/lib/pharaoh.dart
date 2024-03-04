@@ -16,4 +16,4 @@ export 'package:spanner/spanner.dart';
 
 // shelf
 export 'src/shelf_interop/adapter.dart';
-export 'src/shelf_interop/shelf.dart' show Body;
+export 'src/shelf_interop/shelf.dart' show ShelfBody;

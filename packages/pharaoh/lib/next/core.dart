@@ -7,14 +7,15 @@ import 'package:meta/meta.dart';
 import 'package:pharaoh/pharaoh.dart';
 import 'package:spookie/spookie.dart' as spookie;
 
-import '_core/container.dart';
 import 'http.dart';
-import '_router/meta.dart';
-import '_core/reflector.dart';
 import 'router.dart';
-import '_core/config.dart';
 
+import '_core/container.dart';
+import '_core/reflector.dart';
+import '_core/config.dart';
 export '_core/config.dart';
+
+export 'package:pharaoh/pharaoh.dart';
 
 part '_core/core_impl.dart';
 

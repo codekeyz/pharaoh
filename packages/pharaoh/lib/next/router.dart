@@ -10,6 +10,8 @@ import '_core/reflector.dart';
 import '_router/utils.dart';
 import 'core.dart';
 
+export 'package:spanner/spanner.dart' show HTTPMethod;
+
 part '_router/definition.dart';
 
 abstract interface class Route {
