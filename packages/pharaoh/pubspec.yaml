@@ -18,6 +18,14 @@ dependencies:
   # We only need this to implement inter-operability for shelf
   shelf: ^1.4.1
 
+  # framework
+  reflectable: ^4.0.5
+  get_it: ^7.6.7
+  grammer: ^1.0.3
+  dotenv: ^4.2.0
+  ez_validator:
+    git: https://github.com/codekeyz/ez-validator-yaroo.git
+
 dev_dependencies:
   spookie:
   lints: ^3.0.0
