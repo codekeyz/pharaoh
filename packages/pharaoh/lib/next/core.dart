@@ -98,7 +98,7 @@ abstract class ApplicationFactory {
   }
 
   Future<void> startServer() async {
-    final app = Application.instance as _YarooAppImpl;
+    final app = Application.instance as _PharaohNextImpl;
 
     await app
         ._createPharaohInstance(onException: onApplicationException)
@@ -107,7 +107,7 @@ abstract class ApplicationFactory {
 
   Future<void> _bootstrapComponents(AppConfig config) async {
     final spanner = Spanner()..addMiddleware('/', bodyParser);
-    Application.instance = _YarooAppImpl(config, spanner);
+    Application.instance = _PharaohNextImpl(config, spanner);
 
     final providerInstances = providers.map(createNewInstance<ServiceProvider>);
 
@@ -182,7 +182,7 @@ abstract class ApplicationFactory {
 
   @visibleForTesting
   Future<spookie.Spookie> get tester {
-    final app = (Application.instance as _YarooAppImpl);
+    final app = (Application.instance as _PharaohNextImpl);
     return spookie.request(
         app._createPharaohInstance(onException: onApplicationException));
   }

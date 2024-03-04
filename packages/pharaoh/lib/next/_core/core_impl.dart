@@ -2,13 +2,13 @@
 
 part of '../core.dart';
 
-class _YarooAppImpl implements Application {
+class _PharaohNextImpl implements Application {
   late final AppConfig _appConfig;
   late final Spanner _spanner;
 
   ViewEngine? _viewEngine;
 
-  _YarooAppImpl(this._appConfig, this._spanner);
+  _PharaohNextImpl(this._appConfig, this._spanner);
 
   @override
   T singleton<T extends Object>(T instance) => registerSingleton<T>(instance);
