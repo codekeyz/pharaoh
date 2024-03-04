@@ -26,7 +26,7 @@ jobs:
         run: |
           dart pub global activate melos
           melos bootstrap
-          dart run build_runner build --delete-conflicting-outputs
+          cd packages/pharaoh && dart run build_runner build --delete-conflicting-outputs
 
       - name: Check formatting
         run: melos format -- --set-exit-if-changed
@@ -48,7 +48,7 @@ jobs:
         run: |
           dart pub global activate melos
           melos bootstrap
-          dart run build_runner build --delete-conflicting-outputs
+          cd packages/pharaoh && dart run build_runner build --delete-conflicting-outputs
 
       - name: Run Unit tests
         run: melos tests:ci
