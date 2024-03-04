@@ -24,8 +24,9 @@ dependencies:
   grammer: ^1.0.3
   dotenv: ^4.2.0
   ez_validator:
+    # ignore: invalid_dependency
     git: https://github.com/codekeyz/ez-validator-yaroo.git
+  spookie:
 
 dev_dependencies:
-  spookie:
   lints: ^3.0.0

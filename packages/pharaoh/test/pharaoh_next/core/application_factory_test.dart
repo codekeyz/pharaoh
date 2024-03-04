@@ -2,7 +2,6 @@ import 'package:pharaoh/next/core.dart';
 import 'package:pharaoh/next/http.dart';
 import 'package:pharaoh/next/router.dart';
 
-import 'package:pharaoh/pharaoh.dart';
 import 'package:spookie/spookie.dart';
 
 import 'application_factory_test.reflectable.dart';

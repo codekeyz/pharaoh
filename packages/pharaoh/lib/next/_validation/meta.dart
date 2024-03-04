@@ -15,8 +15,11 @@ abstract class ClassPropertyValidator<T extends Object> {
 
   Type get propertyType => T;
 
-  const ClassPropertyValidator(
-      {this.name, this.defaultVal, this.optional = false});
+  const ClassPropertyValidator({
+    this.name,
+    this.defaultVal,
+    this.optional = false,
+  });
 
   EzValidator<T> get validator {
     final base = EzValidator<T>(defaultValue: defaultVal, optional: optional);

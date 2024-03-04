@@ -2,8 +2,6 @@ library;
 
 import 'dart:io';
 
-import 'package:pharaoh/pharaoh.dart';
-
 import '_core/reflector.dart';
 import 'core.dart';
 

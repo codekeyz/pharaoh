@@ -2,7 +2,6 @@ library router;
 
 import 'package:grammer/grammer.dart';
 import 'package:meta/meta.dart';
-import 'package:pharaoh/pharaoh.dart';
 
 import '_validation/dto.dart';
 import '_router/meta.dart';
