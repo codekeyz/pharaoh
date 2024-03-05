@@ -9,11 +9,18 @@ class RouteMapping {
   @visibleForTesting
   String get stringVal => '${methods.map((e) => e.name).toList()}: $_path';
 
-  String get path => cleanRoute(_path);
+  String get path => _path;
 
   const RouteMapping(this.methods, this._path);
 
-  RouteMapping prefix(String prefix) => RouteMapping(methods, '$prefix$_path');
+  RouteMapping prefix(String prefix) {
+    final newPath = prefix == BASE_PATH
+        ? _path
+        : _path == BASE_PATH
+            ? prefix
+            : '$prefix$_path';
+    return RouteMapping(methods, newPath);
+  }
 }
 
 abstract class RouteDefinition {
@@ -42,6 +49,13 @@ class UseAliasedMiddleware {
   }) {
     return RouteGroupDefinition._(name, prefix: prefix, definitions: routes)
       ..middleware(mdw);
+  }
+
+  RouteGroupDefinition routes(List<RouteDefinition> routes) {
+    return RouteGroupDefinition._(
+      BASE_PATH,
+      definitions: routes,
+    )..middleware(mdw);
   }
 }
 
@@ -79,16 +93,23 @@ class ControllerMethodParam {
 
   final BaseDTO? dto;
 
-  const ControllerMethodParam(this.name, this.type,
-      {this.meta, this.optional = false, this.defaultValue, this.dto});
+  const ControllerMethodParam(
+    this.name,
+    this.type, {
+    this.meta,
+    this.optional = false,
+    this.defaultValue,
+    this.dto,
+  });
 }
 
 class ControllerRouteMethodDefinition extends RouteDefinition {
   final ControllerMethod method;
 
   ControllerRouteMethodDefinition(
-      ControllerMethodDefinition defn, RouteMapping mapping)
-      : method = parseControllerMethod(defn),
+    ControllerMethodDefinition defn,
+    RouteMapping mapping,
+  )   : method = parseControllerMethod(defn),
         super(RouteDefinitionType.route) {
     route = mapping;
   }
@@ -113,7 +134,9 @@ class RouteGroupDefinition extends RouteDefinition {
     String? prefix,
     Iterable<RouteDefinition> definitions = const [],
   }) : super(RouteDefinitionType.group) {
-    route = RouteMapping([HTTPMethod.ALL], '/${prefix ?? name.toLowerCase()}');
+    final r = (prefix ?? name).toLowerCase();
+    final routePath = r.startsWith(BASE_PATH) ? r : '/$r';
+    route = RouteMapping([HTTPMethod.ALL], routePath);
     if (definitions.isEmpty) {
       throw StateError('Route definitions not provided for group');
     }
@@ -159,10 +182,8 @@ class FunctionalRouteDefinition extends RouteDefinition {
   final Middleware? _requestHandler;
 
   FunctionalRouteDefinition.route(
-    this.method,
-    this.path,
-    RequestHandler handler,
-  )   : _middleware = null,
+      this.method, this.path, RequestHandler handler)
+      : _middleware = null,
         _requestHandler = useRequestHandler(handler),
         super(RouteDefinitionType.route) {
     route = RouteMapping([method], path);
