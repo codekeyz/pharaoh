@@ -31,7 +31,7 @@ final ReqResHook viewRenderHook = (ReqRes reqRes) async {
     final result = await Isolate.run(
       () => viewEngine.render(viewData.name, viewData.data),
     );
-    res = res.end()..body = shelf.Body(result);
+    res = res.end()..body = shelf.ShelfBody(result);
   } catch (e) {
     throw PharaohException.value('Failed to render view ${viewData.name}', e);
   }

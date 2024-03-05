@@ -7,3 +7,4 @@
 pubspec.lock
 .idea/
 **/pubspec_overrides.yaml
+**.reflectable.dart
