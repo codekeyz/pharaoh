@@ -1,11 +1,4 @@
-import 'package:collection/collection.dart';
-import 'package:reflectable/reflectable.dart' as r;
-
-import 'container.dart';
-import '../router.dart';
-import '../_router/utils.dart';
-import '../_validation/dto.dart';
-import '../http.dart';
+part of '../core.dart';
 
 class Injectable extends r.Reflectable {
   const Injectable()

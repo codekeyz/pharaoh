@@ -1,4 +1,4 @@
-import 'package:get_it/get_it.dart';
+part of '../core.dart';
 
 final GetIt _getIt = GetIt.instance;
 
