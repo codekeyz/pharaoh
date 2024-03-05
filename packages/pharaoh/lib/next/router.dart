@@ -5,7 +5,6 @@ import 'dart:convert';
 import 'package:ez_validator/ez_validator.dart';
 import 'package:grammer/grammer.dart';
 import 'package:meta/meta.dart';
-import 'package:pharaoh/pharaoh.dart';
 
 import 'core.dart';
 import 'validation.dart';
@@ -19,9 +18,7 @@ abstract interface class Route {
       UseAliasedMiddleware(name);
 
   static ControllerRouteMethodDefinition get(
-    String path,
-    ControllerMethodDefinition defn,
-  ) =>
+          String path, ControllerMethodDefinition defn) =>
       ControllerRouteMethodDefinition(
           defn, RouteMapping([HTTPMethod.GET], path));
 
@@ -94,16 +91,11 @@ abstract interface class Route {
   }
 
   static FunctionalRouteDefinition route(
-    HTTPMethod method,
-    String path,
-    RequestHandler handler,
-  ) =>
+          HTTPMethod method, String path, RequestHandler handler) =>
       FunctionalRouteDefinition.route(method, path, handler);
 
-  static FunctionalRouteDefinition notFound(
-    RequestHandler handler, [
-    HTTPMethod method = HTTPMethod.ALL,
-  ]) =>
+  static FunctionalRouteDefinition notFound(RequestHandler handler,
+          [HTTPMethod method = HTTPMethod.ALL]) =>
       Route.route(method, '/*', handler);
 }
 

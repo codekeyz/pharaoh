@@ -2,20 +2,18 @@ library;
 
 import 'dart:io';
 
-import 'package:pharaoh/pharaoh.dart';
-
 import 'core.dart';
 
 export 'package:pharaoh/pharaoh.dart'
     show
+        HTTPMethod,
         Request,
         Response,
-        NextFunction,
-        HTTPMethod,
-        ReqRes,
-        RequestHandler,
         Middleware,
-        MiddlewareChainExtension;
+        MiddlewareChainExtension,
+        cookieParser,
+        CookieOpts,
+        bakeCookie;
 
 @inject
 abstract class ClassMiddleware extends AppInstance {

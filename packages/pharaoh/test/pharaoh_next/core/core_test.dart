@@ -78,7 +78,7 @@ void main() {
           Route.route(HTTPMethod.GET, '/', (req, res) => null),
         ]);
 
-        expect(group.paths, ['[ALL]: /users', '[GET]: /users/']);
+        expect(group.paths, ['[ALL]: /users', '[GET]: /users']);
       });
 
       test('should error when not exist', () {

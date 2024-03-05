@@ -4,7 +4,6 @@ import 'package:collection/collection.dart';
 import 'package:ez_validator/ez_validator.dart';
 import 'package:meta/meta.dart';
 import 'package:pharaoh/next/core.dart';
-import 'package:pharaoh/pharaoh.dart';
 import 'package:reflectable/reflectable.dart' as r;
 
 import 'router.dart';
