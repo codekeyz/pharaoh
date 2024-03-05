@@ -5,7 +5,6 @@ import 'dart:convert';
 import 'package:ez_validator/ez_validator.dart';
 import 'package:grammer/grammer.dart';
 import 'package:meta/meta.dart';
-import 'package:pharaoh/pharaoh.dart';
 
 import 'core.dart';
 import 'validation.dart';
