@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:pharaoh/next/core.dart';
-import 'package:pharaoh/next/http.dart';
 import 'package:pharaoh/next/router.dart';
 import 'package:pharaoh/next/validation.dart';
 

@@ -2,10 +2,20 @@ library;
 
 import 'dart:io';
 
-import '_core/reflector.dart';
+import 'package:pharaoh/pharaoh.dart';
+
 import 'core.dart';
 
-export '_router/meta.dart';
+export 'package:pharaoh/pharaoh.dart'
+    show
+        Request,
+        Response,
+        NextFunction,
+        HTTPMethod,
+        ReqRes,
+        RequestHandler,
+        Middleware,
+        MiddlewareChainExtension;
 
 @inject
 abstract class ClassMiddleware extends AppInstance {

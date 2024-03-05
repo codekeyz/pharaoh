@@ -1,9 +1,4 @@
-import 'dart:convert';
-
-import 'package:ez_validator/ez_validator.dart';
-import 'package:pharaoh/pharaoh.dart';
-
-import '../router.dart';
+part of '../router.dart';
 
 abstract class RequestAnnotation<T> {
   final String? name;

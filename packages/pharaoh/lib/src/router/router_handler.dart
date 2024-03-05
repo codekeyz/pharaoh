@@ -24,7 +24,7 @@ extension ReqResExtension on ReqRes {
   }
 }
 
-extension HandlerChainExtension on Middleware {
+extension MiddlewareChainExtension on Middleware {
   /// Chains the current middleware with a new one.
   Middleware chain(Middleware mdw) => (req, res, done) => this(
         req,

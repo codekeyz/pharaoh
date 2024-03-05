@@ -1,6 +1,4 @@
-import 'dart:convert';
-
-import 'package:dotenv/dotenv.dart';
+part of '../core.dart';
 
 DotEnv? _env;
 

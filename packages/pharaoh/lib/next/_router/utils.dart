@@ -1,3 +1,5 @@
+part of '../router.dart';
+
 String cleanRoute(String route) {
   final result =
       route.replaceAll(RegExp(r'/+'), '/').replaceAll(RegExp(r'/$'), '');
