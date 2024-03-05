@@ -12,7 +12,6 @@ class CookieOpts {
   final String? secret;
   final DateTime? expires;
   final Duration? maxAge;
-  final SameSite? sameSite;
   final String path;
   final bool secure;
   final bool signed;
@@ -22,7 +21,6 @@ class CookieOpts {
     this.domain,
     this.expires,
     this.maxAge,
-    this.sameSite,
     this.secret,
     this.httpOnly = false,
     this.signed = false,
@@ -35,7 +33,6 @@ class CookieOpts {
     String? secret,
     DateTime? expires,
     Duration? maxAge,
-    SameSite? sameSite,
     String? path,
     bool? secure,
     bool? signed,
@@ -46,7 +43,6 @@ class CookieOpts {
       secret: secret ?? this.secret,
       expires: expires ?? this.expires,
       maxAge: maxAge ?? this.maxAge,
-      sameSite: sameSite ?? this.sameSite,
       path: path ?? this.path,
       secure: secure ?? this.secure,
       signed: signed ?? this.signed,
@@ -101,6 +97,5 @@ Cookie bakeCookie(String name, Object? value, CookieOpts opts) {
     ..domain = opts.domain
     ..path = opts.path
     ..secure = opts.secure
-    ..sameSite = opts.sameSite
     ..setMaxAge(opts.maxAge);
 }
