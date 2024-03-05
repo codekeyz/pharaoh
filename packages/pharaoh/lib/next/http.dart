@@ -9,6 +9,7 @@ export 'package:pharaoh/pharaoh.dart'
         HTTPMethod,
         Request,
         Response,
+        NextFunction,
         Middleware,
         MiddlewareChainExtension,
         cookieParser,
