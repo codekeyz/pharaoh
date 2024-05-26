@@ -1,8 +1,6 @@
 part of 'core.dart';
 
-class $PharaohImpl extends RouterContract
-    with RouteDefinitionMixin
-    implements Pharaoh {
+class $PharaohImpl extends RouterContract with RouteDefinitionMixin implements Pharaoh {
   late final HttpServer _server;
 
   OnErrorCallback? _onErrorCb;
@@ -21,9 +19,6 @@ class $PharaohImpl extends RouterContract
 
   @override
   RouterContract router() => GroupRouter();
-
-  @override
-  List<RouteEntry> get routes => spanner.routes;
 
   @override
   String get routeStr => spanner.routeStr;
@@ -66,8 +61,7 @@ class $PharaohImpl extends RouterContract
       ..autoCompress = true;
     _server.listen(handleRequest);
 
-    print(
-        'Server start on PORT: ${_server.port} -> ${uri.scheme}://localhost:${_server.port}');
+    print('Server start on PORT: ${_server.port} -> ${uri.scheme}://localhost:${_server.port}');
     return this;
   }
 
@@ -97,10 +91,7 @@ class $PharaohImpl extends RouterContract
       return forward(
         httpReq,
         response.json(
-          {
-            'error': requestError.exception.toString(),
-            'trace': requestError.trace.toString()
-          },
+          {'error': requestError.exception.toString(), 'trace': requestError.trace.toString()},
           statusCode: status,
         ),
       );
@@ -160,8 +151,7 @@ class $PharaohImpl extends RouterContract
         res_.mimeType != 'multipart/byteranges') {
       // If the response isn't chunked yet and there's no other way to tell its
       // length, enable `dart:io`'s chunked encoding.
-      request.response.headers
-          .set(HttpHeaders.transferEncodingHeader, 'chunked');
+      request.response.headers.set(HttpHeaders.transferEncodingHeader, 'chunked');
     }
 
     // headers to write to the response
@@ -173,14 +163,12 @@ class $PharaohImpl extends RouterContract
       request.response.headers.add(_XPoweredByHeader, 'Pharaoh');
     }
     if (!hders.containsKey(HttpHeaders.dateHeader)) {
-      request.response.headers
-          .add(HttpHeaders.dateHeader, DateTime.now().toUtc());
+      request.response.headers.add(HttpHeaders.dateHeader, DateTime.now().toUtc());
     }
     if (!hders.containsKey(HttpHeaders.contentLengthHeader)) {
       final contentLength = res_.contentLength;
       if (contentLength != null) {
-        request.response.headers
-            .add(HttpHeaders.contentLengthHeader, contentLength);
+        request.response.headers.add(HttpHeaders.contentLengthHeader, contentLength);
       }
     }
 
