@@ -1,4 +1,4 @@
-import '../tree/tree.dart';
+part of '../tree/node.dart';
 
 typedef Indexed<T> = ({int index, T value});
 
@@ -17,11 +17,9 @@ mixin HandlerStore {
 
   void addRoute<T>(HTTPMethod method, IndexedValue<T> handler) {
     if (requestHandlers.containsKey(method)) {
-      var name = (this as dynamic).name;
-      throw ArgumentError.value(
-          '${method.name}: $name', null, 'Route entry already exists');
+      final route = (this as Node).route;
+      throw ArgumentError.value('${method.name}: $route', null, 'Route entry already exists');
     }
-
     requestHandlers[method] = handler;
   }
 

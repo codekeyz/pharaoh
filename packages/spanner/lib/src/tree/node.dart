@@ -2,45 +2,52 @@ import 'package:collection/collection.dart';
 import 'package:equatable/equatable.dart';
 
 import 'tree.dart';
-import '../route/action.dart';
 import '../parametric/definition.dart';
 import '../parametric/utils.dart';
 
+part '../route/action.dart';
+
 abstract class Node with EquatableMixin, HandlerStore {
-  final Map<String, Node> _children = {};
+  final _indexList = <String>[];
+  final _childList = <Node>[];
 
-  Map<String, Node> get children => UnmodifiableMapView(_children);
-
-  String get name;
+  String get route;
 
   bool terminal = false;
 
   Map<String, dynamic> params = {};
 
-  bool hasChild(String char) => children.containsKey(char);
+  UnmodifiableListView<String> get paths => UnmodifiableListView(_indexList);
 
-  Node getChild(String char) => children[char]!;
+  UnmodifiableListView<Node> get children => UnmodifiableListView(_childList);
 
-  bool get hasChildren => children.isNotEmpty;
+  bool hasChild(String char) => _indexList.contains(char);
+
+  Node getChild(String char) => _childList[_indexList.indexOf(char)];
+
+  Node? maybeChild(String char) {
+    final indexOfChar = _indexList.indexOf(char);
+    return indexOfChar == -1 ? null : _childList[indexOfChar];
+  }
+
+  bool get hasChildren => _childList.isNotEmpty;
 
   ParametricNode? _paramNodecache;
   ParametricNode? get paramNode {
     if (_paramNodecache != null) return _paramNodecache;
-    final node = children.values.firstWhereOrNull((e) => e is ParametricNode);
-    if (node == null) return null;
-    return _paramNodecache = (node as ParametricNode);
+    return _paramNodecache = _childList.firstWhereOrNull((e) => e is ParametricNode) as ParametricNode?;
   }
 
   WildcardNode? _wildcardNodeCache;
   WildcardNode? get wildcardNode {
     if (_wildcardNodeCache != null) return _wildcardNodeCache;
-    final node = children.values.firstWhereOrNull((e) => e is WildcardNode);
-    if (node == null) return null;
-    return _wildcardNodeCache = (node as WildcardNode);
+    return _wildcardNodeCache = _childList.firstWhereOrNull((e) => e is WildcardNode) as WildcardNode?;
   }
 
   Node addChildAndReturn(String key, Node node) {
-    return _children[key] = node;
+    _indexList.add(key);
+    _childList.add(node);
+    return node;
   }
 }
 
@@ -50,10 +57,10 @@ class StaticNode extends Node {
   StaticNode(this._name);
 
   @override
-  String get name => _name;
+  String get route => _name;
 
   @override
-  List<Object?> get props => [name, children];
+  List<Object?> get props => [route, _childList];
 }
 
 class ParametricNode extends Node {
@@ -79,8 +86,7 @@ class ParametricNode extends Node {
 
   final List<ParameterDefinition> _definitions = [];
 
-  List<ParameterDefinition> get definitions =>
-      UnmodifiableListView(_definitions);
+  List<ParameterDefinition> get definitions => UnmodifiableListView(_definitions);
 
   ParametricNode(ParameterDefinition defn) {
     _definitions.add(defn);
@@ -89,8 +95,7 @@ class ParametricNode extends Node {
   bool get hasTerminal => _definitions.any((e) => e.terminal);
 
   void addNewDefinition(ParameterDefinition defn) {
-    final existing =
-        _definitions.firstWhereOrNull((e) => e.isExactExceptName(defn));
+    final existing = _definitions.firstWhereOrNull((e) => e.isExactExceptName(defn));
 
     if (existing != null) {
       if (existing.name != defn.name) {
@@ -120,10 +125,10 @@ class ParametricNode extends Node {
   }
 
   @override
-  String get name => ParametricNode.key;
+  String get route => ParametricNode.key;
 
   @override
-  List<Object?> get props => [name, _definitions, children];
+  List<Object?> get props => [route, _definitions, _childList];
 
   ParameterDefinition? findMatchingDefinition(
     HTTPMethod method,
@@ -146,7 +151,7 @@ class WildcardNode extends StaticNode {
   WildcardNode() : super(WildcardNode.key);
 
   @override
-  List<Object?> get props => [name];
+  List<Object?> get props => [route];
 
   @override
   bool get terminal => true;

@@ -1,12 +1,13 @@
 import 'package:meta/meta.dart';
 
 import 'node.dart';
-import '../route/action.dart';
 import '../parametric/definition.dart';
 import '../parametric/utils.dart';
 
 // ignore: constant_identifier_names
 const BASE_PATH = '/';
+
+typedef RouteEntry = ({HTTPMethod method, String path});
 
 // ignore: constant_identifier_names
 enum HTTPMethod { GET, HEAD, POST, PUT, DELETE, ALL, PATCH, OPTIONS, TRACE }
@@ -35,10 +36,7 @@ class Spanner {
 
   Spanner({this.config = const RouterConfig()}) : _root = StaticNode(BASE_PATH);
 
-  List<RouteEntry> get routes => _getRoutes(_root);
-
-  String get routeStr =>
-      routes.map((e) => '${e.method.name} ${e.path}').join('\n');
+  String get routeStr => throw UnimplementedError('');
 
   void addRoute<T>(HTTPMethod method, String path, T handler) {
     final indexedHandler = (index: _nextIndex, value: handler);
@@ -136,7 +134,7 @@ class Spanner {
 
     final key = _getNodeKey(part);
 
-    var child = node.children[part];
+    var child = node.maybeChild(part);
     if (child != null) {
       return node.addChildAndReturn(key, child);
     } else {
@@ -156,8 +154,7 @@ class Spanner {
 
       final paramNode = node.paramNode;
       if (paramNode == null) {
-        final defn =
-            ParameterDefinition.from(routePart, terminal: isLastSegment);
+        final defn = ParameterDefinition.from(routePart, terminal: isLastSegment);
         final newNode = node.addChildAndReturn(key, ParametricNode(defn));
         if (isLastSegment) return defn;
 
@@ -345,8 +342,7 @@ class Spanner {
   String _cleanPath(String path) {
     if ([BASE_PATH, WildcardNode.key].contains(path)) return path;
     if (!path.startsWith(BASE_PATH)) {
-      throw ArgumentError.value(
-          path, null, 'Route registration must start with `/`');
+      throw ArgumentError.value(path, null, 'Route registration must start with `/`');
     }
     if (config.ignoreDuplicateSlashes) {
       path = path.replaceAll(RegExp(r'/+'), '/');
@@ -359,8 +355,7 @@ class Spanner {
 
   List<String> _getRouteSegments(String route) => route.split('/');
 
-  String _getNodeKey(String part) =>
-      part.isParametric ? ParametricNode.key : part;
+  String _getNodeKey(String part) => part.isParametric ? ParametricNode.key : part;
 }
 
 class RouteResult {
@@ -372,51 +367,4 @@ class RouteResult {
   final dynamic actual;
 
   const RouteResult(this.params, this.values, {this.actual});
-}
-
-List<RouteEntry> _getRoutes(Node node) {
-  final routes = <RouteEntry>[];
-
-  void iterateNode(Node node, String prefix) {
-    final hasTerminalInParametricNode =
-        node is ParametricNode && node.hasTerminal;
-    if (node.terminal || hasTerminalInParametricNode) {
-      final entries = _getNodeEntries(node, prefix);
-      routes.addAll(entries);
-    }
-
-    node.children.forEach((char, node) {
-      String path = '$prefix$char';
-      if (node.hasChildren) path += ' / ';
-
-      return iterateNode(node, path);
-    });
-  }
-
-  iterateNode(node, '/ ');
-
-  return routes;
-}
-
-typedef RouteEntry = ({HTTPMethod method, String path});
-
-Iterable<RouteEntry> _getNodeEntries(Node node, String prefix) {
-  switch (node.runtimeType) {
-    case StaticNode:
-    case WildcardNode:
-      final methods = (node as StaticNode).methods;
-      return methods.map<RouteEntry>((e) => (method: e, path: prefix));
-    case ParametricNode:
-      final definitions =
-          (node as ParametricNode).definitions.where((e) => e.terminal);
-      final entries = <RouteEntry>[];
-      for (final defn in definitions) {
-        final result =
-            defn.methods.map<RouteEntry>((e) => (method: e, path: prefix));
-        entries.addAll(result);
-      }
-      return entries;
-  }
-
-  return [];
 }
