@@ -9,7 +9,6 @@ import 'package:spanner/spanner.dart';
 import 'http/request.dart';
 import 'http/response.dart';
 import 'middleware/session_mw.dart';
-import 'router/_handler_executor.dart';
 import 'router/router_contract.dart';
 import 'router/router_handler.dart';
 import 'router/router_mixin.dart';

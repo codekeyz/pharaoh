@@ -6,13 +6,15 @@ import '../utils/exceptions.dart';
 
 typedef ReqRes = ({Request req, Response res});
 
-typedef NextFunction<Next> = dynamic Function([dynamic result, Next? chain]);
+typedef HandlerResult = ({bool canNext, ReqRes reqRes});
 
-typedef Middleware = Function(Request req, Response res, NextFunction next);
+typedef ReqResHook = FutureOr<ReqRes> Function(ReqRes reqRes);
+
+typedef NextFunction<Next> = dynamic Function([dynamic result, Next? chain]);
 
 typedef RequestHandler = FutureOr<dynamic> Function(Request req, Response res);
 
-typedef ReqResHook = FutureOr<ReqRes> Function(ReqRes reqRes);
+typedef Middleware = FutureOr<void> Function(Request req, Response res, NextFunction next);
 
 extension ReqResExtension on ReqRes {
   ReqRes merge(dynamic val) {
@@ -43,8 +45,29 @@ extension MiddlewareChainExtension on Middleware {
       );
 }
 
-Middleware useRequestHandler(RequestHandler handler) =>
-    (req, res, next_) async {
+Middleware useRequestHandler(RequestHandler handler) => (req, res, next_) async {
       final result = await handler(req, res);
       next_(result);
     };
+
+Future<HandlerResult> executeHandlers(Iterable<Middleware> handlers, final ReqRes reqRes) async {
+  ReqRes result = reqRes;
+  bool canGotoNext = false;
+  final stack = List<Middleware>.from(handlers);
+
+  while (stack.isNotEmpty) {
+    final middleware = stack.removeAt(0);
+    canGotoNext = false;
+
+    await middleware.call(result.req, result.res, ([nr_, chain]) {
+      result = result.merge(nr_);
+      canGotoNext = true;
+      if (result.res.ended) return;
+      if (chain != null) stack.insert(0, chain);
+    });
+
+    if (result.res.ended) break;
+  }
+
+  return (canNext: canGotoNext, reqRes: result);
+}
