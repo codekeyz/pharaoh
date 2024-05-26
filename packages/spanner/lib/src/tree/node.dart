@@ -35,13 +35,15 @@ abstract class Node with EquatableMixin, HandlerStore {
   ParametricNode? _paramNodecache;
   ParametricNode? get paramNode {
     if (_paramNodecache != null) return _paramNodecache;
-    return _paramNodecache = _childList.firstWhereOrNull((e) => e is ParametricNode) as ParametricNode?;
+    return _paramNodecache = _childList
+        .firstWhereOrNull((e) => e is ParametricNode) as ParametricNode?;
   }
 
   WildcardNode? _wildcardNodeCache;
   WildcardNode? get wildcardNode {
     if (_wildcardNodeCache != null) return _wildcardNodeCache;
-    return _wildcardNodeCache = _childList.firstWhereOrNull((e) => e is WildcardNode) as WildcardNode?;
+    return _wildcardNodeCache =
+        _childList.firstWhereOrNull((e) => e is WildcardNode) as WildcardNode?;
   }
 
   Node addChildAndReturn(String key, Node node) {
@@ -86,7 +88,8 @@ class ParametricNode extends Node {
 
   final List<ParameterDefinition> _definitions = [];
 
-  List<ParameterDefinition> get definitions => UnmodifiableListView(_definitions);
+  List<ParameterDefinition> get definitions =>
+      UnmodifiableListView(_definitions);
 
   ParametricNode(ParameterDefinition defn) {
     _definitions.add(defn);
@@ -95,7 +98,8 @@ class ParametricNode extends Node {
   bool get hasTerminal => _definitions.any((e) => e.terminal);
 
   void addNewDefinition(ParameterDefinition defn) {
-    final existing = _definitions.firstWhereOrNull((e) => e.isExactExceptName(defn));
+    final existing =
+        _definitions.firstWhereOrNull((e) => e.isExactExceptName(defn));
 
     if (existing != null) {
       if (existing.name != defn.name) {

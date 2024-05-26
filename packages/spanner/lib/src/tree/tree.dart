@@ -154,7 +154,8 @@ class Spanner {
 
       final paramNode = node.paramNode;
       if (paramNode == null) {
-        final defn = ParameterDefinition.from(routePart, terminal: isLastSegment);
+        final defn =
+            ParameterDefinition.from(routePart, terminal: isLastSegment);
         final newNode = node.addChildAndReturn(key, ParametricNode(defn));
         if (isLastSegment) return defn;
 
@@ -342,7 +343,8 @@ class Spanner {
   String _cleanPath(String path) {
     if ([BASE_PATH, WildcardNode.key].contains(path)) return path;
     if (!path.startsWith(BASE_PATH)) {
-      throw ArgumentError.value(path, null, 'Route registration must start with `/`');
+      throw ArgumentError.value(
+          path, null, 'Route registration must start with `/`');
     }
     if (config.ignoreDuplicateSlashes) {
       path = path.replaceAll(RegExp(r'/+'), '/');
@@ -355,7 +357,8 @@ class Spanner {
 
   List<String> _getRouteSegments(String route) => route.split('/');
 
-  String _getNodeKey(String part) => part.isParametric ? ParametricNode.key : part;
+  String _getNodeKey(String part) =>
+      part.isParametric ? ParametricNode.key : part;
 }
 
 class RouteResult {

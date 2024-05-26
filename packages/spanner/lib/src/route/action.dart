@@ -18,7 +18,8 @@ mixin HandlerStore {
   void addRoute<T>(HTTPMethod method, IndexedValue<T> handler) {
     if (requestHandlers.containsKey(method)) {
       final route = (this as Node).route;
-      throw ArgumentError.value('${method.name}: $route', null, 'Route entry already exists');
+      throw ArgumentError.value(
+          '${method.name}: $route', null, 'Route entry already exists');
     }
     requestHandlers[method] = handler;
   }

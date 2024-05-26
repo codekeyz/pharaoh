@@ -60,7 +60,9 @@ void main() {
       expect(result?.values, ['mee-moo']);
     });
 
-    test('static route and wildcard on same method with additional HTTPMETHOD.ALL', () {
+    test(
+        'static route and wildcard on same method with additional HTTPMETHOD.ALL',
+        () {
       final router = Spanner()
         ..addRoute(HTTPMethod.GET, '/hello-world', 'foo-bar')
         ..addRoute(HTTPMethod.GET, '/*', 'mee-moo')

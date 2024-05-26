@@ -10,7 +10,8 @@ final _knownDescriptors = {'number': numDescriptor};
 /// build a parametric definition from a route part
 ParameterDefinition? _buildParamDefinition(String part, bool terminal) {
   if (closeDoorParametricRegex.hasMatch(part)) {
-    throw ArgumentError.value(part, null, 'Parameter definition is invalid. Close door neighbors');
+    throw ArgumentError.value(
+        part, null, 'Parameter definition is invalid. Close door neighbors');
   }
 
   ParameterDefinition makeDefinition(RegExpMatch m, {bool end = false}) {
@@ -21,7 +22,8 @@ ParameterDefinition? _buildParamDefinition(String part, bool terminal) {
       final result = parts.sublist(1).map((e) {
         final value = e.isRegex ? regexDescriptor : _knownDescriptors[e];
         if (value == null) {
-          throw ArgumentError.value(e, null, 'Parameter definition has invalid descriptor');
+          throw ArgumentError.value(
+              e, null, 'Parameter definition has invalid descriptor');
         }
         return value;
       });
@@ -52,7 +54,8 @@ ParameterDefinition? _buildParamDefinition(String part, bool terminal) {
     (i, e) => makeDefinition(e, end: i == (subdefns.length - 1) && terminal),
   );
 
-  return CompositeParameterDefinition._(parent, subparts: UnmodifiableListView(subparts));
+  return CompositeParameterDefinition._(parent,
+      subparts: UnmodifiableListView(subparts));
 }
 
 class ParameterDefinition with EquatableMixin, HandlerStore {
@@ -96,7 +99,9 @@ class ParameterDefinition with EquatableMixin, HandlerStore {
       if (!hasMethod) return false;
     }
 
-    return prefix == defn.prefix && suffix == defn.suffix && terminal == defn.terminal;
+    return prefix == defn.prefix &&
+        suffix == defn.suffix &&
+        terminal == defn.terminal;
   }
 
   Map<String, dynamic> resolveParams(final String pattern) {
@@ -146,7 +151,8 @@ class CompositeParameterDefinition extends ParameterDefinition {
   @override
   Map<String, dynamic> resolveParams(String pattern) {
     final params = resolveParamsFromPath(template, pattern);
-    final definitions = [this, ...subparts].where((e) => e.descriptors.isNotEmpty);
+    final definitions =
+        [this, ...subparts].where((e) => e.descriptors.isNotEmpty);
     if (definitions.isNotEmpty) {
       for (final defn in definitions) {
         params[defn.name] = defn.descriptors.fold<dynamic>(
