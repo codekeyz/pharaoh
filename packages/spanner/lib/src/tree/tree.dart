@@ -172,34 +172,40 @@ class Spanner {
 
   RouteResult? lookup(HTTPMethod method, dynamic route, {bool debug = false}) {
     final path = route is Uri ? route.path : route.toString();
-    late List<String> routeSegments;
+    final routeSegments = route is Uri
+        ? route.pathSegments
+        : path.split('/').where((part) => part.isNotEmpty).toList();
 
-    if (route is Uri) {
-      routeSegments = route.pathSegments;
-    } else {
-      final parts = path.split('/');
-      if (parts.first.isEmpty) parts.removeAt(0);
-      if (parts.last.isEmpty) parts.removeLast();
-      routeSegments = parts;
+    final resolvedParams = <String, dynamic>{};
+    final resolvedHandlers = <IndexedValue>[];
+
+    void insertHandler(IndexedValue handler) {
+      int index = resolvedHandlers.indexWhere((h) => h.index > handler.index);
+      if (index == -1) {
+        resolvedHandlers.add(handler);
+      } else {
+        resolvedHandlers.insert(index, handler);
+      }
     }
 
-    Node rootNode = _root;
+    void collectMiddlewares(Node node) {
+      for (final middleware in node.middlewares) {
+        insertHandler(middleware);
+      }
+    }
 
-    Map<String, dynamic> resolvedParams = {};
-    List<IndexedValue> resolvedHandlers = [...rootNode.middlewares];
+    Iterable<dynamic> getResults(IndexedValue? handler) => ([
+          ...resolvedHandlers,
+          if (handler != null) handler,
+        ]).map((e) => e.value);
+
+    Node rootNode = _root;
 
     /// keep track of last wildcard we encounter along route. We'll resort to this
     /// incase we don't find the route we were looking for.
     WildcardNode? wildcardNode = rootNode.wildcardNode;
 
-    List<dynamic> getResults(IndexedValue? handler) {
-      final resultingHandlers = [
-        if (handler != null) handler,
-        ...resolvedHandlers,
-      ]..sort((a, b) => a.index.compareTo(b.index));
-
-      return resultingHandlers.map((e) => e.value).toList();
-    }
+    collectMiddlewares(rootNode);
 
     if (path == BASE_PATH) {
       return RouteResult(
@@ -219,11 +225,8 @@ class Spanner {
 
     for (int i = 0; i < routeSegments.length; i++) {
       final String currPart = routeSegments[i];
-
-      var routePart = currPart;
-      if (!config.caseSensitive) routePart = routePart.toLowerCase();
-
-      final hasChild = rootNode.hasChild(routePart);
+      final routePart =
+          config.caseSensitive ? currPart : currPart.toLowerCase();
       final isLastPart = i == (routeSegments.length - 1);
 
       void useWildcard(WildcardNode wildcard) {
@@ -231,14 +234,10 @@ class Spanner {
         rootNode = wildcard;
       }
 
-      void extractNodeMiddlewares(StaticNode node) {
-        final mdws = node.middlewares;
-        if (mdws.isNotEmpty) resolvedHandlers.addAll(mdws);
-      }
-
-      if (hasChild) {
+      if (rootNode.hasChild(routePart)) {
         rootNode = rootNode.getChild(routePart);
-        extractNodeMiddlewares(rootNode as StaticNode);
+        collectMiddlewares(rootNode);
+
         final wcNode = rootNode.wildcardNode;
         if (wcNode != null) wildcardNode = wcNode;
 
@@ -257,14 +256,11 @@ class Spanner {
           return RouteResult(resolvedParams, getResults(null), actual: null);
         }
 
-        final hasChild = parametricNode.hasChild(routePart);
-        if (hasChild) {
-          devlog(
-            '- Found Static for             ->              $routePart',
-          );
+        if (parametricNode.hasChild(routePart)) {
+          devlog('- Found Static for             ->              $routePart');
           rootNode = parametricNode.getChild(routePart);
           final wcNode = rootNode.wildcardNode;
-          if (rootNode.wildcardNode != null) wildcardNode = wcNode;
+          if (wcNode != null) wildcardNode = wcNode;
           continue;
         }
 
@@ -331,9 +327,10 @@ class Spanner {
     }
 
     final handler = rootNode.getHandler(method);
-    if (handler == null) return null;
 
-    return RouteResult(resolvedParams, getResults(handler), actual: rootNode);
+    return handler == null
+        ? null
+        : RouteResult(resolvedParams, getResults(handler), actual: rootNode);
   }
 
   void printTree() {
@@ -363,7 +360,7 @@ class Spanner {
 
 class RouteResult {
   final Map<String, dynamic> params;
-  final List<dynamic> values;
+  final Iterable<dynamic> values;
 
   /// this is either a Node or Parametric Definition
   @visibleForTesting
