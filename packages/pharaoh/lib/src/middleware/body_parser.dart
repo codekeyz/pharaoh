@@ -9,7 +9,8 @@ import '../router/router_handler.dart';
 
 class MimeType {
   static const String multiPartForm = 'multipart/form-data';
-  static const String applicationFormUrlEncoded = 'application/x-www-form-urlencoded';
+  static const String applicationFormUrlEncoded =
+      'application/x-www-form-urlencoded';
   static const String applicationJson = 'application/json';
   static const String textPlain = 'text/plain';
 }

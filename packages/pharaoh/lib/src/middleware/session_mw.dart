@@ -69,7 +69,8 @@ Middleware sessionMdw({
     if (!req.path.startsWith(opts.path)) return next();
     if (req.session?.valid ?? false) return next();
 
-    final reqSid = req.signedCookies.firstWhereOrNull((e) => e.name == name)?.value;
+    final reqSid =
+        req.signedCookies.firstWhereOrNull((e) => e.name == name)?.value;
     if (reqSid != null) {
       var result = await sessionStore.get(reqSid);
       if (result != null && result.valid) {
