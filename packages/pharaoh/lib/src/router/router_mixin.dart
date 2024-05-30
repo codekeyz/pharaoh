@@ -1,4 +1,5 @@
 import 'package:spanner/spanner.dart';
+import 'package:spanner/src/tree/tree.dart' show BASE_PATH;
 
 import 'router_contract.dart';
 import 'router_handler.dart';

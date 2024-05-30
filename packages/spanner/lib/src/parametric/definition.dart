@@ -1,7 +1,7 @@
 import 'package:collection/collection.dart';
 import 'package:equatable/equatable.dart';
 
-import '../route/action.dart';
+import '../tree/node.dart';
 import 'descriptor.dart';
 import 'utils.dart';
 

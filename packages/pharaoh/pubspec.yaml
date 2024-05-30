@@ -19,7 +19,7 @@ dependencies:
   shelf: ^1.4.1
 
   # framework
-  reflectable: ^4.0.5
+  reflectable: 4.0.6
   get_it: ^7.6.7
   grammer: ^1.0.3
   dotenv: ^4.2.0
@@ -30,3 +30,6 @@ dependencies:
 
 dev_dependencies:
   lints: ^3.0.0
+
+dependency_overrides:
+  analyzer: 6.4.0

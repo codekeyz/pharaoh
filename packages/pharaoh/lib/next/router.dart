@@ -2,12 +2,12 @@ library router;
 
 import 'dart:convert';
 
+import 'package:spanner/src/tree/tree.dart' show BASE_PATH;
 import 'package:ez_validator/ez_validator.dart';
 import 'package:grammer/grammer.dart';
 import 'package:meta/meta.dart';
-
-import 'core.dart';
 import 'validation.dart';
+import 'core.dart';
 
 part '_router/definition.dart';
 part '_router/meta.dart';

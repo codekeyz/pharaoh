@@ -1,12 +1,13 @@
 import 'package:meta/meta.dart';
 
 import 'node.dart';
-import '../route/action.dart';
 import '../parametric/definition.dart';
 import '../parametric/utils.dart';
 
 // ignore: constant_identifier_names
 const BASE_PATH = '/';
+
+typedef RouteEntry = ({HTTPMethod method, String path});
 
 // ignore: constant_identifier_names
 enum HTTPMethod { GET, HEAD, POST, PUT, DELETE, ALL, PATCH, OPTIONS, TRACE }
@@ -35,10 +36,7 @@ class Spanner {
 
   Spanner({this.config = const RouterConfig()}) : _root = StaticNode(BASE_PATH);
 
-  List<RouteEntry> get routes => _getRoutes(_root);
-
-  String get routeStr =>
-      routes.map((e) => '${e.method.name} ${e.path}').join('\n');
+  String get routeStr => throw UnimplementedError('');
 
   void addRoute<T>(HTTPMethod method, String path, T handler) {
     final indexedHandler = (index: _nextIndex, value: handler);
@@ -136,7 +134,7 @@ class Spanner {
 
     final key = _getNodeKey(part);
 
-    var child = node.children[part];
+    var child = node.maybeChild(part);
     if (child != null) {
       return node.addChildAndReturn(key, child);
     } else {
@@ -174,34 +172,40 @@ class Spanner {
 
   RouteResult? lookup(HTTPMethod method, dynamic route, {bool debug = false}) {
     final path = route is Uri ? route.path : route.toString();
-    late List<String> routeSegments;
+    final routeSegments = route is Uri
+        ? route.pathSegments
+        : path.split('/').where((part) => part.isNotEmpty).toList();
 
-    if (route is Uri) {
-      routeSegments = route.pathSegments;
-    } else {
-      final parts = path.split('/');
-      if (parts.first.isEmpty) parts.removeAt(0);
-      if (parts.last.isEmpty) parts.removeLast();
-      routeSegments = parts;
+    final resolvedParams = <String, dynamic>{};
+    final resolvedHandlers = <IndexedValue>[];
+
+    void insertHandler(IndexedValue handler) {
+      int index = resolvedHandlers.indexWhere((h) => h.index > handler.index);
+      if (index == -1) {
+        resolvedHandlers.add(handler);
+      } else {
+        resolvedHandlers.insert(index, handler);
+      }
     }
 
-    Node rootNode = _root;
+    void collectMiddlewares(Node node) {
+      for (final middleware in node.middlewares) {
+        insertHandler(middleware);
+      }
+    }
 
-    Map<String, dynamic> resolvedParams = {};
-    List<IndexedValue> resolvedHandlers = [...rootNode.middlewares];
+    List<dynamic> getResults(IndexedValue? handler) => ([
+          ...resolvedHandlers,
+          if (handler != null) handler,
+        ]).map((e) => e.value).toList(growable: false);
+
+    Node rootNode = _root;
 
     /// keep track of last wildcard we encounter along route. We'll resort to this
     /// incase we don't find the route we were looking for.
     WildcardNode? wildcardNode = rootNode.wildcardNode;
 
-    List<dynamic> getResults(IndexedValue? handler) {
-      final resultingHandlers = [
-        if (handler != null) handler,
-        ...resolvedHandlers,
-      ]..sort((a, b) => a.index.compareTo(b.index));
-
-      return resultingHandlers.map((e) => e.value).toList();
-    }
+    collectMiddlewares(rootNode);
 
     if (path == BASE_PATH) {
       return RouteResult(
@@ -221,11 +225,8 @@ class Spanner {
 
     for (int i = 0; i < routeSegments.length; i++) {
       final String currPart = routeSegments[i];
-
-      var routePart = currPart;
-      if (!config.caseSensitive) routePart = routePart.toLowerCase();
-
-      final hasChild = rootNode.hasChild(routePart);
+      final routePart =
+          config.caseSensitive ? currPart : currPart.toLowerCase();
       final isLastPart = i == (routeSegments.length - 1);
 
       void useWildcard(WildcardNode wildcard) {
@@ -233,14 +234,10 @@ class Spanner {
         rootNode = wildcard;
       }
 
-      void extractNodeMiddlewares(StaticNode node) {
-        final mdws = node.middlewares;
-        if (mdws.isNotEmpty) resolvedHandlers.addAll(mdws);
-      }
-
-      if (hasChild) {
+      if (rootNode.hasChild(routePart)) {
         rootNode = rootNode.getChild(routePart);
-        extractNodeMiddlewares(rootNode as StaticNode);
+        collectMiddlewares(rootNode);
+
         final wcNode = rootNode.wildcardNode;
         if (wcNode != null) wildcardNode = wcNode;
 
@@ -259,14 +256,11 @@ class Spanner {
           return RouteResult(resolvedParams, getResults(null), actual: null);
         }
 
-        final hasChild = parametricNode.hasChild(routePart);
-        if (hasChild) {
-          devlog(
-            '- Found Static for             ->              $routePart',
-          );
+        if (parametricNode.hasChild(routePart)) {
+          devlog('- Found Static for             ->              $routePart');
           rootNode = parametricNode.getChild(routePart);
           final wcNode = rootNode.wildcardNode;
-          if (rootNode.wildcardNode != null) wildcardNode = wcNode;
+          if (wcNode != null) wildcardNode = wcNode;
           continue;
         }
 
@@ -333,9 +327,10 @@ class Spanner {
     }
 
     final handler = rootNode.getHandler(method);
-    if (handler == null) return null;
 
-    return RouteResult(resolvedParams, getResults(handler), actual: rootNode);
+    return handler == null
+        ? null
+        : RouteResult(resolvedParams, getResults(handler), actual: rootNode);
   }
 
   void printTree() {
@@ -372,51 +367,4 @@ class RouteResult {
   final dynamic actual;
 
   const RouteResult(this.params, this.values, {this.actual});
-}
-
-List<RouteEntry> _getRoutes(Node node) {
-  final routes = <RouteEntry>[];
-
-  void iterateNode(Node node, String prefix) {
-    final hasTerminalInParametricNode =
-        node is ParametricNode && node.hasTerminal;
-    if (node.terminal || hasTerminalInParametricNode) {
-      final entries = _getNodeEntries(node, prefix);
-      routes.addAll(entries);
-    }
-
-    node.children.forEach((char, node) {
-      String path = '$prefix$char';
-      if (node.hasChildren) path += ' / ';
-
-      return iterateNode(node, path);
-    });
-  }
-
-  iterateNode(node, '/ ');
-
-  return routes;
-}
-
-typedef RouteEntry = ({HTTPMethod method, String path});
-
-Iterable<RouteEntry> _getNodeEntries(Node node, String prefix) {
-  switch (node.runtimeType) {
-    case StaticNode:
-    case WildcardNode:
-      final methods = (node as StaticNode).methods;
-      return methods.map<RouteEntry>((e) => (method: e, path: prefix));
-    case ParametricNode:
-      final definitions =
-          (node as ParametricNode).definitions.where((e) => e.terminal);
-      final entries = <RouteEntry>[];
-      for (final defn in definitions) {
-        final result =
-            defn.methods.map<RouteEntry>((e) => (method: e, path: prefix));
-        entries.addAll(result);
-      }
-      return entries;
-  }
-
-  return [];
 }

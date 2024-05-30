@@ -23,9 +23,6 @@ class $PharaohImpl extends RouterContract
   RouterContract router() => GroupRouter();
 
   @override
-  List<RouteEntry> get routes => spanner.routes;
-
-  @override
   String get routeStr => spanner.routeStr;
 
   @override
@@ -116,19 +113,16 @@ class $PharaohImpl extends RouterContract
     Response routeNotFound() => res.notFound("Route not found: ${req.path}");
 
     final routeResult = spanner.lookup(req.method, req.uri);
-    final resolvedHandlers = routeResult?.values.cast<Middleware>() ?? [];
+    final resolvedHandlers = routeResult?.values ?? const [];
     if (routeResult == null || resolvedHandlers.isEmpty) {
       return reqRes.merge(routeNotFound());
     }
 
-    /// update request params with params resolved from spanner
-    for (final param in routeResult.params.entries) {
-      req.params[param.key] = param.value;
+    if (routeResult.params.isNotEmpty) {
+      req.params.addAll(routeResult.params);
     }
 
-    final chainedHandlers = resolvedHandlers.reduce((a, b) => a.chain(b));
-    final result = await Executor(chainedHandlers).execute(reqRes);
-    reqRes = result.reqRes;
+    reqRes = await executeHandlers(resolvedHandlers, reqRes);
 
     for (final job in _preResponseHooks) {
       reqRes = await Future.microtask(() => job(reqRes));

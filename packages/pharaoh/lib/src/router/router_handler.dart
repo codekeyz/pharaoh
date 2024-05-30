@@ -6,13 +6,17 @@ import '../utils/exceptions.dart';
 
 typedef ReqRes = ({Request req, Response res});
 
-typedef NextFunction<Next> = dynamic Function([dynamic result, Next? chain]);
+typedef ReqResHook = FutureOr<ReqRes> Function(ReqRes reqRes);
 
-typedef Middleware = Function(Request req, Response res, NextFunction next);
+typedef NextFunction<Next> = dynamic Function([dynamic result, Next? chain]);
 
 typedef RequestHandler = FutureOr<dynamic> Function(Request req, Response res);
 
-typedef ReqResHook = FutureOr<ReqRes> Function(ReqRes reqRes);
+typedef Middleware = FutureOr<void> Function(
+  Request req,
+  Response res,
+  NextFunction next,
+);
 
 extension ReqResExtension on ReqRes {
   ReqRes merge(dynamic val) {
@@ -48,3 +52,29 @@ Middleware useRequestHandler(RequestHandler handler) =>
       final result = await handler(req, res);
       next_(result);
     };
+
+Future<ReqRes> executeHandlers(
+  Iterable<dynamic> handlers,
+  ReqRes reqRes,
+) async {
+  var result = reqRes;
+  final iterator = handlers.iterator;
+
+  Future<void> handleChain([dynamic nr_, Middleware? mdw]) async {
+    result = result.merge(nr_);
+    if (mdw == null || result.res.ended) return;
+
+    return await mdw.call(
+      result.req,
+      result.res,
+      ([nr_, chain]) => handleChain(nr_, chain),
+    );
+  }
+
+  while (iterator.moveNext()) {
+    await handleChain(null, iterator.current);
+    if (result.res.ended) break;
+  }
+
+  return result;
+}
