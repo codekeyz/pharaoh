@@ -194,10 +194,10 @@ class Spanner {
       }
     }
 
-    Iterable<dynamic> getResults(IndexedValue? handler) => ([
+    List<dynamic> getResults(IndexedValue? handler) => ([
           ...resolvedHandlers,
           if (handler != null) handler,
-        ]).map((e) => e.value);
+        ]).map((e) => e.value).toList(growable: false);
 
     Node rootNode = _root;
 
@@ -360,7 +360,7 @@ class Spanner {
 
 class RouteResult {
   final Map<String, dynamic> params;
-  final Iterable<dynamic> values;
+  final List<dynamic> values;
 
   /// this is either a Node or Parametric Definition
   @visibleForTesting

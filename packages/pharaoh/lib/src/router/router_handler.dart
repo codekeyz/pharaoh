@@ -6,15 +6,17 @@ import '../utils/exceptions.dart';
 
 typedef ReqRes = ({Request req, Response res});
 
-typedef HandlerResult = ({bool canNext, ReqRes reqRes});
-
 typedef ReqResHook = FutureOr<ReqRes> Function(ReqRes reqRes);
 
 typedef NextFunction<Next> = dynamic Function([dynamic result, Next? chain]);
 
 typedef RequestHandler = FutureOr<dynamic> Function(Request req, Response res);
 
-typedef Middleware = FutureOr<void> Function(Request req, Response res, NextFunction next);
+typedef Middleware = FutureOr<void> Function(
+  Request req,
+  Response res,
+  NextFunction next,
+);
 
 extension ReqResExtension on ReqRes {
   ReqRes merge(dynamic val) {
@@ -45,29 +47,34 @@ extension MiddlewareChainExtension on Middleware {
       );
 }
 
-Middleware useRequestHandler(RequestHandler handler) => (req, res, next_) async {
+Middleware useRequestHandler(RequestHandler handler) =>
+    (req, res, next_) async {
       final result = await handler(req, res);
       next_(result);
     };
 
-Future<HandlerResult> executeHandlers(Iterable<Middleware> handlers, final ReqRes reqRes) async {
-  ReqRes result = reqRes;
-  bool canGotoNext = false;
-  final stack = List<Middleware>.from(handlers);
+Future<ReqRes> executeHandlers(
+  Iterable<Middleware> handlers,
+  ReqRes reqRes,
+) async {
+  var result = reqRes;
+  final iterator = handlers.iterator;
 
-  while (stack.isNotEmpty) {
-    final middleware = stack.removeAt(0);
-    canGotoNext = false;
+  Future<void> handleChain([dynamic nr_, Middleware? mdw]) async {
+    result = result.merge(nr_);
+    if (mdw == null || result.res.ended) return;
 
-    await middleware.call(result.req, result.res, ([nr_, chain]) {
-      result = result.merge(nr_);
-      canGotoNext = true;
-      if (result.res.ended) return;
-      if (chain != null) stack.insert(0, chain);
-    });
+    return await mdw.call(
+      result.req,
+      result.res,
+      ([nr_, chain]) => handleChain(nr_, chain),
+    );
+  }
 
+  while (iterator.moveNext()) {
+    await handleChain(null, iterator.current);
     if (result.res.ended) break;
   }
 
-  return (canNext: canGotoNext, reqRes: result);
+  return result;
 }
