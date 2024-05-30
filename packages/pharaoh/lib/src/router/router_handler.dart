@@ -54,7 +54,7 @@ Middleware useRequestHandler(RequestHandler handler) =>
     };
 
 Future<ReqRes> executeHandlers(
-  Iterable<Middleware> handlers,
+  Iterable<dynamic> handlers,
   ReqRes reqRes,
 ) async {
   var result = reqRes;

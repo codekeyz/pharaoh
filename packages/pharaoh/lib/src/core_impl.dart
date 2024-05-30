@@ -122,9 +122,7 @@ class $PharaohImpl extends RouterContract
       req.params.addAll(routeResult.params);
     }
 
-    final result =
-        await executeHandlers(resolvedHandlers.cast<Middleware>(), reqRes);
-    reqRes = result.reqRes;
+    reqRes = await executeHandlers(resolvedHandlers, reqRes);
 
     for (final job in _preResponseHooks) {
       reqRes = await Future.microtask(() => job(reqRes));
