@@ -3,9 +3,10 @@
 import 'package:collection/collection.dart';
 import 'package:ez_validator/ez_validator.dart';
 import 'package:meta/meta.dart';
-import 'package:pharaoh/next/core.dart';
+import 'package:pharaoh/src/_next/core.dart';
 import 'package:reflectable/reflectable.dart' as r;
 
+import '../http/request.dart';
 import 'router.dart';
 
 part '_validation/dto.dart';

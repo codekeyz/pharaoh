@@ -1,5 +1,4 @@
-import 'package:pharaoh/next/http.dart';
-import 'package:pharaoh/next/router.dart';
+import 'package:pharaoh/pharaoh_next.dart';
 import 'package:spookie/spookie.dart';
 
 import './router_test.reflectable.dart';
@@ -18,7 +17,7 @@ class TestController extends HTTPController {
 }
 
 void main() {
-  setUpAll(() => initializeReflectable());
+  setUpAll(initializeReflectable);
 
   group('Router', () {
     group('when route group', () {

@@ -75,7 +75,7 @@ typedef ControllerMethodDefinition = (Type controller, Symbol symbol);
 
 class ControllerMethod {
   final ControllerMethodDefinition method;
-  final List<ControllerMethodParam> params;
+  final Iterable<ControllerMethodParam> params;
 
   String get methodName => symbolToString(method.$2);
 
@@ -172,7 +172,10 @@ class RouteGroupDefinition extends RouteDefinition {
 }
 
 typedef RequestHandlerWithApp = Function(
-    Application app, Request req, Response res);
+  Application app,
+  Request req,
+  Response res,
+);
 
 class FunctionalRouteDefinition extends RouteDefinition {
   final HTTPMethod method;
