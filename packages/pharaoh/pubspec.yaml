@@ -1,6 +1,6 @@
 name: pharaoh
 description: Minimalist web-server library for Dart
-version: 0.0.6+5
+version: 0.0.7
 repository: https://github.com/codekeyz/pharaoh/tree/main/packages/pharaoh
 
 environment:
