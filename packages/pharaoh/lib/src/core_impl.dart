@@ -107,6 +107,7 @@ class $PharaohImpl extends RouterContract
   Future<ReqRes> resolveAndExecuteHandlers(Request req, Response res) async {
     ReqRes reqRes = (req: req, res: res);
 
+    @pragma('vm:prefer-inline')
     Response routeNotFound() => res.notFound("Route not found: ${req.path}");
 
     final routeResult = spanner.lookup(req.method, req.uri);
