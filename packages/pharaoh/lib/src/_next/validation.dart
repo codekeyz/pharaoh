@@ -1,7 +1,7 @@
 // ignore_for_file: camel_case_types
 
 import 'package:collection/collection.dart';
-import 'package:ez_validator/ez_validator.dart';
+import 'package:ez_validator_dart/ez_validator.dart';
 import 'package:meta/meta.dart';
 import 'package:pharaoh/src/_next/core.dart';
 import 'package:reflectable/reflectable.dart' as r;

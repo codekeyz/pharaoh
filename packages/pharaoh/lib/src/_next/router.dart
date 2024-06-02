@@ -4,7 +4,7 @@ import 'dart:convert';
 
 import 'package:spanner/spanner.dart';
 import 'package:spanner/src/tree/tree.dart' show BASE_PATH;
-import 'package:ez_validator/ez_validator.dart';
+import 'package:ez_validator_dart/ez_validator.dart';
 import 'package:grammer/grammer.dart';
 import 'package:meta/meta.dart';
 import '../http/request.dart';
