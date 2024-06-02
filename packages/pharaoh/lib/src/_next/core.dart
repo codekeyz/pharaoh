@@ -6,6 +6,7 @@ import 'dart:io';
 
 import 'package:pharaoh/pharaoh.dart';
 import 'package:reflectable/reflectable.dart' as r;
+import 'package:spanner/spanner.dart';
 import 'package:spookie/spookie.dart' as spookie;
 import 'package:collection/collection.dart';
 import 'package:dotenv/dotenv.dart';
@@ -15,8 +16,6 @@ import 'package:meta/meta.dart';
 import 'http.dart';
 import 'router.dart';
 import 'validation.dart';
-
-export 'package:pharaoh/pharaoh.dart';
 
 part '_core/core_impl.dart';
 part '_core/config.dart';

@@ -1,8 +1,6 @@
 import 'dart:io';
 
-import 'package:pharaoh/next/core.dart';
-import 'package:pharaoh/next/router.dart';
-import 'package:pharaoh/next/validation.dart';
+import 'package:pharaoh/pharaoh_next.dart';
 
 import 'package:spookie/spookie.dart';
 

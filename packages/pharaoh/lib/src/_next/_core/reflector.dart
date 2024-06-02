@@ -114,18 +114,22 @@ ControllerMethod parseControllerMethod(ControllerMethodDefinition defn) {
     final meta = e.metadata.first;
     if (meta is! RequestAnnotation) {
       throw ArgumentError(
-          'Invalid annotation $meta used on $type #${symbolToString(method)} parameter');
+        'Invalid annotation $meta used on $type #${symbolToString(method)} parameter',
+      );
     }
 
     final paramType = e.reflectedType;
     final maybeDto = _tryResolveDtoInstance(paramType);
 
-    return ControllerMethodParam(e.simpleName, paramType,
-        defaultValue: e.defaultValue,
-        optional: e.isOptional,
-        meta: meta,
-        dto: maybeDto);
-  }).toList();
+    return ControllerMethodParam(
+      e.simpleName,
+      paramType,
+      defaultValue: e.defaultValue,
+      optional: e.isOptional,
+      meta: meta,
+      dto: maybeDto,
+    );
+  });
 
   return ControllerMethod(defn, params);
 }

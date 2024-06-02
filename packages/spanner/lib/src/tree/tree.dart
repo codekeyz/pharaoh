@@ -36,8 +36,6 @@ class Spanner {
 
   Spanner({this.config = const RouterConfig()}) : _root = StaticNode(BASE_PATH);
 
-  String get routeStr => throw UnimplementedError('');
-
   void addRoute<T>(HTTPMethod method, String path, T handler) {
     final result = _on(path);
     final indexedHandler = (index: _nextIndex, value: handler);
@@ -325,10 +323,6 @@ class Spanner {
     return handler == null
         ? null
         : RouteResult(resolvedParams, getResults(handler), actual: rootNode);
-  }
-
-  void printTree() {
-    print(routeStr);
   }
 
   String _cleanPath(String path) {

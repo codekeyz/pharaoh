@@ -42,8 +42,6 @@ abstract class Pharaoh implements RouterContract {
 
   RouterContract router();
 
-  String get routeStr;
-
   Uri get uri;
 
   Pharaoh group(String path, RouterContract router);

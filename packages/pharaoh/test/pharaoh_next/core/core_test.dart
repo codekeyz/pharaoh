@@ -1,6 +1,4 @@
-import 'package:pharaoh/next/core.dart';
-import 'package:pharaoh/next/http.dart';
-import 'package:pharaoh/next/router.dart';
+import 'package:pharaoh/pharaoh_next.dart';
 import 'package:spookie/spookie.dart';
 
 import '../config/config_test.dart';
