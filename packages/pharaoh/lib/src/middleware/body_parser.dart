@@ -7,7 +7,7 @@ import '../http/request.dart';
 import '../http/response.dart';
 import '../router/router_handler.dart';
 
-class MimeType {
+sealed class MimeType {
   static const String multiPartForm = 'multipart/form-data';
   static const String applicationFormUrlEncoded =
       'application/x-www-form-urlencoded';
@@ -15,17 +15,19 @@ class MimeType {
   static const String textPlain = 'text/plain';
 }
 
-_processBody(Request req, Response res, NextFunction next) async {
+bodyParser(Request req, Response res, NextFunction next) async {
   final mimeType = req.mediaType?.mimeType;
   if (mimeType == null || req.actual.contentLength == 0) {
     return next(req..body = null);
   }
 
   if (mimeType == MimeType.multiPartForm) {
-    final boundary = req.mediaType!.parameters['boundary']!;
-    final parts = MimeMultipartTransformer(boundary).bind(req.actual);
+    final boundary = req.mediaType!.parameters['boundary'];
+    if (boundary == null) return next(req..body = null);
 
-    Map<String, dynamic> dataBag = {};
+    final parts = MimeMultipartTransformer(boundary).bind(req.actual);
+    final dataBag = <String, String>{};
+
     await for (final part in parts) {
       final header = HeaderValue.parse(part.headers['content-disposition']!);
       final name = header.parameters['name']!;
@@ -39,7 +41,7 @@ _processBody(Request req, Response res, NextFunction next) async {
 
   final body = await utf8.decoder.bind(req.actual).join();
   if (body.trim().isEmpty) {
-    return next();
+    return next(req..body = null);
   }
 
   switch (mimeType) {
@@ -56,5 +58,3 @@ _processBody(Request req, Response res, NextFunction next) async {
 
   next(req);
 }
-
-const Middleware bodyParser = _processBody;

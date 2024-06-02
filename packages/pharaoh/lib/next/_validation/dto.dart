@@ -18,17 +18,15 @@ class DtoReflector extends r.Reflectable {
 const dtoReflector = DtoReflector();
 
 abstract interface class _BaseDTOImpl {
-  final Map<String, dynamic> _databag = {};
-
-  Map<String, dynamic> get data => UnmodifiableMapView(_databag);
+  late Map<String, dynamic> data;
 
   void make(Request request) {
-    _databag.clear();
-    final (data, errors) = schema.validateSync(request.body ?? {});
+    data = const {};
+    final (result, errors) = schema.validateSync(request.body ?? {});
     if (errors.isNotEmpty) {
       throw RequestValidationError.errors(ValidationErrorLocation.body, errors);
     }
-    _databag.addAll(Map<String, dynamic>.from(data));
+    data = Map<String, dynamic>.from(result);
   }
 
   EzSchema? _schemaCache;
@@ -64,6 +62,6 @@ abstract class BaseDTO extends _BaseDTOImpl {
   @override
   noSuchMethod(Invocation invocation) {
     final property = symbolToString(invocation.memberName);
-    return _databag[property];
+    return data[property];
   }
 }

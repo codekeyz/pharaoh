@@ -2,7 +2,7 @@ import '../http/request.dart';
 import '../http/response.dart';
 import '../router/router_handler.dart';
 
-void _logRequest(Request req, Response res, NextFunction next) async {
+logRequests(Request req, Response res, NextFunction next) {
   final logLines = """
 -------------------------------------------------------
 Path:             ${req.path}
@@ -12,5 +12,3 @@ Content-Type      ${req.mimeType}
   print(logLines);
   next();
 }
-
-const Middleware logRequests = _logRequest;
