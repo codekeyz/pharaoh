@@ -65,8 +65,8 @@ void main() {
         ..addRoute(HTTPMethod.GET, '/user/<userId>/details', null)
         ..addRoute(HTTPMethod.GET, '/user/<file>.png/download', null)
         ..addRoute(HTTPMethod.GET, '/user/<file>.png/<user2>/hello', null)
-        ..addRoute(HTTPMethod.GET, '/a/<param>-static', null)
-        ..addRoute(HTTPMethod.GET, '/b/<param>.static', null);
+        ..addRoute(HTTPMethod.GET, '/a/<userId>-static', null)
+        ..addRoute(HTTPMethod.GET, '/b/<userId>.static', null);
 
       var node = router.lookup(HTTPMethod.GET, '/user');
       expect(node, isStaticNode('user'));
@@ -87,10 +87,10 @@ void main() {
               {'file': 'aws-image', 'user2': 'A29384'}));
 
       node = router.lookup(HTTPMethod.GET, '/a/param-static');
-      expect(node, havingParameters<ParameterDefinition>({'param': 'param'}));
+      expect(node, havingParameters<ParameterDefinition>({'userId': 'param'}));
 
       node = router.lookup(HTTPMethod.GET, '/b/param.static');
-      expect(node, havingParameters<ParameterDefinition>({'param': 'param'}));
+      expect(node, havingParameters<ParameterDefinition>({'userId': 'param'}));
     });
 
     test('contain param and wildcard together', () {

@@ -4,32 +4,42 @@ Generic HTTP Router implementation, internally uses a Radix Tree (aka compact Pr
 
 ```dart
 import 'package:spanner/spanner.dart';
+import 'package:test/test.dart';
 
 void main() {
-  final spanner = Spanner();
+  test('spanner sample test', () {
+    final routeHandler = () async {};
 
-  List<String> getUsers() => ['Foo', 'Bar'];
+    final router = Spanner()
+      ..addMiddleware('/user', #userMiddleware)
+      ..addMiddleware('/a/<userId>', #anyUser)
+      ..addRoute(HTTPMethod.GET, '/user', #currentUser)
+      ..addRoute(HTTPMethod.GET, '/user/<userId>', 123)
+      ..addRoute(HTTPMethod.GET, '/user/<file>.png/download', null)
+      ..addRoute(HTTPMethod.GET, '/user/<file>.png/<user2>/hello', null)
+      ..addRoute(HTTPMethod.GET, '/a/<userId>-static', routeHandler)
+      ..addRoute(HTTPMethod.GET, '/b/<userId>.static', routeHandler);
 
-  String getUser(String userId) => 'Hello $userId';
+    var result = router.lookup(HTTPMethod.GET, '/user');
+    expect(result!.values, [#userMiddleware, #currentUser]);
 
-  spanner.addRoute(HTTPMethod.GET, '/', getUsers);
+    result = router.lookup(HTTPMethod.GET, '/user/24');
+    expect(result?.params, {'userId': '24'});
+    expect(result?.values, [#userMiddleware, 123]);
 
-  spanner.addRoute(HTTPMethod.GET, '/<userId>', getUser);
+    result = router.lookup(HTTPMethod.GET, '/user/aws-image.png/download');
+    expect(result?.params, {'file': 'aws-image'});
 
-  final result = spanner.lookup(HTTPMethod.GET, '/');
-  if (result == null) return;
-  
+    result = router.lookup(HTTPMethod.GET, '/user/aws-image.png/A29384/hello');
+    expect(result?.params, {'file': 'aws-image', 'user2': 'A29384'});
 
-  /// This contains all parameters that were resolved in the route
-  final routeParams = result.params; // Map<String, dynamic>
+    result = router.lookup(HTTPMethod.GET, '/a/chima-static');
+    expect(result?.values, [routeHandler]);
+    expect(result?.params, {'userId': 'chima'});
 
-  /// your handler will be in this list.
-  ///
-  /// If any middlewares where resolved along the route to this handler
-  /// they'll be present in the list
-  ///
-  /// The list is ordered in the exact way you registed your middlewares and handlers
-  final resolvedHandler = result.values; // List<dynamic>
+    result = router.lookup(HTTPMethod.GET, '/b/codekeyz.static');
+    expect(result?.values, [routeHandler]);
+  });
 }
 
 ```
