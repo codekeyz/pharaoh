@@ -1,3 +1,8 @@
+# 0.0.7
+
+- chore: Perf improvements by @codekeyz in https://github.com/codekeyz/pharaoh/pull/123
+- chore: Bump package versions by @codekeyz in https://github.com/codekeyz/pharaoh/pull/124
+
 # 0.0.6+2
 
 - chore: Pass response to onError cb by @codekeyz in https://github.com/codekeyz/pharaoh/pull/105
