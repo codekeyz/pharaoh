@@ -17,9 +17,9 @@ ParameterDefinition? _buildParamDefinition(String part, bool terminal) {
   ParameterDefinition makeDefinition(RegExpMatch m, {bool end = false}) {
     final parts = m.group(2)!.split('|');
 
-    List<ParameterDescriptor> descriptors = [];
+    Iterable<ParameterDescriptor>? descriptors;
     if (parts.length > 1) {
-      final result = parts.sublist(1).map((e) {
+      descriptors = parts.sublist(1).map((e) {
         final value = e.isRegex ? regexDescriptor : _knownDescriptors[e];
         if (value == null) {
           throw ArgumentError.value(
@@ -27,7 +27,6 @@ ParameterDefinition? _buildParamDefinition(String part, bool terminal) {
         }
         return value;
       });
-      descriptors.addAll(result.cast<ParameterDescriptor>());
     }
 
     return ParameterDefinition._(
@@ -35,7 +34,7 @@ ParameterDefinition? _buildParamDefinition(String part, bool terminal) {
       prefix: m.group(1)?.nullIfEmpty,
       suffix: m.group(3)?.nullIfEmpty,
       terminal: end,
-      descriptors: descriptors,
+      descriptors: descriptors ?? const [],
     );
   }
 
@@ -54,8 +53,7 @@ ParameterDefinition? _buildParamDefinition(String part, bool terminal) {
     (i, e) => makeDefinition(e, end: i == (subdefns.length - 1) && terminal),
   );
 
-  return CompositeParameterDefinition._(parent,
-      subparts: UnmodifiableListView(subparts));
+  return CompositeParameterDefinition._(parent, subparts: subparts);
 }
 
 class ParameterDefinition with EquatableMixin, HandlerStore {
@@ -64,7 +62,7 @@ class ParameterDefinition with EquatableMixin, HandlerStore {
   final String? suffix;
   final bool terminal;
 
-  final List<ParameterDescriptor> descriptors;
+  final Iterable<ParameterDescriptor> descriptors;
 
   ParameterDefinition._(
     this.name, {
@@ -106,11 +104,11 @@ class ParameterDefinition with EquatableMixin, HandlerStore {
 
   Map<String, dynamic> resolveParams(final String pattern) {
     final params = resolveParamsFromPath(template, pattern);
-    params[name] = descriptors.fold<dynamic>(
-      params[name],
-      (value, descriptor) => descriptor(value),
-    );
-    return params;
+    return params
+      ..[name] = descriptors.fold<dynamic>(
+        params[name],
+        (value, descriptor) => descriptor(value),
+      );
   }
 
   @override
@@ -118,7 +116,7 @@ class ParameterDefinition with EquatableMixin, HandlerStore {
 }
 
 class CompositeParameterDefinition extends ParameterDefinition {
-  final UnmodifiableListView<ParameterDefinition> subparts;
+  final Iterable<ParameterDefinition> subparts;
 
   CompositeParameterDefinition._(
     ParameterDefinition parent, {
@@ -153,14 +151,15 @@ class CompositeParameterDefinition extends ParameterDefinition {
     final params = resolveParamsFromPath(template, pattern);
     final definitions =
         [this, ...subparts].where((e) => e.descriptors.isNotEmpty);
-    if (definitions.isNotEmpty) {
-      for (final defn in definitions) {
-        params[defn.name] = defn.descriptors.fold<dynamic>(
-          params[defn.name],
-          (value, descriptor) => descriptor(value),
-        );
-      }
+    if (definitions.isEmpty) return params;
+
+    for (final defn in definitions) {
+      params[defn.name] = defn.descriptors.fold<dynamic>(
+        params[defn.name],
+        (value, descriptor) => descriptor(value),
+      );
     }
+
     return params;
   }
 }

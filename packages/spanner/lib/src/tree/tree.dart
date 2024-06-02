@@ -39,9 +39,8 @@ class Spanner {
   String get routeStr => throw UnimplementedError('');
 
   void addRoute<T>(HTTPMethod method, String path, T handler) {
+    final result = _on(path);
     final indexedHandler = (index: _nextIndex, value: handler);
-
-    dynamic result = _on(path);
 
     if (result is ParameterDefinition) {
       result.addRoute(method, indexedHandler);
@@ -55,9 +54,8 @@ class Spanner {
   }
 
   void addMiddleware<T>(String path, T handler) {
+    final result = _on(path);
     final middleware = (index: _nextIndex, value: handler);
-
-    dynamic result = _on(path);
 
     if (result is Node) {
       result.addMiddleware(middleware);
@@ -133,41 +131,37 @@ class Spanner {
     if (!config.caseSensitive) part = part.toLowerCase();
 
     final key = _getNodeKey(part);
+    final child = node.maybeChild(part);
 
-    var child = node.maybeChild(part);
     if (child != null) {
       return node.addChildAndReturn(key, child);
-    } else {
-      if (part.isStatic) {
-        return node.addChildAndReturn(key, StaticNode(key));
-      } else if (part.isWildCard) {
-        if (!isLastSegment) {
-          throw ArgumentError.value(
-            fullPath,
-            null,
-            'Route definition is not valid. Wildcard must be the end of the route',
-          );
-        }
-
-        return node.addChildAndReturn(key, WildcardNode());
-      }
-
-      final paramNode = node.paramNode;
-      if (paramNode == null) {
-        final defn =
-            ParameterDefinition.from(routePart, terminal: isLastSegment);
-        final newNode = node.addChildAndReturn(key, ParametricNode(defn));
-        if (isLastSegment) return defn;
-
-        return newNode;
-      }
-
-      final defn = ParameterDefinition.from(routePart, terminal: isLastSegment);
-      paramNode.addNewDefinition(defn);
-      if (isLastSegment) return defn;
-
-      return node.addChildAndReturn(key, paramNode);
     }
+
+    if (part.isStatic) {
+      return node.addChildAndReturn(key, StaticNode(key));
+    }
+
+    if (part.isWildCard) {
+      if (!isLastSegment) {
+        throw ArgumentError.value(
+          fullPath,
+          null,
+          'Route definition is not valid. Wildcard must be the end of the route',
+        );
+      }
+      return node.addChildAndReturn(key, WildcardNode());
+    }
+
+    final paramNode = node.paramNode;
+    final defn = ParameterDefinition.from(routePart, terminal: isLastSegment);
+
+    if (paramNode == null) {
+      final newNode = node.addChildAndReturn(key, ParametricNode(defn));
+      return isLastSegment ? defn : newNode;
+    }
+
+    paramNode.addNewDefinition(defn);
+    return isLastSegment ? defn : node.addChildAndReturn(key, paramNode);
   }
 
   RouteResult? lookup(HTTPMethod method, dynamic route, {bool debug = false}) {
