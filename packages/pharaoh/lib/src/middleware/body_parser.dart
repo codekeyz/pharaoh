@@ -39,10 +39,12 @@ bodyParser(Request req, Response res, NextFunction next) async {
     return next(req..body = dataBag);
   }
 
-  final body = await utf8.decoder.bind(req.actual).join();
-  if (body.trim().isEmpty) {
-    return next(req..body = null);
+  final buffer = StringBuffer();
+  await for (final chunk in utf8.decoder.bind(req.actual)) {
+    if (chunk.isEmpty) return next(req..body = null);
+    buffer.write(chunk);
   }
+  final body = buffer.toString();
 
   switch (mimeType) {
     case MimeType.applicationFormUrlEncoded:
