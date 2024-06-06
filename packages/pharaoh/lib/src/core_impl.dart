@@ -156,22 +156,29 @@ class $PharaohImpl extends RouterContract
           .set(HttpHeaders.transferEncodingHeader, 'chunked');
     }
 
-    for (final entry in res_.headers.entries) {
-      request.response.headers.add(entry.key, entry.value);
+    final responseHeaders = res_.headers;
+    if (responseHeaders.isNotEmpty) {
+      for (final key in responseHeaders.keys) {
+        request.response.headers.add(key, responseHeaders[key]);
+      }
     }
 
-    if (!res_.headers.containsKey(_XPoweredByHeader)) {
+    if (!responseHeaders.containsKey(_XPoweredByHeader)) {
       request.response.headers.add(_XPoweredByHeader, 'Pharaoh');
     }
-    if (!res_.headers.containsKey(HttpHeaders.dateHeader)) {
-      request.response.headers
-          .add(HttpHeaders.dateHeader, DateTime.now().toUtc());
+    if (!responseHeaders.containsKey(HttpHeaders.dateHeader)) {
+      request.response.headers.add(
+        HttpHeaders.dateHeader,
+        DateTime.now().toUtc(),
+      );
     }
-    if (!res_.headers.containsKey(HttpHeaders.contentLengthHeader)) {
+    if (!responseHeaders.containsKey(HttpHeaders.contentLengthHeader)) {
       final contentLength = res_.contentLength;
       if (contentLength != null) {
-        request.response.headers
-            .add(HttpHeaders.contentLengthHeader, contentLength);
+        request.response.headers.add(
+          HttpHeaders.contentLengthHeader,
+          contentLength,
+        );
       }
     }
 
