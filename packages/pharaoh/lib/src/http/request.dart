@@ -31,8 +31,8 @@ HTTPMethod getHttpMethod(HttpRequest req) => switch (req.method) {
       _ => throw PharaohException('Method ${req.method} not yet supported')
     };
 
-abstract class Request<T> extends Message<T> {
-  static RequestImpl from(HttpRequest request) => RequestImpl._(request);
+sealed class Request extends Message<dynamic> {
+  factory Request.from(HttpRequest request) = _$RequestImpl._;
 
   late final HttpRequest actual;
 
@@ -68,7 +68,7 @@ abstract class Request<T> extends Message<T> {
 
   Session? get session;
 
-  T? get body;
+  dynamic get body;
 
   DateTime? get ifModifiedSince;
 

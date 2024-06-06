@@ -137,6 +137,8 @@ class $PharaohImpl extends RouterContract
     var coding = res_.headers['transfer-encoding'];
 
     final statusCode = res_.statusCode;
+    request.response.statusCode = statusCode;
+
     if (coding != null && !equalsIgnoreAsciiCase(coding, 'identity')) {
       // If the response is already in a chunked encoding, de-chunk it because
       // otherwise `dart:io` will try to add another layer of chunking.
@@ -156,28 +158,32 @@ class $PharaohImpl extends RouterContract
           .set(HttpHeaders.transferEncodingHeader, 'chunked');
     }
 
-    // headers to write to the response
-    final hders = res_.headers;
-
-    hders.forEach((key, value) => request.response.headers.add(key, value));
-
-    if (!hders.containsKey(_XPoweredByHeader)) {
-      request.response.headers.add(_XPoweredByHeader, 'Pharaoh');
-    }
-    if (!hders.containsKey(HttpHeaders.dateHeader)) {
-      request.response.headers
-          .add(HttpHeaders.dateHeader, DateTime.now().toUtc());
-    }
-    if (!hders.containsKey(HttpHeaders.contentLengthHeader)) {
-      final contentLength = res_.contentLength;
-      if (contentLength != null) {
-        request.response.headers
-            .add(HttpHeaders.contentLengthHeader, contentLength);
+    final responseHeaders = res_.headers;
+    if (responseHeaders.isNotEmpty) {
+      for (final key in responseHeaders.keys) {
+        request.response.headers.add(key, responseHeaders[key]);
       }
     }
 
-    final response = request.response..statusCode = statusCode;
+    if (!responseHeaders.containsKey(_XPoweredByHeader)) {
+      request.response.headers.add(_XPoweredByHeader, 'Pharaoh');
+    }
+    if (!responseHeaders.containsKey(HttpHeaders.dateHeader)) {
+      request.response.headers.add(
+        HttpHeaders.dateHeader,
+        DateTime.now().toUtc(),
+      );
+    }
+    if (!responseHeaders.containsKey(HttpHeaders.contentLengthHeader) &&
+        res_.contentLength != null) {
+      request.response.headers.add(
+        HttpHeaders.contentLengthHeader,
+        res_.contentLength!,
+      );
+    }
+
     final body = res_.body;
+    final response = request.response;
     if (body == null) return response.close();
     return response.addStream(body.read()).then((_) => response.close());
   }

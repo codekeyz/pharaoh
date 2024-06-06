@@ -1,10 +1,10 @@
 part of 'request.dart';
 
-class RequestImpl extends Request<dynamic> {
+class _$RequestImpl extends Request {
   final Map<String, dynamic> _params = {};
   final Map<String, dynamic> _context = {};
 
-  RequestImpl._(HttpRequest _req) : super(_req, headers: {}) {
+  _$RequestImpl._(HttpRequest _req) : super(_req, headers: {}) {
     actual = _req;
     actual.headers.forEach((name, values) => headers[name] = values);
     headers.remove(HttpHeaders.transferEncodingHeader);
