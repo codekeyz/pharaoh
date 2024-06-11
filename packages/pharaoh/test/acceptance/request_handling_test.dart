@@ -140,7 +140,7 @@ void main() {
           (req, res) => res.json(req.params),
         );
 
-      final router = app.router()
+      final router = Pharaoh.router
         ..get('/', (req, res) => res.ok('Group working'))
         ..delete('/say-hello', (req, res) => res.ok('Hello World'));
 

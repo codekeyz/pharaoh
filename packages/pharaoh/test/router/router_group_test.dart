@@ -6,7 +6,7 @@ void main() {
     test('should execute middlewares in group', () async {
       final app = Pharaoh()..post('/', (req, res) => res.json(req.body));
 
-      final adminRouter = app.router()
+      final adminRouter = Pharaoh.router
         ..get('/', (req, res) => res.ok('Holy Moly 🚀'))
         ..post('/hello', (req, res) => res.json(req.body));
       app.group('/admin', adminRouter);

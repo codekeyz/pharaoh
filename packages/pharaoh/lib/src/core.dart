@@ -30,6 +30,8 @@ typedef OnErrorCallback = FutureOr<Response> Function(
 );
 
 abstract class Pharaoh implements RouterContract {
+  static RouterContract get router => GroupRouter();
+
   factory Pharaoh() => $PharaohImpl();
 
   ViewEngine? get viewEngine;
@@ -39,8 +41,6 @@ abstract class Pharaoh implements RouterContract {
   set viewEngine(ViewEngine? engine);
 
   void useSpanner(Spanner spanner);
-
-  RouterContract router();
 
   Uri get uri;
 

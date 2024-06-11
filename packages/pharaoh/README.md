@@ -42,7 +42,7 @@ void main() async {
 
   app.get('/foo', (req, res) => res.ok("bar"));
 
-  final guestRouter = app.router()
+  final guestRouter = Pharaoh.router
     ..get('/user', (req, res) => res.ok("Hello World"))
     ..post('/post', (req, res) => res.json({"mee": "moo"}))
     ..put('/put', (req, res) => res.json({"pookey": "reyrey"}));

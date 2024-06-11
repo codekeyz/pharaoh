@@ -3,12 +3,12 @@ import 'package:pharaoh/pharaoh.dart';
 final app = Pharaoh();
 
 void main() async {
-  final guestRouter = app.router()
+  final guestRouter = Pharaoh.router
     ..get('/foo', (req, res) => res.ok("Hello World"))
     ..post('/bar', (req, res) => res.json({"mee": "moo"}))
     ..put('/yoo', (req, res) => res.json({"pookey": "reyrey"}));
 
-  final adminRouter = app.router()
+  final adminRouter = Pharaoh.router
     ..use(logRequests)
     ..get('/user', (req, res) => res.json({"chima": "happy"}))
     ..put('/hello', (req, res) => res.json({"name": "chima"}))

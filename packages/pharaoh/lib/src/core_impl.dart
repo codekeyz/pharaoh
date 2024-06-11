@@ -20,9 +20,6 @@ class $PharaohImpl extends RouterContract
   }
 
   @override
-  RouterContract router() => GroupRouter();
-
-  @override
   Uri get uri {
     if (_server.address.isLoopback) {
       return Uri(scheme: 'http', host: 'localhost', port: _server.port);
