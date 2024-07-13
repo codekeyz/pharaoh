@@ -86,12 +86,11 @@ class ParametricNode extends Node {
     return super.addChildAndReturn(key, node);
   }
 
-  final List<ParameterDefinition> _definitions = [];
+  final List<ParameterDefinition> _definitions;
 
-  List<ParameterDefinition> get definitions =>
-      UnmodifiableListView(_definitions);
+  Iterable<ParameterDefinition> get definitions => _definitions;
 
-  ParametricNode(ParameterDefinition defn) {
+  ParametricNode(ParameterDefinition defn) : _definitions = [] {
     _definitions.add(defn);
   }
 

@@ -162,7 +162,11 @@ class Spanner {
     return isLastSegment ? defn : node.addChildAndReturn(key, paramNode);
   }
 
-  RouteResult? lookup(HTTPMethod method, dynamic route, {bool debug = false}) {
+  RouteResult? lookup(
+    HTTPMethod method,
+    dynamic route, {
+    void Function(String)? devlog,
+  }) {
     final path = route is Uri ? route.path : route.toString();
     final routeSegments = route is Uri
         ? route.pathSegments
@@ -206,14 +210,9 @@ class Spanner {
       );
     }
 
-    final debugLog = StringBuffer("\n");
-
-    void devlog(String message) {
-      if (!debug) return;
-      debugLog.writeln(message);
-    }
-
-    devlog('Finding node for ---------  ${method.name} $path ------------\n');
+    devlog?.call(
+      'Finding node for ---------  ${method.name} $path ------------\n',
+    );
 
     for (int i = 0; i < routeSegments.length; i++) {
       final String currPart = routeSegments[i];
@@ -233,12 +232,14 @@ class Spanner {
         final wcNode = rootNode.wildcardNode;
         if (wcNode != null) wildcardNode = wcNode;
 
-        devlog('- Found Static for                ->         $routePart');
+        devlog?.call('- Found Static for                ->         $routePart');
       } else {
         final parametricNode = rootNode.paramNode;
         if (parametricNode == null) {
-          devlog('x Found no Static Node for part   ->         $routePart');
-          devlog('x Route is not found              ->         $path');
+          devlog?.call(
+            'x Found no Static Node for part   ->         $routePart',
+          );
+          devlog?.call('x Route is not found              ->         $path');
 
           if (wildcardNode != null) {
             useWildcard(wildcardNode);
@@ -249,14 +250,16 @@ class Spanner {
         }
 
         if (parametricNode.hasChild(routePart)) {
-          devlog('- Found Static for             ->              $routePart');
+          devlog?.call(
+            '- Found Static for             ->              $routePart',
+          );
           rootNode = parametricNode.getChild(routePart);
           final wcNode = rootNode.wildcardNode;
           if (wcNode != null) wildcardNode = wcNode;
           continue;
         }
 
-        devlog(
+        devlog?.call(
           '- Finding Defn for $routePart        -> terminal?    $isLastPart',
         );
 
@@ -266,7 +269,7 @@ class Spanner {
           terminal: isLastPart,
         );
 
-        devlog('    * parametric defn:         ${definition.toString()}');
+        devlog?.call('    * parametric defn:         ${definition.toString()}');
 
         if (definition == null) {
           if (wildcardNode != null) {
@@ -294,7 +297,9 @@ class Spanner {
           break;
         }
 
-        devlog('- Found defn for route part    ->              $routePart');
+        devlog?.call(
+          '- Found defn for route part    ->              $routePart',
+        );
 
         final params = definition.resolveParams(currPart);
         resolvedParams.addAll(params);
@@ -308,10 +313,6 @@ class Spanner {
           );
         }
       }
-    }
-
-    if (debug) {
-      print(debugLog);
     }
 
     if (!rootNode.terminal) {
