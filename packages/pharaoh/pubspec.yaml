@@ -8,7 +8,7 @@ environment:
 
 dependencies:
   meta:
-  spanner: ^1.0.1+5
+  spanner: ^1.0.2
   mime: ^1.0.4
   collection: ^1.18.0
   http_parser: ^4.0.2

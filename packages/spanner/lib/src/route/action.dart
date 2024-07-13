@@ -13,7 +13,8 @@ mixin HandlerStore {
 
   bool hasMethod(HTTPMethod method) => requestHandlers.containsKey(method);
 
-  IndexedValue? getHandler(HTTPMethod method) => requestHandlers[method];
+  IndexedValue? getHandler(HTTPMethod method) =>
+      requestHandlers[method] ?? requestHandlers[HTTPMethod.ALL];
 
   void addRoute<T>(HTTPMethod method, IndexedValue<T> handler) {
     if (requestHandlers.containsKey(method)) {
