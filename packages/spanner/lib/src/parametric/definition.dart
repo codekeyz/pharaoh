@@ -1,5 +1,4 @@
 import 'package:collection/collection.dart';
-import 'package:equatable/equatable.dart';
 
 import '../tree/node.dart';
 import 'descriptor.dart';
@@ -56,7 +55,7 @@ ParameterDefinition? _buildParamDefinition(String part, bool terminal) {
   return CompositeParameterDefinition._(parent, subparts: subparts);
 }
 
-class ParameterDefinition with EquatableMixin, HandlerStore {
+class ParameterDefinition with HandlerStore {
   final String name;
   final String? prefix;
   final String? suffix;
@@ -110,9 +109,6 @@ class ParameterDefinition with EquatableMixin, HandlerStore {
         (value, descriptor) => descriptor(value),
       );
   }
-
-  @override
-  List<Object?> get props => [prefix, name, suffix, terminal];
 }
 
 class CompositeParameterDefinition extends ParameterDefinition {
@@ -128,9 +124,6 @@ class CompositeParameterDefinition extends ParameterDefinition {
           terminal: false,
           descriptors: parent.descriptors,
         );
-
-  @override
-  List<Object?> get props => [super.props, ...subparts];
 
   @override
   bool get terminal => subparts.any((e) => e.terminal);

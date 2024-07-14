@@ -1,5 +1,4 @@
 import 'package:collection/collection.dart';
-import 'package:equatable/equatable.dart';
 
 import 'tree.dart';
 import '../parametric/definition.dart';
@@ -7,7 +6,7 @@ import '../parametric/utils.dart';
 
 part '../route/action.dart';
 
-abstract class Node with EquatableMixin, HandlerStore {
+abstract class Node with HandlerStore {
   final _indexList = <String>[];
   final _childList = <Node>[];
 
@@ -60,9 +59,6 @@ class StaticNode extends Node {
 
   @override
   String get route => _name;
-
-  @override
-  List<Object?> get props => [route, _childList];
 }
 
 class ParametricNode extends Node {
@@ -130,9 +126,6 @@ class ParametricNode extends Node {
   @override
   String get route => ParametricNode.key;
 
-  @override
-  List<Object?> get props => [route, _definitions, _childList];
-
   ParameterDefinition? findMatchingDefinition(
     HTTPMethod method,
     String part, {
@@ -152,9 +145,6 @@ class WildcardNode extends StaticNode {
   static final String key = '*';
 
   WildcardNode() : super(WildcardNode.key);
-
-  @override
-  List<Object?> get props => [route];
 
   @override
   bool get terminal => true;
