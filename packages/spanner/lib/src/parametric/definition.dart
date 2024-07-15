@@ -63,13 +63,15 @@ class ParameterDefinition with HandlerStore {
 
   final Iterable<ParameterDescriptor> descriptors;
 
+  final String key;
+
   ParameterDefinition._(
     this.name, {
     this.descriptors = const [],
     this.prefix,
     this.suffix,
     this.terminal = false,
-  });
+  }) : key = 'prefix=$prefix&suffix=$suffix&terminal=&$terminal';
 
   String get templateStr {
     String result = '<$name>';
@@ -89,17 +91,6 @@ class ParameterDefinition with HandlerStore {
   }
 
   bool matches(String pattern) => template.hasMatch(pattern);
-
-  bool isExactExceptName(ParameterDefinition defn) {
-    if (methods.isNotEmpty) {
-      final hasMethod = defn.methods.any((e) => methods.contains(e));
-      if (!hasMethod) return false;
-    }
-
-    return prefix == defn.prefix &&
-        suffix == defn.suffix &&
-        terminal == defn.terminal;
-  }
 
   Map<String, dynamic> resolveParams(final String pattern) {
     final params = resolveParamsFromPath(template, pattern);
@@ -131,12 +122,6 @@ class CompositeParameterDefinition extends ParameterDefinition {
   @override
   String get templateStr {
     return '${super.templateStr}${subparts.map((e) => e.templateStr).join()}';
-  }
-
-  @override
-  RegExp get template {
-    if (_paramRegexCache != null) return _paramRegexCache!;
-    return _paramRegexCache = buildRegexFromTemplate(templateStr);
   }
 
   @override

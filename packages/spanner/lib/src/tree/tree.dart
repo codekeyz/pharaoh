@@ -37,7 +37,7 @@ class Spanner {
   Spanner({this.config = const RouterConfig()}) : _root = StaticNode(BASE_PATH);
 
   void addRoute<T>(HTTPMethod method, String path, T handler) {
-    final result = _on(path);
+    final result = _on(method, path);
     final indexedHandler = (index: _nextIndex, value: handler);
 
     if (result is ParameterDefinition) {
@@ -52,7 +52,7 @@ class Spanner {
   }
 
   void addMiddleware<T>(String path, T handler) {
-    final result = _on(path);
+    final result = _on(HTTPMethod.ALL, path);
     final middleware = (index: _nextIndex, value: handler);
 
     if (result is Node) {
@@ -64,7 +64,7 @@ class Spanner {
     _currentIndex = _nextIndex;
   }
 
-  dynamic _on(String path) {
+  dynamic _on(HTTPMethod method, String path) {
     path = _cleanPath(path);
 
     Node rootNode = _root;
@@ -89,6 +89,7 @@ class Spanner {
 
       final result = _computeNode(
         rootNode,
+        method,
         segment,
         fullPath: path,
         isLastSegment: i == (pathSegments.length - 1),
@@ -121,6 +122,7 @@ class Spanner {
   /// definition, or create a new [ParametricNode] with this definition.
   dynamic _computeNode(
     Node node,
+    HTTPMethod method,
     String routePart, {
     bool isLastSegment = false,
     required String fullPath,
@@ -150,15 +152,15 @@ class Spanner {
       return node.addChildAndReturn(key, WildcardNode());
     }
 
-    final paramNode = node.paramNode;
     final defn = ParameterDefinition.from(routePart, terminal: isLastSegment);
+    final paramNode = node.paramNode;
 
     if (paramNode == null) {
-      final newNode = node.addChildAndReturn(key, ParametricNode(defn));
+      final newNode = node.addChildAndReturn(key, ParametricNode(method, defn));
       return isLastSegment ? defn : newNode;
     }
 
-    paramNode.addNewDefinition(defn);
+    paramNode.addNewDefinition(method, defn);
     return isLastSegment ? defn : node.addChildAndReturn(key, paramNode);
   }
 

@@ -7,8 +7,12 @@ import '../parametric/utils.dart';
 part '../route/action.dart';
 
 abstract class Node with HandlerStore {
-  final _indexList = <String>[];
-  final _childList = <Node>[];
+  final List<String> _indexList;
+  final List<Node> _childList;
+
+  Node()
+      : _indexList = [],
+        _childList = [];
 
   String get route;
 
@@ -75,6 +79,10 @@ class ParametricNode extends Node {
   }
 
   @override
+  Iterable<HTTPMethod> get methods => definitions
+      .fold<List<HTTPMethod>>([], (preV, e) => preV..addAll(e.methods));
+
+  @override
   Node addChildAndReturn(String key, Node node) {
     if (node is WildcardNode) {
       throw ArgumentError('Parametric Node cannot have wildcard');
@@ -86,16 +94,15 @@ class ParametricNode extends Node {
 
   Iterable<ParameterDefinition> get definitions => _definitions;
 
-  ParametricNode(ParameterDefinition defn) : _definitions = [] {
-    _definitions.add(defn);
+  ParametricNode(HTTPMethod method, ParameterDefinition defn)
+      : _definitions = [] {
+    addNewDefinition(method, defn);
   }
 
   bool get hasTerminal => _definitions.any((e) => e.terminal);
 
-  void addNewDefinition(ParameterDefinition defn) {
-    final existing =
-        _definitions.firstWhereOrNull((e) => e.isExactExceptName(defn));
-
+  void addNewDefinition(HTTPMethod method, ParameterDefinition defn) {
+    final existing = _definitions.firstWhereOrNull((e) => e.key == defn.key);
     if (existing != null) {
       if (existing.name != defn.name) {
         throw ArgumentError(
@@ -106,16 +113,17 @@ class ParametricNode extends Node {
         );
       }
 
-      if (existing.terminal && defn.terminal) {
+      // Skip method check if defn is not terminal
+      if (!existing.terminal) return;
+
+      if (methods.any((e) => e == method)) {
         throw ArgumentError(
-          'Route already exists.${[
-            ' - ${existing.templateStr}',
+          'Definition already exists${[
+            ' - ${defn.key}',
             ' - ${defn.templateStr}',
           ].join('\n')}',
         );
       }
-
-      return;
     }
 
     _definitions
@@ -148,11 +156,6 @@ class WildcardNode extends StaticNode {
 
   @override
   bool get terminal => true;
-
-  @override
-  IndexedValue? getHandler(HTTPMethod method) {
-    return super.getHandler(method) ?? super.getHandler(HTTPMethod.ALL);
-  }
 
   @override
   Node addChildAndReturn(key, node) {
