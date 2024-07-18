@@ -62,14 +62,9 @@ RegExp buildRegexFromTemplate(String template) {
 Map<String, dynamic> resolveParamsFromPath(RegExp templateRegex, String path) {
   final match = templateRegex.firstMatch(path);
   if (match == null) return const {};
-
-  final map = <String, dynamic>{};
-
-  for (final param in match.groupNames) {
-    map[param] = match.namedGroup(param)!;
-  }
-
-  return map;
+  return {
+    for (final param in match.groupNames) param: match.namedGroup(param)!
+  };
 }
 
 extension ParametricDefinitionsExtension on List<ParameterDefinition> {
@@ -84,7 +79,4 @@ extension ParametricDefinitionsExtension on List<ParameterDefinition> {
 
     sort((a, b) => nullCount[a.hashCode]!.compareTo(nullCount[b.hashCode]!));
   }
-
-  Iterable get methods =>
-      map((e) => e.methods).reduce((val, e) => {...val, ...e});
 }

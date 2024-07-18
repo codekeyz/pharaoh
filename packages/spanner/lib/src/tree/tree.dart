@@ -178,25 +178,14 @@ class Spanner {
     final resolvedParams = <String, dynamic>{};
     final resolvedHandlers = <IndexedValue>[];
 
-    void insertHandler(IndexedValue handler) {
-      int index = resolvedHandlers.indexWhere((h) => h.index > handler.index);
-      if (index == -1) {
-        resolvedHandlers.add(handler);
-      } else {
-        resolvedHandlers.insert(index, handler);
-      }
-    }
-
     void collectMiddlewares(Node node) {
-      for (final middleware in node.middlewares) {
-        insertHandler(middleware);
-      }
+      resolvedHandlers.addAll(node.middlewares);
     }
 
-    List<dynamic> getResults(IndexedValue? handler) => ([
-          ...resolvedHandlers,
-          if (handler != null) handler,
-        ]).map((e) => e.value).toList(growable: false);
+    List<IndexedValue> getResults(IndexedValue? handler) {
+      if (handler != null) resolvedHandlers.add(handler);
+      return resolvedHandlers;
+    }
 
     Node rootNode = _root;
 
@@ -206,7 +195,7 @@ class Spanner {
 
     collectMiddlewares(rootNode);
 
-    if (path == BASE_PATH) {
+    if (path.isEmpty) {
       return RouteResult(
         resolvedParams,
         getResults(rootNode.getHandler(method)),
@@ -352,11 +341,18 @@ class Spanner {
 
 class RouteResult {
   final Map<String, dynamic> params;
-  final List<dynamic> values;
+  final List<IndexedValue> _values;
 
   /// this is either a Node or Parametric Definition
   @visibleForTesting
   final dynamic actual;
 
-  const RouteResult(this.params, this.values, {this.actual});
+  RouteResult(this.params, this._values, {this.actual});
+
+  bool _sorted = false;
+  Iterable<dynamic> get values {
+    if (!_sorted) _values.sort((a, b) => a.index.compareTo(b.index));
+    _sorted = true;
+    return _values.map((e) => e.value);
+  }
 }
