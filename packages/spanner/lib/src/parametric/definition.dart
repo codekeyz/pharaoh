@@ -7,23 +7,29 @@ import 'utils.dart';
 final _knownDescriptors = {'number': numDescriptor};
 
 ParameterDefinition _makeParametricDefn(RegExpMatch m, {bool end = false}) {
-  final parts = m.group(2)!.split('|');
+  final group = m.group(2)!;
+  var param = group;
 
   Iterable<ParameterDescriptor>? descriptors;
 
-  if (parts.length > 1) {
-    descriptors = parts.sublist(1).map((e) {
-      final value = e.isRegex ? regexDescriptor : _knownDescriptors[e];
-      if (value == null) {
-        throw ArgumentError.value(
-            e, null, 'Parameter definition has invalid descriptor');
-      }
-      return value;
-    });
+  if (group.contains('|')) {
+    final parts = m.group(2)!.split('|');
+    param = parts.first;
+
+    if (parts.length > 1) {
+      descriptors = parts.sublist(1).map((e) {
+        final value = e.isRegex ? regexDescriptor : _knownDescriptors[e];
+        if (value == null) {
+          throw ArgumentError.value(
+              e, null, 'Parameter definition has invalid descriptor');
+        }
+        return value;
+      });
+    }
   }
 
   return ParameterDefinition._(
-    parts.first,
+    param,
     prefix: m.group(1)?.nullIfEmpty,
     suffix: m.group(3)?.nullIfEmpty,
     terminal: end,
@@ -86,6 +92,8 @@ class ParameterDefinition with HandlerStore {
 
   Map<String, dynamic> resolveParams(final String pattern) {
     final params = resolveParamsFromPath(template, pattern);
+    if (descriptors.isEmpty) return params;
+
     return params
       ..[name] = descriptors.fold<dynamic>(
         params[name],

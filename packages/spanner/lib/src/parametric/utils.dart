@@ -63,11 +63,13 @@ Map<String, dynamic> resolveParamsFromPath(RegExp templateRegex, String path) {
   final match = templateRegex.firstMatch(path);
   if (match == null) return const {};
 
-  final resolvedParams = <String, dynamic>{};
+  final map = <String, dynamic>{};
+
   for (final param in match.groupNames) {
-    resolvedParams[param] = match.namedGroup(param);
+    map[param] = match.namedGroup(param)!;
   }
-  return resolvedParams;
+
+  return map;
 }
 
 extension ParametricDefinitionsExtension on List<ParameterDefinition> {

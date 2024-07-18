@@ -1,4 +1,5 @@
 import 'package:collection/collection.dart';
+import 'package:spanner/spanner.dart';
 
 import 'tree.dart';
 import '../parametric/definition.dart';
@@ -30,22 +31,15 @@ abstract class Node with HandlerStore {
   bool get hasChildren => _nodesMap.isNotEmpty;
 
   ParametricNode? _paramNodecache;
-  ParametricNode? get paramNode {
-    if (_paramNodecache != null) return _paramNodecache;
-    return _paramNodecache = _nodesMap.values
-        .firstWhereOrNull((e) => e is ParametricNode) as ParametricNode?;
-  }
+  ParametricNode? get paramNode => _paramNodecache;
 
   WildcardNode? _wildcardNodeCache;
-  WildcardNode? get wildcardNode {
-    if (_wildcardNodeCache != null) return _wildcardNodeCache;
-    return _wildcardNodeCache = _nodesMap.values
-        .firstWhereOrNull((e) => e is WildcardNode) as WildcardNode?;
-  }
+  WildcardNode? get wildcardNode => _wildcardNodeCache;
 
   Node addChildAndReturn(String key, Node node) {
-    _nodesMap[key] = node;
-    return node;
+    if (node is WildcardNode) return _wildcardNodeCache = node;
+    if (node is ParametricNode) return _paramNodecache = node;
+    return _nodesMap[key] = node;
   }
 }
 
