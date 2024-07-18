@@ -191,7 +191,7 @@ class Spanner {
 
     /// keep track of last wildcard we encounter along route. We'll resort to this
     /// incase we don't find the route we were looking for.
-    WildcardNode? wildcardNode = rootNode.wildcardNode;
+    var wildcardNode = rootNode.wildcardNode;
 
     collectMiddlewares(rootNode);
 

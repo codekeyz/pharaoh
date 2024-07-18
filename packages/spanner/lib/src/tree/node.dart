@@ -16,8 +16,6 @@ abstract class Node with HandlerStore {
 
   bool terminal = false;
 
-  Map<String, dynamic> params = {};
-
   Iterable<String> get paths => _nodesMap.keys;
 
   Iterable<Node> get children => _nodesMap.values;
@@ -130,7 +128,7 @@ class ParametricNode extends Node {
       (e) {
         final supportsMethod = e.methods.isEmpty || e.hasMethod(method);
         if (terminal != e.terminal || !supportsMethod) return false;
-        return e.matches(part);
+        return e.template.hasMatch(part);
       },
     );
   }
