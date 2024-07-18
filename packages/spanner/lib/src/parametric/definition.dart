@@ -6,35 +6,36 @@ import 'utils.dart';
 
 final _knownDescriptors = {'number': numDescriptor};
 
+ParameterDefinition _makeParametricDefn(RegExpMatch m, {bool end = false}) {
+  final parts = m.group(2)!.split('|');
+
+  Iterable<ParameterDescriptor>? descriptors;
+
+  if (parts.length > 1) {
+    descriptors = parts.sublist(1).map((e) {
+      final value = e.isRegex ? regexDescriptor : _knownDescriptors[e];
+      if (value == null) {
+        throw ArgumentError.value(
+            e, null, 'Parameter definition has invalid descriptor');
+      }
+      return value;
+    });
+  }
+
+  return ParameterDefinition._(
+    parts.first,
+    prefix: m.group(1)?.nullIfEmpty,
+    suffix: m.group(3)?.nullIfEmpty,
+    terminal: end,
+    descriptors: descriptors ?? const [],
+  );
+}
+
 /// build a parametric definition from a route part
-ParameterDefinition? _buildParamDefinition(String part, bool terminal) {
+ParameterDefinition buildParamDefinition(String part, bool terminal) {
   if (closeDoorParametricRegex.hasMatch(part)) {
     throw ArgumentError.value(
         part, null, 'Parameter definition is invalid. Close door neighbors');
-  }
-
-  ParameterDefinition makeDefinition(RegExpMatch m, {bool end = false}) {
-    final parts = m.group(2)!.split('|');
-
-    Iterable<ParameterDescriptor>? descriptors;
-    if (parts.length > 1) {
-      descriptors = parts.sublist(1).map((e) {
-        final value = e.isRegex ? regexDescriptor : _knownDescriptors[e];
-        if (value == null) {
-          throw ArgumentError.value(
-              e, null, 'Parameter definition has invalid descriptor');
-        }
-        return value;
-      });
-    }
-
-    return ParameterDefinition._(
-      parts.first,
-      prefix: m.group(1)?.nullIfEmpty,
-      suffix: m.group(3)?.nullIfEmpty,
-      terminal: end,
-      descriptors: descriptors ?? const [],
-    );
   }
 
   final matches = parametricDefnsRegex.allMatches(part);
@@ -43,13 +44,14 @@ ParameterDefinition? _buildParamDefinition(String part, bool terminal) {
   }
 
   if (matches.length == 1) {
-    return makeDefinition(matches.first, end: terminal);
+    return _makeParametricDefn(matches.first, end: terminal);
   }
 
-  final parent = makeDefinition(matches.first, end: false);
+  final parent = _makeParametricDefn(matches.first, end: false);
   final subdefns = matches.skip(1);
   final subparts = subdefns.mapIndexed(
-    (i, e) => makeDefinition(e, end: i == (subdefns.length - 1) && terminal),
+    (i, e) =>
+        _makeParametricDefn(e, end: i == (subdefns.length - 1) && terminal),
   );
 
   return CompositeParameterDefinition._(parent, subparts: subparts);
@@ -64,6 +66,9 @@ class ParameterDefinition with HandlerStore {
   final Iterable<ParameterDescriptor> descriptors;
 
   final String key;
+  final String templateStr;
+
+  late final RegExp template;
 
   ParameterDefinition._(
     this.name, {
@@ -71,23 +76,10 @@ class ParameterDefinition with HandlerStore {
     this.prefix,
     this.suffix,
     this.terminal = false,
-  }) : key = 'prefix=$prefix&suffix=$suffix&terminal=&$terminal';
-
-  String get templateStr {
-    String result = '<$name>';
-    if (prefix != null) result = "$prefix$result";
-    if (suffix != null) result = '$result$suffix';
-    return result;
-  }
-
-  RegExp? _paramRegexCache;
-  RegExp get template {
-    if (_paramRegexCache != null) return _paramRegexCache!;
-    return _paramRegexCache = buildRegexFromTemplate(templateStr);
-  }
-
-  factory ParameterDefinition.from(String part, {bool terminal = false}) {
-    return _buildParamDefinition(part, terminal)!;
+  })  : key = 'prefix=$prefix&suffix=$suffix&terminal=&$terminal',
+        templateStr =
+            buildTemplateString(name: name, prefix: prefix, suffix: suffix) {
+    template = buildRegexFromTemplate(templateStr);
   }
 
   bool matches(String pattern) => template.hasMatch(pattern);

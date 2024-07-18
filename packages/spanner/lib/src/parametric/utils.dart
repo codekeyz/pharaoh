@@ -33,8 +33,19 @@ RegExp descriptorToRegex(String descriptor) {
   return RegExp(regexStr);
 }
 
+String buildTemplateString({
+  required String name,
+  String? prefix,
+  String? suffix,
+}) {
+  var template = '<$name>';
+  if (prefix != null) template = "$prefix$template";
+  if (suffix != null) template = '$template$suffix';
+  return template;
+}
+
 RegExp buildRegexFromTemplate(String template) {
-  String escapedTemplate = RegExp.escape(template);
+  final escapedTemplate = RegExp.escape(template);
 
   // Replace <...> placeholders with named capturing groups
   final regexPattern = escapedTemplate.replaceAllMapped(

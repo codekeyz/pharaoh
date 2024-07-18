@@ -152,7 +152,7 @@ class Spanner {
       return node.addChildAndReturn(key, WildcardNode());
     }
 
-    final defn = ParameterDefinition.from(routePart, terminal: isLastSegment);
+    final defn = buildParamDefinition(routePart, isLastSegment);
     final paramNode = node.paramNode;
 
     if (paramNode == null) {
@@ -169,10 +169,11 @@ class Spanner {
     dynamic route, {
     void Function(String)? devlog,
   }) {
-    final path = route is Uri ? route.path : route.toString();
-    final routeSegments = route is Uri
-        ? route.pathSegments
-        : path.split('/').where((part) => part.isNotEmpty).toList();
+    var path = route is Uri ? route.path : route.toString();
+    if (path.startsWith(BASE_PATH)) path = path.substring(1);
+    if (path.endsWith(BASE_PATH)) path = path.substring(0, path.length - 1);
+
+    var routeSegments = route is Uri ? route.pathSegments : path.split('/');
 
     final resolvedParams = <String, dynamic>{};
     final resolvedHandlers = <IndexedValue>[];

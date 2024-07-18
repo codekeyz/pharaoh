@@ -7,12 +7,9 @@ import '../parametric/utils.dart';
 part '../route/action.dart';
 
 abstract class Node with HandlerStore {
-  final List<String> _indexList;
-  final List<Node> _childList;
+  final Map<String, Node> _nodesMap;
 
-  Node()
-      : _indexList = [],
-        _childList = [];
+  Node() : _nodesMap = {};
 
   String get route;
 
@@ -20,38 +17,34 @@ abstract class Node with HandlerStore {
 
   Map<String, dynamic> params = {};
 
-  UnmodifiableListView<String> get paths => UnmodifiableListView(_indexList);
+  Iterable<String> get paths => _nodesMap.keys;
 
-  UnmodifiableListView<Node> get children => UnmodifiableListView(_childList);
+  Iterable<Node> get children => _nodesMap.values;
 
-  bool hasChild(String char) => _indexList.contains(char);
+  bool hasChild(String char) => _nodesMap.containsKey(char);
 
-  Node getChild(String char) => _childList[_indexList.indexOf(char)];
+  Node getChild(String char) => _nodesMap[char]!;
 
-  Node? maybeChild(String char) {
-    final indexOfChar = _indexList.indexOf(char);
-    return indexOfChar == -1 ? null : _childList[indexOfChar];
-  }
+  Node? maybeChild(String char) => _nodesMap[char];
 
-  bool get hasChildren => _childList.isNotEmpty;
+  bool get hasChildren => _nodesMap.isNotEmpty;
 
   ParametricNode? _paramNodecache;
   ParametricNode? get paramNode {
     if (_paramNodecache != null) return _paramNodecache;
-    return _paramNodecache = _childList
+    return _paramNodecache = _nodesMap.values
         .firstWhereOrNull((e) => e is ParametricNode) as ParametricNode?;
   }
 
   WildcardNode? _wildcardNodeCache;
   WildcardNode? get wildcardNode {
     if (_wildcardNodeCache != null) return _wildcardNodeCache;
-    return _wildcardNodeCache =
-        _childList.firstWhereOrNull((e) => e is WildcardNode) as WildcardNode?;
+    return _wildcardNodeCache = _nodesMap.values
+        .firstWhereOrNull((e) => e is WildcardNode) as WildcardNode?;
   }
 
   Node addChildAndReturn(String key, Node node) {
-    _indexList.add(key);
-    _childList.add(node);
+    _nodesMap[key] = node;
     return node;
   }
 }
