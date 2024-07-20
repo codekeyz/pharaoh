@@ -83,41 +83,42 @@ class ParameterDefinition with HandlerStore {
     this.suffix,
     this.terminal = false,
   })  : key = 'prefix=$prefix&suffix=$suffix&terminal=&$terminal',
-        templateStr =
-            buildTemplateString(name: name, prefix: prefix, suffix: suffix) {
+        templateStr = buildTemplateString(
+          name: name,
+          prefix: prefix,
+          suffix: suffix,
+        ) {
     template = buildRegexFromTemplate(templateStr);
   }
 
   bool matches(String pattern) => template.hasMatch(pattern);
 
-  Map<String, dynamic> resolveParams(final String pattern) {
-    final params = resolveParamsFromPath(template, pattern);
-    if (descriptors.isEmpty) return params;
-
-    return params
-      ..[name] = descriptors.fold<dynamic>(
-        params[name],
-        (value, descriptor) => descriptor(value),
-      );
+  Iterable<ParamAndValue> resolveParams(final String pattern) sync* {
+    for (final param in resolveParamsFromPath(template, pattern)) {
+      yield param
+        ..value = descriptors.fold(
+          param.value,
+          (value, descriptor) => descriptor(value),
+        );
+    }
   }
 }
 
 class CompositeParameterDefinition extends ParameterDefinition {
   final Iterable<ParameterDefinition> subparts;
+  final List<ParameterDefinition> _allDefinitions;
 
   CompositeParameterDefinition._(
     ParameterDefinition parent, {
     required this.subparts,
-  }) : super._(
+  })  : _allDefinitions = [parent, ...subparts],
+        super._(
           parent.name,
           prefix: parent.prefix,
           suffix: parent.suffix,
-          terminal: false,
+          terminal: subparts.any((e) => e.terminal),
           descriptors: parent.descriptors,
         );
-
-  @override
-  bool get terminal => subparts.any((e) => e.terminal);
 
   @override
   String get templateStr {
@@ -125,19 +126,15 @@ class CompositeParameterDefinition extends ParameterDefinition {
   }
 
   @override
-  Map<String, dynamic> resolveParams(String pattern) {
-    final params = resolveParamsFromPath(template, pattern);
-    final definitions =
-        [this, ...subparts].where((e) => e.descriptors.isNotEmpty);
-    if (definitions.isEmpty) return params;
+  Iterable<ParamAndValue> resolveParams(String pattern) sync* {
+    for (final param in resolveParamsFromPath(template, pattern)) {
+      final defn = _allDefinitions.firstWhere((e) => e.name == param.param);
 
-    for (final defn in definitions) {
-      params[defn.name] = defn.descriptors.fold<dynamic>(
-        params[defn.name],
-        (value, descriptor) => descriptor(value),
-      );
+      yield param
+        ..value = defn.descriptors.fold<dynamic>(
+          param.value,
+          (value, descriptor) => descriptor(value),
+        );
     }
-
-    return params;
   }
 }

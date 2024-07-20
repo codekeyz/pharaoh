@@ -175,7 +175,7 @@ class Spanner {
 
     var routeSegments = route is Uri ? route.pathSegments : path.split('/');
 
-    final resolvedParams = <String, dynamic>{};
+    final resolvedParams = <ParamAndValue>[];
     final resolvedHandlers = <IndexedValue>[];
 
     void collectMiddlewares(Node node) {
@@ -213,12 +213,16 @@ class Spanner {
       final isLastPart = i == (routeSegments.length - 1);
 
       void useWildcard(WildcardNode wildcard) {
-        resolvedParams['*'] = routeSegments.sublist(i).join('/');
+        resolvedParams.add(ParamAndValue(
+          param: '*',
+          value: routeSegments.sublist(i).join('/'),
+        ));
         rootNode = wildcard;
       }
 
-      if (rootNode.hasChild(routePart)) {
-        rootNode = rootNode.getChild(routePart);
+      final maybeChild = rootNode.maybeChild(routePart);
+      if (maybeChild != null) {
+        rootNode = maybeChild;
         collectMiddlewares(rootNode);
 
         final wcNode = rootNode.wildcardNode;
@@ -241,11 +245,12 @@ class Spanner {
           return RouteResult(resolvedParams, getResults(null), actual: null);
         }
 
-        if (parametricNode.hasChild(routePart)) {
+        final maybeChild = parametricNode.maybeChild(routePart);
+        if (maybeChild != null) {
+          rootNode = maybeChild;
           devlog?.call(
             '- Found Static for             ->              $routePart',
           );
-          rootNode = parametricNode.getChild(routePart);
           final wcNode = rootNode.wildcardNode;
           if (wcNode != null) wildcardNode = wcNode;
           continue;
@@ -278,7 +283,10 @@ class Spanner {
             if (partsLeft.length > 1) break;
 
             final name = parametricNode.definitions.first.name;
-            resolvedParams[name] = partsLeft.join('/');
+            resolvedParams.add(ParamAndValue(
+              param: name,
+              value: partsLeft.join('/'),
+            ));
 
             return RouteResult(
               resolvedParams,
@@ -293,8 +301,8 @@ class Spanner {
           '- Found defn for route part    ->              $routePart',
         );
 
-        final params = definition.resolveParams(currPart);
-        resolvedParams.addAll(params);
+        final result = definition.resolveParams(currPart);
+        resolvedParams.addAll(result);
         rootNode = parametricNode;
 
         if (isLastPart && definition.terminal) {
@@ -340,19 +348,26 @@ class Spanner {
 }
 
 class RouteResult {
-  final Map<String, dynamic> params;
+  final List<ParamAndValue> _params;
   final List<IndexedValue> _values;
 
   /// this is either a Node or Parametric Definition
   @visibleForTesting
   final dynamic actual;
 
-  RouteResult(this.params, this._values, {this.actual});
+  RouteResult(this._params, this._values, {this.actual});
 
   bool _sorted = false;
   Iterable<dynamic> get values {
     if (!_sorted) _values.sort((a, b) => a.index.compareTo(b.index));
     _sorted = true;
     return _values.map((e) => e.value);
+  }
+
+  Map<String, dynamic>? _paramsCache;
+  Map<String, dynamic> get params {
+    if (_paramsCache != null) return _paramsCache!;
+    _paramsCache = {for (final param in _params) param.param: param.value};
+    return _paramsCache!;
   }
 }
