@@ -50,8 +50,10 @@ ParameterDefinition buildParamDefinition(String part) {
     return _singleParamDefn(matches.first);
   }
 
-  final parts = matches.map(_singleParamDefn).toList(growable: false);
-  return CompositeParameterDefinition._(parts);
+  final defns = matches.map(_singleParamDefn);
+  final partsMap = {for (final defn in defns) defn.name: defn};
+
+  return CompositeParameterDefinition._(partsMap, defns.last.name);
 }
 
 abstract class ParameterDefinition implements HandlerStore {
@@ -65,7 +67,7 @@ abstract class ParameterDefinition implements HandlerStore {
 
   bool get terminal;
 
-  Iterable<ParamAndValue> resolveParams(String pattern);
+  Map<String, dynamic>? resolveParams(String pattern);
 }
 
 class SingleParameterDefn extends ParameterDefinition with HandlerStoreMixin {
@@ -108,14 +110,15 @@ class SingleParameterDefn extends ParameterDefinition with HandlerStoreMixin {
   bool matches(String pattern) => template.hasMatch(pattern);
 
   @override
-  Iterable<ParamAndValue> resolveParams(final String pattern) sync* {
-    for (final param in resolveParamsFromPath(template, pattern)) {
-      yield param
-        ..value = descriptors.fold(
-          param.value,
-          (value, descriptor) => descriptor(value),
-        );
-    }
+  Map<String, dynamic>? resolveParams(final String pattern) {
+    final params = resolveParamsFromPath(template, pattern);
+    if (params == null) return null;
+
+    return params
+      ..[name] = descriptors.fold(
+        params[name],
+        (value, descriptor) => descriptor(value),
+      );
   }
 
   @override
@@ -127,19 +130,21 @@ class SingleParameterDefn extends ParameterDefinition with HandlerStoreMixin {
 
 class CompositeParameterDefinition extends ParameterDefinition
     implements HandlerStore {
-  final List<SingleParameterDefn> parts;
-  final SingleParameterDefn _maybeTerminalPart;
+  final Map<String, SingleParameterDefn> parts;
+  final String _lastPartKey;
 
-  CompositeParameterDefinition._(this.parts) : _maybeTerminalPart = parts.last;
+  SingleParameterDefn get _maybeTerminalPart => parts[_lastPartKey]!;
 
-  @override
-  String get templateStr => parts.map((e) => e.templateStr).join();
-
-  @override
-  String get name => parts.map((e) => e.name).join('|');
+  CompositeParameterDefinition._(this.parts, this._lastPartKey);
 
   @override
-  String get key => parts.map((e) => e.key).join('|');
+  String get templateStr => parts.values.map((e) => e.templateStr).join();
+
+  @override
+  String get name => parts.values.map((e) => e.name).join('|');
+
+  @override
+  String get key => parts.values.map((e) => e.key).join('|');
 
   @override
   RegExp get template => buildRegexFromTemplate(templateStr);
@@ -148,16 +153,21 @@ class CompositeParameterDefinition extends ParameterDefinition
   bool get terminal => _maybeTerminalPart.terminal;
 
   @override
-  Iterable<ParamAndValue> resolveParams(String pattern) sync* {
-    for (final param in resolveParamsFromPath(template, pattern)) {
-      final defn = parts.firstWhere((e) => e.name == param.param);
+  Map<String, dynamic>? resolveParams(String pattern) {
+    final result = resolveParamsFromPath(template, pattern);
+    if (result == null) return null;
 
-      yield param
-        ..value = defn.descriptors.fold<dynamic>(
-          param.value,
-          (value, descriptor) => descriptor(value),
-        );
+    for (final param in result.keys) {
+      final defn = parts[param]!;
+      final value = result[param];
+
+      result[param] = defn.descriptors.fold<dynamic>(
+        value,
+        (value, fn) => fn(value),
+      );
     }
+
+    return result;
   }
 
   @override

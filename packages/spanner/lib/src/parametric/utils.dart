@@ -59,22 +59,16 @@ RegExp buildRegexFromTemplate(String template) {
   return RegExp(regexPattern, caseSensitive: false);
 }
 
-class ParamAndValue {
-  String param;
-  dynamic value;
-  ParamAndValue({required this.param, required this.value});
-}
-
-Iterable<ParamAndValue> resolveParamsFromPath(
+Map<String, dynamic>? resolveParamsFromPath(
   RegExp templateRegex,
   String path,
-) sync* {
+) {
   final match = templateRegex.firstMatch(path);
-  if (match == null) return;
+  if (match == null) return null;
 
-  for (final param in match.groupNames) {
-    yield ParamAndValue(param: param, value: match.namedGroup(param));
-  }
+  return {
+    for (final param in match.groupNames) param: match.namedGroup(param),
+  };
 }
 
 extension ParametricDefinitionsExtension on List<ParameterDefinition> {

@@ -84,8 +84,6 @@ class Spanner {
       );
 
       /// the only time [result] won't be Node is when we have a parametric definition
-      /// that is a terminal. It's safe to break the loop since we're already
-      /// on the last segment anyways.
       if (result is! Node) return result;
 
       rootNode = result;
@@ -108,7 +106,7 @@ class Spanner {
   /// we will find a static child `users` or create one, then proceed to search
   /// for a [ParametricNode] on the current root [node]. If found, we fill add a new
   /// definition, or create a new [ParametricNode] with this definition.
-  dynamic _computeNode(
+  HandlerStore _computeNode(
     Node node,
     HTTPMethod method,
     String routePart, {
@@ -260,10 +258,9 @@ class Spanner {
         '- Found defn for route part    ->              $routePart',
       );
 
-      final result = definition.resolveParams(currPart);
-      for (var res in result) {
-        resolvedParams[res.param] = res.value;
-      }
+      final params = definition.resolveParams(currPart);
+      if (params != null) resolvedParams.addAll(params);
+
       rootNode = parametricNode;
 
       if (isLastPart && definition.terminal) {
