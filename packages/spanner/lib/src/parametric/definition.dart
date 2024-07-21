@@ -1,23 +1,20 @@
-import 'package:collection/collection.dart';
-import 'package:equatable/equatable.dart';
-
 import '../tree/node.dart';
+import '../tree/tree.dart';
 import 'descriptor.dart';
 import 'utils.dart';
 
 final _knownDescriptors = {'number': numDescriptor};
 
-/// build a parametric definition from a route part
-ParameterDefinition? _buildParamDefinition(String part, bool terminal) {
-  if (closeDoorParametricRegex.hasMatch(part)) {
-    throw ArgumentError.value(
-        part, null, 'Parameter definition is invalid. Close door neighbors');
-  }
+SingleParameterDefn _singleParamDefn(RegExpMatch m) {
+  final group = m.group(2)!;
+  var param = group;
 
-  ParameterDefinition makeDefinition(RegExpMatch m, {bool end = false}) {
+  Iterable<ParameterDescriptor>? descriptors;
+
+  if (group.contains('|')) {
     final parts = m.group(2)!.split('|');
+    param = parts.first;
 
-    Iterable<ParameterDescriptor>? descriptors;
     if (parts.length > 1) {
       descriptors = parts.sublist(1).map((e) {
         final value = e.isRegex ? regexDescriptor : _knownDescriptors[e];
@@ -28,14 +25,20 @@ ParameterDefinition? _buildParamDefinition(String part, bool terminal) {
         return value;
       });
     }
+  }
 
-    return ParameterDefinition._(
-      parts.first,
-      prefix: m.group(1)?.nullIfEmpty,
-      suffix: m.group(3)?.nullIfEmpty,
-      terminal: end,
-      descriptors: descriptors ?? const [],
-    );
+  return SingleParameterDefn._(
+    param,
+    prefix: m.group(1)?.nullIfEmpty,
+    suffix: m.group(3)?.nullIfEmpty,
+    descriptors: descriptors ?? const [],
+  );
+}
+
+ParameterDefinition buildParamDefinition(String part) {
+  if (closeDoorParametricRegex.hasMatch(part)) {
+    throw ArgumentError.value(
+        part, null, 'Parameter definition is invalid. Close door neighbors');
   }
 
   final matches = parametricDefnsRegex.allMatches(part);
@@ -44,122 +47,145 @@ ParameterDefinition? _buildParamDefinition(String part, bool terminal) {
   }
 
   if (matches.length == 1) {
-    return makeDefinition(matches.first, end: terminal);
+    return _singleParamDefn(matches.first);
   }
 
-  final parent = makeDefinition(matches.first, end: false);
-  final subdefns = matches.skip(1);
-  final subparts = subdefns.mapIndexed(
-    (i, e) => makeDefinition(e, end: i == (subdefns.length - 1) && terminal),
-  );
+  final defns = matches.map(_singleParamDefn);
+  final partsMap = {for (final defn in defns) defn.name: defn};
 
-  return CompositeParameterDefinition._(parent, subparts: subparts);
+  return CompositeParameterDefinition._(partsMap, defns.last.name);
 }
 
-class ParameterDefinition with EquatableMixin, HandlerStore {
+abstract class ParameterDefinition implements HandlerStore {
+  String get name;
+
+  String get templateStr;
+
+  RegExp get template;
+
+  String get key;
+
+  bool get terminal;
+
+  Map<String, dynamic>? resolveParams(String pattern);
+}
+
+class SingleParameterDefn extends ParameterDefinition with HandlerStoreMixin {
+  @override
   final String name;
+
   final String? prefix;
   final String? suffix;
-  final bool terminal;
 
   final Iterable<ParameterDescriptor> descriptors;
 
-  ParameterDefinition._(
+  @override
+  final String templateStr;
+
+  @override
+  late final RegExp template;
+
+  @override
+  String get key => 'prefix=$prefix&suffix=$suffix&terminal=$terminal';
+
+  bool _terminal;
+
+  @override
+  bool get terminal => _terminal;
+
+  SingleParameterDefn._(
     this.name, {
     this.descriptors = const [],
     this.prefix,
     this.suffix,
-    this.terminal = false,
-  });
-
-  String get templateStr {
-    String result = '<$name>';
-    if (prefix != null) result = "$prefix$result";
-    if (suffix != null) result = '$result$suffix';
-    return result;
-  }
-
-  RegExp? _paramRegexCache;
-  RegExp get template {
-    if (_paramRegexCache != null) return _paramRegexCache!;
-    return _paramRegexCache = buildRegexFromTemplate(templateStr);
-  }
-
-  factory ParameterDefinition.from(String part, {bool terminal = false}) {
-    return _buildParamDefinition(part, terminal)!;
+  })  : templateStr = buildTemplateString(
+          name: name,
+          prefix: prefix,
+          suffix: suffix,
+        ),
+        _terminal = false {
+    template = buildRegexFromTemplate(templateStr);
   }
 
   bool matches(String pattern) => template.hasMatch(pattern);
 
-  bool isExactExceptName(ParameterDefinition defn) {
-    if (methods.isNotEmpty) {
-      final hasMethod = defn.methods.any((e) => methods.contains(e));
-      if (!hasMethod) return false;
-    }
-
-    return prefix == defn.prefix &&
-        suffix == defn.suffix &&
-        terminal == defn.terminal;
-  }
-
-  Map<String, dynamic> resolveParams(final String pattern) {
+  @override
+  Map<String, dynamic>? resolveParams(final String pattern) {
     final params = resolveParamsFromPath(template, pattern);
+    if (params == null) return null;
+
     return params
-      ..[name] = descriptors.fold<dynamic>(
+      ..[name] = descriptors.fold(
         params[name],
         (value, descriptor) => descriptor(value),
       );
   }
 
   @override
-  List<Object?> get props => [prefix, name, suffix, terminal];
+  void addRoute<T>(HTTPMethod method, IndexedValue<T> handler) {
+    super.addRoute(method, handler);
+    _terminal = true;
+  }
 }
 
-class CompositeParameterDefinition extends ParameterDefinition {
-  final Iterable<ParameterDefinition> subparts;
+class CompositeParameterDefinition extends ParameterDefinition
+    implements HandlerStore {
+  final Map<String, SingleParameterDefn> parts;
+  final String _lastPartKey;
 
-  CompositeParameterDefinition._(
-    ParameterDefinition parent, {
-    required this.subparts,
-  }) : super._(
-          parent.name,
-          prefix: parent.prefix,
-          suffix: parent.suffix,
-          terminal: false,
-          descriptors: parent.descriptors,
-        );
+  SingleParameterDefn get _maybeTerminalPart => parts[_lastPartKey]!;
+
+  CompositeParameterDefinition._(this.parts, this._lastPartKey);
 
   @override
-  List<Object?> get props => [super.props, ...subparts];
+  String get templateStr => parts.values.map((e) => e.templateStr).join();
 
   @override
-  bool get terminal => subparts.any((e) => e.terminal);
+  String get name => parts.values.map((e) => e.name).join('|');
 
   @override
-  String get templateStr {
-    return '${super.templateStr}${subparts.map((e) => e.templateStr).join()}';
-  }
+  String get key => parts.values.map((e) => e.key).join('|');
 
   @override
-  RegExp get template {
-    if (_paramRegexCache != null) return _paramRegexCache!;
-    return _paramRegexCache = buildRegexFromTemplate(templateStr);
-  }
+  RegExp get template => buildRegexFromTemplate(templateStr);
 
   @override
-  Map<String, dynamic> resolveParams(String pattern) {
-    final params = resolveParamsFromPath(template, pattern);
-    final definitions =
-        [this, ...subparts].where((e) => e.descriptors.isNotEmpty);
-    if (definitions.isEmpty) return params;
+  bool get terminal => _maybeTerminalPart.terminal;
 
-    for (final defn in definitions) {
-      params[defn.name] = defn.descriptors.fold<dynamic>(
-        params[defn.name],
-        (value, descriptor) => descriptor(value),
+  @override
+  Map<String, dynamic>? resolveParams(String pattern) {
+    final result = resolveParamsFromPath(template, pattern);
+    if (result == null) return null;
+
+    for (final param in result.keys) {
+      final defn = parts[param]!;
+      final value = result[param];
+
+      result[param] = defn.descriptors.fold<dynamic>(
+        value,
+        (value, fn) => fn(value),
       );
     }
 
-    return params;
+    return result;
   }
+
+  @override
+  void addMiddleware<T>(IndexedValue<T> handler) {
+    _maybeTerminalPart.addMiddleware(handler);
+  }
+
+  @override
+  void addRoute<T>(HTTPMethod method, IndexedValue<T> handler) =>
+      _maybeTerminalPart.addRoute(method, handler);
+
+  @override
+  IndexedValue? getHandler(HTTPMethod method) =>
+      _maybeTerminalPart.getHandler(method);
+
+  @override
+  bool hasMethod(HTTPMethod method) => _maybeTerminalPart.hasMethod(method);
+
+  @override
+  Iterable<HTTPMethod> get methods => _maybeTerminalPart.methods;
 }

@@ -33,8 +33,19 @@ RegExp descriptorToRegex(String descriptor) {
   return RegExp(regexStr);
 }
 
+String buildTemplateString({
+  required String name,
+  String? prefix,
+  String? suffix,
+}) {
+  var template = '<$name>';
+  if (prefix != null) template = "$prefix$template";
+  if (suffix != null) template = '$template$suffix';
+  return template;
+}
+
 RegExp buildRegexFromTemplate(String template) {
-  String escapedTemplate = RegExp.escape(template);
+  final escapedTemplate = RegExp.escape(template);
 
   // Replace <...> placeholders with named capturing groups
   final regexPattern = escapedTemplate.replaceAllMapped(
@@ -48,30 +59,51 @@ RegExp buildRegexFromTemplate(String template) {
   return RegExp(regexPattern, caseSensitive: false);
 }
 
-Map<String, dynamic> resolveParamsFromPath(RegExp templateRegex, String path) {
+Map<String, dynamic>? resolveParamsFromPath(
+  RegExp templateRegex,
+  String path,
+) {
   final match = templateRegex.firstMatch(path);
-  if (match == null) return const {};
+  if (match == null) return null;
 
-  final resolvedParams = <String, dynamic>{};
-  for (final param in match.groupNames) {
-    resolvedParams[param] = match.namedGroup(param);
-  }
-  return resolvedParams;
+  return {
+    for (final param in match.groupNames) param: match.namedGroup(param),
+  };
 }
 
 extension ParametricDefinitionsExtension on List<ParameterDefinition> {
-  void sortByProps() {
-    final Map<int, int> nullCount = {};
-    for (final def in this) {
-      int count = 0;
-      if (def.prefix == null) count += 1;
-      if (def.suffix == null) count += 1;
-      nullCount[def.hashCode] = count;
-    }
+  void sortByProps() => sort((a, b) {
+        // First, prioritize CompositeParameterDefinition
+        if (a is CompositeParameterDefinition &&
+            b is! CompositeParameterDefinition) {
+          return -1;
+        }
+        if (b is CompositeParameterDefinition &&
+            a is! CompositeParameterDefinition) {
+          return 1;
+        }
 
-    sort((a, b) => nullCount[a.hashCode]!.compareTo(nullCount[b.hashCode]!));
-  }
+        // If both are CompositeParameterDefinition, compare their lengths
+        if (a is CompositeParameterDefinition &&
+            b is CompositeParameterDefinition) {
+          return b.parts.length.compareTo(a.parts.length);
+        }
 
-  Iterable get methods =>
-      map((e) => e.methods).reduce((val, e) => {...val, ...e});
+        // Now handle SingleParameterDefn cases
+        if (a is SingleParameterDefn && b is SingleParameterDefn) {
+          bool aHasPrefix = a.prefix != null;
+          bool aHasSuffix = a.suffix != null;
+          bool bHasPrefix = b.prefix != null;
+          bool bHasSuffix = b.suffix != null;
+
+          int aScore = (aHasPrefix ? 1 : 0) + (aHasSuffix ? 1 : 0);
+          int bScore = (bHasPrefix ? 1 : 0) + (bHasSuffix ? 1 : 0);
+
+          return bScore.compareTo(aScore);
+        }
+
+        // This case shouldn't occur if all elements are either Composite or Single,
+        // but including it for completeness
+        return 0;
+      });
 }
