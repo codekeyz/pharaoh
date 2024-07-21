@@ -1,12 +1,11 @@
-import 'package:collection/collection.dart';
-
 import '../tree/node.dart';
+import '../tree/tree.dart';
 import 'descriptor.dart';
 import 'utils.dart';
 
 final _knownDescriptors = {'number': numDescriptor};
 
-ParameterDefinition _makeParametricDefn(RegExpMatch m, {bool end = false}) {
+SingleParameterDefn _singleParamDefn(RegExpMatch m) {
   final group = m.group(2)!;
   var param = group;
 
@@ -28,17 +27,15 @@ ParameterDefinition _makeParametricDefn(RegExpMatch m, {bool end = false}) {
     }
   }
 
-  return ParameterDefinition._(
+  return SingleParameterDefn._(
     param,
     prefix: m.group(1)?.nullIfEmpty,
     suffix: m.group(3)?.nullIfEmpty,
-    terminal: end,
     descriptors: descriptors ?? const [],
   );
 }
 
-/// build a parametric definition from a route part
-ParameterDefinition buildParamDefinition(String part, bool terminal) {
+ParameterDefinition buildParamDefinition(String part) {
   if (closeDoorParametricRegex.hasMatch(part)) {
     throw ArgumentError.value(
         part, null, 'Parameter definition is invalid. Close door neighbors');
@@ -50,49 +47,67 @@ ParameterDefinition buildParamDefinition(String part, bool terminal) {
   }
 
   if (matches.length == 1) {
-    return _makeParametricDefn(matches.first, end: terminal);
+    return _singleParamDefn(matches.first);
   }
 
-  final parent = _makeParametricDefn(matches.first, end: false);
-  final subdefns = matches.skip(1);
-  final subparts = subdefns.mapIndexed(
-    (i, e) =>
-        _makeParametricDefn(e, end: i == (subdefns.length - 1) && terminal),
-  );
-
-  return CompositeParameterDefinition._(parent, subparts: subparts);
+  final parts = matches.map(_singleParamDefn).toList(growable: false);
+  return CompositeParameterDefinition._(parts);
 }
 
-class ParameterDefinition with HandlerStore {
+abstract class ParameterDefinition implements HandlerStore {
+  String get name;
+
+  String get templateStr;
+
+  RegExp get template;
+
+  String get key;
+
+  bool get terminal;
+
+  Iterable<ParamAndValue> resolveParams(String pattern);
+}
+
+class SingleParameterDefn extends ParameterDefinition with HandlerStoreMixin {
+  @override
   final String name;
+
   final String? prefix;
   final String? suffix;
-  final bool terminal;
 
   final Iterable<ParameterDescriptor> descriptors;
 
-  final String key;
+  @override
   final String templateStr;
 
+  @override
   late final RegExp template;
 
-  ParameterDefinition._(
+  @override
+  String get key => 'prefix=$prefix&suffix=$suffix&terminal=$terminal';
+
+  bool _terminal;
+
+  @override
+  bool get terminal => _terminal;
+
+  SingleParameterDefn._(
     this.name, {
     this.descriptors = const [],
     this.prefix,
     this.suffix,
-    this.terminal = false,
-  })  : key = 'prefix=$prefix&suffix=$suffix&terminal=&$terminal',
-        templateStr = buildTemplateString(
+  })  : templateStr = buildTemplateString(
           name: name,
           prefix: prefix,
           suffix: suffix,
-        ) {
+        ),
+        _terminal = false {
     template = buildRegexFromTemplate(templateStr);
   }
 
   bool matches(String pattern) => template.hasMatch(pattern);
 
+  @override
   Iterable<ParamAndValue> resolveParams(final String pattern) sync* {
     for (final param in resolveParamsFromPath(template, pattern)) {
       yield param
@@ -102,33 +117,40 @@ class ParameterDefinition with HandlerStore {
         );
     }
   }
-}
-
-class CompositeParameterDefinition extends ParameterDefinition {
-  final Iterable<ParameterDefinition> subparts;
-  final List<ParameterDefinition> _allDefinitions;
-
-  CompositeParameterDefinition._(
-    ParameterDefinition parent, {
-    required this.subparts,
-  })  : _allDefinitions = [parent, ...subparts],
-        super._(
-          parent.name,
-          prefix: parent.prefix,
-          suffix: parent.suffix,
-          terminal: subparts.any((e) => e.terminal),
-          descriptors: parent.descriptors,
-        );
 
   @override
-  String get templateStr {
-    return '${super.templateStr}${subparts.map((e) => e.templateStr).join()}';
+  void addRoute<T>(HTTPMethod method, IndexedValue<T> handler) {
+    super.addRoute(method, handler);
+    _terminal = true;
   }
+}
+
+class CompositeParameterDefinition extends ParameterDefinition
+    implements HandlerStore {
+  final List<SingleParameterDefn> parts;
+  final SingleParameterDefn _maybeTerminalPart;
+
+  CompositeParameterDefinition._(this.parts) : _maybeTerminalPart = parts.last;
+
+  @override
+  String get templateStr => parts.map((e) => e.templateStr).join();
+
+  @override
+  String get name => parts.map((e) => e.name).join('|');
+
+  @override
+  String get key => parts.map((e) => e.key).join('|');
+
+  @override
+  RegExp get template => buildRegexFromTemplate(templateStr);
+
+  @override
+  bool get terminal => _maybeTerminalPart.terminal;
 
   @override
   Iterable<ParamAndValue> resolveParams(String pattern) sync* {
     for (final param in resolveParamsFromPath(template, pattern)) {
-      final defn = _allDefinitions.firstWhere((e) => e.name == param.param);
+      final defn = parts.firstWhere((e) => e.name == param.param);
 
       yield param
         ..value = defn.descriptors.fold<dynamic>(
@@ -137,4 +159,23 @@ class CompositeParameterDefinition extends ParameterDefinition {
         );
     }
   }
+
+  @override
+  void addMiddleware<T>(IndexedValue<T> handler) {
+    _maybeTerminalPart.addMiddleware(handler);
+  }
+
+  @override
+  void addRoute<T>(HTTPMethod method, IndexedValue<T> handler) =>
+      _maybeTerminalPart.addRoute(method, handler);
+
+  @override
+  IndexedValue? getHandler(HTTPMethod method) =>
+      _maybeTerminalPart.getHandler(method);
+
+  @override
+  bool hasMethod(HTTPMethod method) => _maybeTerminalPart.hasMethod(method);
+
+  @override
+  Iterable<HTTPMethod> get methods => _maybeTerminalPart.methods;
 }

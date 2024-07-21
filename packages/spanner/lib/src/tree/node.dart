@@ -7,7 +7,7 @@ import '../parametric/utils.dart';
 
 part '../route/action.dart';
 
-abstract class Node with HandlerStore {
+abstract class Node with HandlerStoreMixin {
   final Map<String, Node> _nodesMap;
 
   Node() : _nodesMap = {};
@@ -39,6 +39,12 @@ abstract class Node with HandlerStore {
     if (node is ParametricNode) return _paramNodecache = node;
     return _nodesMap[key] = node;
   }
+
+  @override
+  void addRoute<T>(HTTPMethod method, IndexedValue<T> handler) {
+    super.addRoute(method, handler);
+    terminal = true;
+  }
 }
 
 class StaticNode extends Node {
@@ -53,6 +59,8 @@ class StaticNode extends Node {
 class ParametricNode extends Node {
   static final String key = '<:>';
 
+  final Map<HTTPMethod, List<ParameterDefinition>> _definitionsMap;
+
   @override
   void addMiddleware<T>(IndexedValue<T> handler) {
     throw ArgumentError('Parametric Node cannot have middlewares');
@@ -64,8 +72,7 @@ class ParametricNode extends Node {
   }
 
   @override
-  Iterable<HTTPMethod> get methods => definitions
-      .fold<List<HTTPMethod>>([], (preV, e) => preV..addAll(e.methods));
+  Iterable<HTTPMethod> get methods => _definitionsMap.keys;
 
   @override
   Node addChildAndReturn(String key, Node node) {
@@ -75,43 +82,47 @@ class ParametricNode extends Node {
     return super.addChildAndReturn(key, node);
   }
 
-  final List<ParameterDefinition> _definitions;
-
-  Iterable<ParameterDefinition> get definitions => _definitions;
+  List<ParameterDefinition> definitions(HTTPMethod method) =>
+      _definitionsMap[method] ?? const [];
 
   ParametricNode(HTTPMethod method, ParameterDefinition defn)
-      : _definitions = [] {
+      : _definitionsMap = {} {
     addNewDefinition(method, defn);
   }
 
-  bool get hasTerminal => _definitions.any((e) => e.terminal);
-
   void addNewDefinition(HTTPMethod method, ParameterDefinition defn) {
-    final existing = _definitions.firstWhereOrNull((e) => e.key == defn.key);
-    if (existing != null) {
-      if (existing.name != defn.name) {
-        throw ArgumentError(
-          'Route has inconsistent naming in parameter definition\n${[
-            ' - ${existing.templateStr}',
-            ' - ${defn.templateStr}',
-          ].join('\n')}',
-        );
-      }
+    var definitions = _definitionsMap[method];
+    if (definitions == null) {
+      definitions = [];
+      _definitionsMap[method] = definitions;
+    }
 
-      // Skip method check if defn is not terminal
-      if (!existing.terminal) return;
+    if (definitions.isNotEmpty) {
+      final existing = definitions.firstWhereOrNull((e) => e.key == defn.key);
+      if (existing != null) {
+        if (existing.name != defn.name) {
+          throw ArgumentError(
+            'Route has inconsistent naming in parameter definition\n${[
+              ' - ${existing.templateStr}',
+              ' - ${defn.templateStr}',
+            ].join('\n')}',
+          );
+        }
 
-      if (methods.any((e) => e == method)) {
-        throw ArgumentError(
-          'Definition already exists${[
-            ' - ${defn.key}',
-            ' - ${defn.templateStr}',
-          ].join('\n')}',
-        );
+        if (existing.terminal && defn.terminal) {
+          throw ArgumentError(
+            'Route already exists${[
+              ' - ${existing.templateStr}',
+              ' - ${defn.templateStr}',
+            ].join('\n')}',
+          );
+        }
+
+        return;
       }
     }
 
-    _definitions
+    definitions
       ..add(defn)
       ..sortByProps();
   }
@@ -121,16 +132,19 @@ class ParametricNode extends Node {
 
   ParameterDefinition? findMatchingDefinition(
     HTTPMethod method,
-    String part, {
-    bool terminal = false,
-  }) {
-    return definitions.firstWhereOrNull(
-      (e) {
-        final supportsMethod = e.methods.isEmpty || e.hasMethod(method);
-        if (terminal != e.terminal || !supportsMethod) return false;
-        return e.template.hasMatch(part);
-      },
-    );
+    String part,
+    bool terminal,
+  ) {
+    return _definitionsMap[method]?.firstWhereOrNull((e) {
+      /// If we're looking for a terminal, be sure we have the method entry too.
+      /// if not just ensure out condition for terminal being same is met.
+      final a = terminal
+          ? (e.terminal && e.hasMethod(method))
+          : e.terminal == terminal;
+      if (!a) return false;
+
+      return e.template.hasMatch(part);
+    });
   }
 }
 

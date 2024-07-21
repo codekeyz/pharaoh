@@ -37,34 +37,24 @@ class Spanner {
   Spanner({this.config = const RouterConfig()}) : _root = StaticNode(BASE_PATH);
 
   void addRoute<T>(HTTPMethod method, String path, T handler) {
-    final result = _on(method, path);
-    final indexedHandler = (index: _nextIndex, value: handler);
-
-    if (result is ParameterDefinition) {
-      result.addRoute(method, indexedHandler);
-    } else {
-      (result as StaticNode)
-        ..addRoute(method, indexedHandler)
-        ..terminal = true;
-    }
+    _on(method, path).addRoute(method, (
+      index: _nextIndex,
+      value: handler,
+    ));
 
     _currentIndex = _nextIndex;
   }
 
   void addMiddleware<T>(String path, T handler) {
-    final result = _on(HTTPMethod.ALL, path);
-    final middleware = (index: _nextIndex, value: handler);
-
-    if (result is Node) {
-      result.addMiddleware(middleware);
-    } else if (result is ParameterDefinition) {
-      result.addMiddleware(middleware);
-    }
+    _on(HTTPMethod.ALL, path).addMiddleware((
+      index: _nextIndex,
+      value: handler,
+    ));
 
     _currentIndex = _nextIndex;
   }
 
-  dynamic _on(HTTPMethod method, String path) {
+  HandlerStore _on(HTTPMethod method, String path) {
     path = _cleanPath(path);
 
     Node rootNode = _root;
@@ -83,14 +73,12 @@ class Spanner {
       return wildCardNode..terminal = true;
     }
 
-    final pathSegments = _getRouteSegments(path);
+    final pathSegments = path.split('/');
     for (int i = 0; i < pathSegments.length; i++) {
-      final segment = pathSegments[i];
-
       final result = _computeNode(
         rootNode,
         method,
-        segment,
+        pathSegments[i],
         fullPath: path,
         isLastSegment: i == (pathSegments.length - 1),
       );
@@ -127,21 +115,14 @@ class Spanner {
     bool isLastSegment = false,
     required String fullPath,
   }) {
-    String part = routePart;
-    if (!config.caseSensitive) part = part.toLowerCase();
+    final part = config.caseSensitive ? routePart : routePart.toLowerCase();
 
-    final key = _getNodeKey(part);
     final child = node.maybeChild(part);
-
     if (child != null) {
-      return node.addChildAndReturn(key, child);
-    }
-
-    if (part.isStatic) {
-      return node.addChildAndReturn(key, StaticNode(key));
-    }
-
-    if (part.isWildCard) {
+      return node.addChildAndReturn(part, child);
+    } else if (part.isStatic) {
+      return node.addChildAndReturn(part, StaticNode(part));
+    } else if (part.isWildCard) {
       if (!isLastSegment) {
         throw ArgumentError.value(
           fullPath,
@@ -149,19 +130,25 @@ class Spanner {
           'Route definition is not valid. Wildcard must be the end of the route',
         );
       }
-      return node.addChildAndReturn(key, WildcardNode());
+      return node.addChildAndReturn(WildcardNode.key, WildcardNode());
     }
 
-    final defn = buildParamDefinition(routePart, isLastSegment);
+    final defn = buildParamDefinition(routePart);
     final paramNode = node.paramNode;
 
     if (paramNode == null) {
-      final newNode = node.addChildAndReturn(key, ParametricNode(method, defn));
+      final newNode = node.addChildAndReturn(
+        ParametricNode.key,
+        ParametricNode(method, defn),
+      );
       return isLastSegment ? defn : newNode;
     }
 
     paramNode.addNewDefinition(method, defn);
-    return isLastSegment ? defn : node.addChildAndReturn(key, paramNode);
+
+    return isLastSegment
+        ? defn
+        : node.addChildAndReturn(ParametricNode.key, paramNode);
   }
 
   RouteResult? lookup(
@@ -173,24 +160,15 @@ class Spanner {
     if (path.startsWith(BASE_PATH)) path = path.substring(1);
     if (path.endsWith(BASE_PATH)) path = path.substring(0, path.length - 1);
 
-    final routeSegments = route is Uri ? route.pathSegments : path.split('/');
     final resolvedParams = <String, dynamic>{};
     final resolvedHandlers = <IndexedValue>[];
 
-    void collectMiddlewares(Node node) {
-      resolvedHandlers.addAll(node.middlewares);
-    }
+    collectMiddlewares(Node node) => resolvedHandlers.addAll(node.middlewares);
 
-    List<IndexedValue> getResults(IndexedValue? handler) {
-      if (handler != null) resolvedHandlers.add(handler);
-      return resolvedHandlers;
-    }
+    getResults(IndexedValue? handler) =>
+        handler != null ? (resolvedHandlers..add(handler)) : resolvedHandlers;
 
     Node rootNode = _root;
-
-    /// keep track of last wildcard we encounter along route. We'll resort to this
-    /// incase we don't find the route we were looking for.
-    var wildcardNode = rootNode.wildcardNode;
 
     collectMiddlewares(rootNode);
 
@@ -201,12 +179,18 @@ class Spanner {
       );
     }
 
+    /// keep track of last wildcard we encounter along route. We'll resort to this
+    /// incase we don't find the route we were looking for.
+    var wildcardNode = rootNode.wildcardNode;
+
     devlog?.call(
       'Finding node for ---------  ${method.name} $path ------------\n',
     );
 
+    final routeSegments = route is Uri ? route.pathSegments : path.split('/');
+
     for (int i = 0; i < routeSegments.length; i++) {
-      final String currPart = routeSegments[i];
+      final currPart = routeSegments[i];
       final routePart =
           config.caseSensitive ? currPart : currPart.toLowerCase();
       final isLastPart = i == (routeSegments.length - 1);
@@ -262,34 +246,13 @@ class Spanner {
       final definition = parametricNode.findMatchingDefinition(
         method,
         routePart,
-        terminal: isLastPart,
+        isLastPart,
       );
 
       devlog?.call('    * parametric defn:         ${definition.toString()}');
 
       if (definition == null) {
-        if (wildcardNode != null) {
-          useWildcard(wildcardNode);
-          break;
-        }
-
-        if (parametricNode.definitions.length == 1) {
-          final definition = parametricNode.definitions.first;
-          if (definition is CompositeParameterDefinition) break;
-
-          /// if we have more path segments, do not pass it as a parameteric value
-          final partsLeft = routeSegments.sublist(i);
-          if (partsLeft.length > 1) break;
-
-          final name = parametricNode.definitions.first.name;
-          resolvedParams[name] = partsLeft.join('/');
-
-          return RouteResult(
-            resolvedParams,
-            getResults(definition.getHandler(method)),
-            actual: definition,
-          );
-        }
+        if (wildcardNode != null) useWildcard(wildcardNode);
         break;
       }
 
@@ -337,11 +300,6 @@ class Spanner {
     }
     return path.substring(1);
   }
-
-  List<String> _getRouteSegments(String route) => route.split('/');
-
-  String _getNodeKey(String part) =>
-      part.isParametric ? ParametricNode.key : part;
 }
 
 class RouteResult {
@@ -354,10 +312,10 @@ class RouteResult {
 
   RouteResult(this.params, this._values, {this.actual});
 
-  bool _sorted = false;
+  Iterable<dynamic>? _cachedValues;
   Iterable<dynamic> get values {
-    if (!_sorted) _values.sort((a, b) => a.index.compareTo(b.index));
-    _sorted = true;
-    return _values.map((e) => e.value);
+    if (_cachedValues != null) return _cachedValues!;
+    _values.sort((a, b) => a.index.compareTo(b.index));
+    return _cachedValues = _values.map((e) => e.value);
   }
 }
