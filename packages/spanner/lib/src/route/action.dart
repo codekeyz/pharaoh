@@ -40,7 +40,5 @@ mixin HandlerStoreMixin implements HandlerStore {
   }
 
   @override
-  void addMiddleware<T>(IndexedValue<T> handler) {
-    middlewares.add(handler);
-  }
+  void addMiddleware<T>(IndexedValue<T> handler) => middlewares.add(handler);
 }
