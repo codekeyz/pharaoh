@@ -224,8 +224,7 @@ class Spanner {
 
       devlog?.call('- Found defn for route part    ->              $routePart');
 
-      final params = definition!.resolveParams(currPart);
-      if (params != null) resolvedParams.addAll(params);
+      definition!.resolveParams(currPart, resolvedParams);
 
       if (isLastPart && definition.terminal) {
         return RouteResult(

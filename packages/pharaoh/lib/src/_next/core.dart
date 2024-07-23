@@ -198,10 +198,6 @@ abstract class ApplicationFactory {
     final exception = error.exception;
     if (exception is RequestValidationError) {
       return response.json(exception, statusCode: HttpStatus.badRequest);
-    } else if (error is SpannerRouteValidatorError) {
-      return response.json({
-        'errors': [exception]
-      }, statusCode: HttpStatus.badRequest);
     }
     return response.internalServerError(exception.toString());
   }

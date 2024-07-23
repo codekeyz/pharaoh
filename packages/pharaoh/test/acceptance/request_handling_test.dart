@@ -9,51 +9,46 @@ void main() {
       ..get('/home/chima', (req, res) => res.ok('Okay 🚀'))
       ..delete('/home/chima', (req, res) => res.ok('Item deleted'))
       ..post('/home/strange', (req, res) => res.ok('Post something 🚀'))
-      ..get('/chima/<userId|number>', (req, res) => res.ok('Foo Bar'));
+      ..get('/chima/<userId>', (req, res) => res.json(req.params));
 
-    await (await request(app))
+    final tester = await request(app);
+
+    await tester
         .get('/home/chima')
         .expectStatus(200)
         .expectBody('Okay 🚀')
         .test();
 
-    await (await request(app))
+    await tester
         .post('/home/strange', {})
         .expectStatus(200)
         .expectBody('Post something 🚀')
         .test();
 
-    await (await request(app))
+    await tester
         .get('/users/204')
         .expectStatus(200)
         .expectBody({'userId': '204'}).test();
 
-    await (await request(app))
+    await tester
         .post('/users/204398938948374797', {})
         .expectStatus(200)
         .expectBody({'userId': '204398938948374797'})
         .test();
 
-    await (await request(app))
-        .get('/something-new-is-here')
-        .expectStatus(404)
-        .expectBody(
-            {"error": "Route not found: /something-new-is-here"}).test();
+    await tester.get('/something-new-is-here').expectStatus(404).expectBody(
+        {"error": "Route not found: /something-new-is-here"}).test();
 
-    await (await request(app))
+    await tester
         .delete('/home/chima')
         .expectStatus(200)
         .expectBody('Item deleted')
         .test();
 
-    await (await request(app))
+    await tester
         .get('/chima/asbc')
-        .expectStatus(422)
-        .expectJsonBody(containsPair(
-          'error',
-          'Invalid argument: Invalid parameter value: \"asbc\"',
-        ))
-        .test();
+        .expectStatus(200)
+        .expectJsonBody({'userId': 'asbc'}).test();
   });
 
   group('execute middleware and request', () {

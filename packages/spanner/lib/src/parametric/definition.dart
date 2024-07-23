@@ -1,39 +1,12 @@
 import '../tree/node.dart';
 import '../tree/tree.dart';
-import 'descriptor.dart';
 import 'utils.dart';
 
-final _knownDescriptors = {'number': numDescriptor};
-
-SingleParameterDefn _singleParamDefn(RegExpMatch m) {
-  final group = m.group(2)!;
-  var param = group;
-
-  Iterable<ParameterDescriptor>? descriptors;
-
-  if (group.contains('|')) {
-    final parts = m.group(2)!.split('|');
-    param = parts.first;
-
-    if (parts.length > 1) {
-      descriptors = parts.sublist(1).map((e) {
-        final value = e.isRegex ? regexDescriptor : _knownDescriptors[e];
-        if (value == null) {
-          throw ArgumentError.value(
-              e, null, 'Parameter definition has invalid descriptor');
-        }
-        return value;
-      });
-    }
-  }
-
-  return SingleParameterDefn._(
-    param,
-    prefix: m.group(1)?.nullIfEmpty,
-    suffix: m.group(3)?.nullIfEmpty,
-    descriptors: descriptors ?? const [],
-  );
-}
+SingleParameterDefn _singleParamDefn(RegExpMatch m) => SingleParameterDefn._(
+      m.group(2)!,
+      prefix: m.group(1)?.nullIfEmpty,
+      suffix: m.group(3)?.nullIfEmpty,
+    );
 
 ParameterDefinition buildParamDefinition(String part) {
   if (closeDoorParametricRegex.hasMatch(part)) {
@@ -67,7 +40,7 @@ abstract class ParameterDefinition implements HandlerStore {
 
   bool get terminal;
 
-  Map<String, dynamic>? resolveParams(String pattern);
+  void resolveParams(String pattern, Map<String, dynamic> collector);
 }
 
 class SingleParameterDefn extends ParameterDefinition with HandlerStoreMixin {
@@ -76,8 +49,6 @@ class SingleParameterDefn extends ParameterDefinition with HandlerStoreMixin {
 
   final String? prefix;
   final String? suffix;
-
-  final Iterable<ParameterDescriptor> descriptors;
 
   @override
   final String templateStr;
@@ -95,7 +66,6 @@ class SingleParameterDefn extends ParameterDefinition with HandlerStoreMixin {
 
   SingleParameterDefn._(
     this.name, {
-    this.descriptors = const [],
     this.prefix,
     this.suffix,
   })  : templateStr = buildTemplateString(
@@ -110,15 +80,11 @@ class SingleParameterDefn extends ParameterDefinition with HandlerStoreMixin {
   bool matches(String pattern) => template.hasMatch(pattern);
 
   @override
-  Map<String, dynamic>? resolveParams(final String pattern) {
-    final params = resolveParamsFromPath(template, pattern);
-    if (params == null) return null;
+  void resolveParams(final String pattern, Map<String, dynamic> collector) {
+    final match = template.firstMatch(pattern);
+    if (match == null) return;
 
-    return params
-      ..[name] = descriptors.fold(
-        params[name],
-        (value, descriptor) => descriptor(value),
-      );
+    collector[name] = match.namedGroup(name);
   }
 
   @override
@@ -153,21 +119,13 @@ class CompositeParameterDefinition extends ParameterDefinition
   bool get terminal => _maybeTerminalPart.terminal;
 
   @override
-  Map<String, dynamic>? resolveParams(String pattern) {
+  void resolveParams(String pattern, Map<String, dynamic> collector) {
     final result = resolveParamsFromPath(template, pattern);
-    if (result == null) return null;
+    if (result == null) return;
 
     for (final param in result.keys) {
-      final defn = parts[param]!;
-      final value = result[param];
-
-      result[param] = defn.descriptors.fold<dynamic>(
-        value,
-        (value, fn) => fn(value),
-      );
+      collector[param] = result[param];
     }
-
-    return result;
   }
 
   @override
