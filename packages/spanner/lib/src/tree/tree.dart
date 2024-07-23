@@ -159,16 +159,12 @@ class Spanner {
     if (path.endsWith(BASE_PATH)) path = path.substring(0, path.length - 1);
 
     final resolvedParams = <String, dynamic>{};
-    final resolvedHandlers = <IndexedValue>[];
-
-    collectMiddlewares(Node node) => resolvedHandlers.addAll(node.middlewares);
+    final resolvedHandlers = <IndexedValue>[...root.middlewares];
 
     getResults(IndexedValue? handler) =>
         handler != null ? (resolvedHandlers..add(handler)) : resolvedHandlers;
 
     Node rootNode = _root;
-
-    collectMiddlewares(rootNode);
 
     if (path.isEmpty) {
       return RouteResult(
