@@ -23,10 +23,7 @@ ParameterDefinition buildParamDefinition(String part) {
     return _singleParamDefn(matches.first);
   }
 
-  final defns = matches.map(_singleParamDefn);
-  final partsMap = {for (final defn in defns) defn.name: defn};
-
-  return CompositeParameterDefinition._(partsMap, defns.last.name);
+  return CompositeParameterDefinition._(matches.map(_singleParamDefn));
 }
 
 abstract class ParameterDefinition implements HandlerStore {
@@ -96,21 +93,19 @@ class SingleParameterDefn extends ParameterDefinition with HandlerStoreMixin {
 
 class CompositeParameterDefinition extends ParameterDefinition
     implements HandlerStore {
-  final Map<String, SingleParameterDefn> parts;
-  final String _lastPartKey;
+  final Iterable<SingleParameterDefn> parts;
+  final SingleParameterDefn _maybeTerminalPart;
 
-  SingleParameterDefn get _maybeTerminalPart => parts[_lastPartKey]!;
-
-  CompositeParameterDefinition._(this.parts, this._lastPartKey);
+  CompositeParameterDefinition._(this.parts) : _maybeTerminalPart = parts.last;
 
   @override
-  String get templateStr => parts.values.map((e) => e.templateStr).join();
+  String get templateStr => parts.map((e) => e.templateStr).join();
 
   @override
-  String get name => parts.values.map((e) => e.name).join('|');
+  String get name => parts.map((e) => e.name).join('|');
 
   @override
-  String get key => parts.values.map((e) => e.key).join('|');
+  String get key => parts.map((e) => e.key).join('|');
 
   @override
   RegExp get template => buildRegexFromTemplate(templateStr);
@@ -120,11 +115,11 @@ class CompositeParameterDefinition extends ParameterDefinition
 
   @override
   void resolveParams(String pattern, Map<String, dynamic> collector) {
-    final result = resolveParamsFromPath(template, pattern);
-    if (result == null) return;
+    final match = template.firstMatch(pattern);
+    if (match == null) return;
 
-    for (final param in result.keys) {
-      collector[param] = result[param];
+    for (final key in match.groupNames) {
+      collector[key] = match.namedGroup(key);
     }
   }
 
@@ -134,12 +129,14 @@ class CompositeParameterDefinition extends ParameterDefinition
   }
 
   @override
-  void addRoute<T>(HTTPMethod method, IndexedValue<T> handler) =>
-      _maybeTerminalPart.addRoute(method, handler);
+  void addRoute<T>(HTTPMethod method, IndexedValue<T> handler) {
+    _maybeTerminalPart.addRoute(method, handler);
+  }
 
   @override
-  IndexedValue? getHandler(HTTPMethod method) =>
-      _maybeTerminalPart.getHandler(method);
+  IndexedValue? getHandler(HTTPMethod method) {
+    return _maybeTerminalPart.getHandler(method);
+  }
 
   @override
   bool hasMethod(HTTPMethod method) => _maybeTerminalPart.hasMethod(method);
