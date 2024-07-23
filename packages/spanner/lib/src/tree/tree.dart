@@ -193,75 +193,42 @@ class Spanner {
           config.caseSensitive ? currPart : currPart.toLowerCase();
       final isLastPart = i == (routeSegments.length - 1);
 
-      void useWildcard(WildcardNode wildcard) {
-        resolvedParams['*'] = routeSegments.sublist(i).join('/');
-        rootNode = wildcard;
-      }
-
-      final maybeChild = rootNode.maybeChild(routePart);
-      if (maybeChild != null) {
-        rootNode = maybeChild;
-        collectMiddlewares(rootNode);
-
-        final wcNode = rootNode.wildcardNode;
-        if (wcNode != null) wildcardNode = wcNode;
-
-        devlog?.call('- Found Static for                ->         $routePart');
-        continue;
-      }
-
       final parametricNode = rootNode.paramNode;
-      if (parametricNode == null) {
-        devlog?.call(
-          'x Found no Static Node for part   ->         $routePart',
-        );
-        devlog?.call('x Route is not found              ->         $path');
+      final childNode = rootNode.maybeChild(routePart) ??
+          parametricNode?.maybeChild(routePart);
+      wildcardNode = childNode?.wildcardNode ?? wildcardNode;
 
-        if (wildcardNode != null) {
-          useWildcard(wildcardNode);
-          break;
-        }
+      // set root node as current child
+      rootNode = childNode ?? parametricNode ?? rootNode;
 
-        return RouteResult(resolvedParams, getResults(null), actual: null);
-      }
-
-      final maybeChildParam = parametricNode.maybeChild(routePart);
-      if (maybeChildParam != null) {
-        rootNode = maybeChildParam;
-        devlog?.call(
-          '- Found Static for             ->              $routePart',
-        );
-
-        final wcNode = rootNode.wildcardNode;
-        if (wcNode != null) wildcardNode = wcNode;
-        continue;
-      }
-
-      devlog?.call(
-        '- Finding Defn for $routePart        -> terminal?    $isLastPart',
-      );
-
-      final definition = parametricNode.findMatchingDefinition(
+      final definition = parametricNode?.findMatchingDefinition(
         method,
         routePart,
         isLastPart,
       );
 
-      devlog?.call('    * parametric defn:         ${definition.toString()}');
-
-      if (definition == null) {
-        if (wildcardNode != null) useWildcard(wildcardNode);
+      /// If we don't find no matching Static path or a Parametric Node, OR
+      /// we don't find a matching path or a matching definition, then
+      /// use wildcard if we have any registered
+      if ((childNode == null && parametricNode == null) ||
+          (childNode == null && definition == null)) {
+        if (wildcardNode != null) {
+          resolvedParams['*'] = routeSegments.sublist(i).join('/');
+          rootNode = wildcardNode;
+        }
         break;
       }
 
-      devlog?.call(
-        '- Found defn for route part    ->              $routePart',
-      );
+      if (childNode != null) {
+        resolvedHandlers.addAll(childNode.middlewares);
+        devlog?.call('- Found Statsc for                ->         $routePart');
+        continue;
+      }
 
-      final params = definition.resolveParams(currPart);
+      devlog?.call('- Found defn for route part    ->              $routePart');
+
+      final params = definition!.resolveParams(currPart);
       if (params != null) resolvedParams.addAll(params);
-
-      rootNode = parametricNode;
 
       if (isLastPart && definition.terminal) {
         return RouteResult(

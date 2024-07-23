@@ -45,6 +45,51 @@ abstract class Node with HandlerStoreMixin {
     super.addRoute(method, handler);
     terminal = true;
   }
+
+  String _buildFullRoute(String basePath, String nodeRoute) {
+    if (basePath == '/') {
+      return nodeRoute.startsWith('/') ? nodeRoute : '/$nodeRoute';
+    } else {
+      return nodeRoute.startsWith('/')
+          ? '$basePath$nodeRoute'
+          : '$basePath/$nodeRoute';
+    }
+  }
+
+  String _getRoutes(String basePath, Node node, {int tabIndex = 0}) {
+    final buffer = StringBuffer();
+
+    final methods = node.requestHandlers.keys;
+    final tabSpace = ' ' * tabIndex;
+    var routeStr = '$tabSpace└── ${node.route}';
+    if (methods.isNotEmpty) {
+      final res = node.requestHandlers.keys.map((e) => e.name).join(', ');
+      routeStr += ' ($res)';
+    }
+
+    buffer.writeln(routeStr);
+
+    for (final child in node.children) {
+      final prefix = _buildFullRoute(basePath, node.route);
+      final tabIndex = prefix.length == 1 ? 0 : prefix.length + 1;
+      buffer.write(_getRoutes(prefix, child, tabIndex: tabIndex));
+    }
+
+    final paramNode = node.paramNode;
+    final wildcardNode = node.wildcardNode;
+
+    // TODO: add this to route tree print
+    if (paramNode != null) {}
+
+    // TODO: add this to route tree print
+    if (wildcardNode != null) {}
+
+    return buffer.toString();
+  }
+
+  String get routes {
+    return _getRoutes('/', this);
+  }
 }
 
 class StaticNode extends Node {
@@ -160,4 +205,14 @@ class WildcardNode extends StaticNode {
   Node addChildAndReturn(key, node) {
     throw ArgumentError('Wildcard cannot have a child');
   }
+}
+
+void main() {
+  final router = Spanner()
+    ..addRoute(HTTPMethod.GET, '/user/details/chima', #chair)
+    ..addRoute(HTTPMethod.POST, '/user/details/biona', #heeoo)
+    ..addRoute(HTTPMethod.DELETE, '/user/<userId>/popsd', #heeoo)
+    ..addRoute(HTTPMethod.POST, '/tems/chima', #hel);
+
+  print(router.root.routes);
 }
