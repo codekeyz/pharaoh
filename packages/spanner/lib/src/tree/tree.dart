@@ -192,6 +192,7 @@ class Spanner {
       final parametricNode = rootNode.paramNode;
       final childNode = rootNode.maybeChild(routePart) ??
           parametricNode?.maybeChild(routePart);
+
       wildcardNode = childNode?.wildcardNode ?? wildcardNode;
 
       // set root node as current child
