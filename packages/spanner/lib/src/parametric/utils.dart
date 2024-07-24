@@ -7,10 +7,10 @@ final parametricRegex = RegExp(r"<[^>]+>");
 ///
 /// - ([^<]*) -> this captures prefix
 ///
-/// - (\w+(?:\|[^>|]+)*) -> this captures the value within definition
+/// - (\w+) -> this captures the parameter name
 ///
 /// - ([^<]*) -> this captures suffix
-final parametricDefnsRegex = RegExp(r"([^<]*)<(\w+(?:\|[^>|]+)*)>([^<]*)");
+final parametricDefnsRegex = RegExp(r"([^<]*)<(\w+)>([^<]*)");
 
 final closeDoorParametricRegex = RegExp(r"><");
 
@@ -106,4 +106,77 @@ extension ParametricDefinitionsExtension on List<ParameterDefinition> {
         // but including it for completeness
         return 0;
       });
+}
+
+const _lowerA = 97; // 'a'
+const _upperA = 65; //  'A'
+const _lowerZ = 122; // 'z'
+const _upperZ = 90; // 'Z'
+
+int _stringToBitmask(String s, bool caseSensitive) {
+  int mask = 0;
+
+  for (int i = 0; i < s.length; i++) {
+    int charCode = s.codeUnitAt(i);
+    if (!caseSensitive && charCode >= _upperA && charCode <= _upperZ) {
+      charCode += 32; // Convert to lowercase
+    }
+    if (charCode >= _lowerA && charCode <= _lowerZ) {
+      mask |= (1 << (charCode - _lowerA));
+    }
+  }
+  return mask;
+}
+
+String? matchPattern(
+  String input,
+  String prefix,
+  String suffix,
+  bool caseSensitive,
+) {
+  if (prefix.isEmpty && suffix.isEmpty) return input;
+
+  final prefixMask = _stringToBitmask(prefix, caseSensitive);
+  final suffixMask = _stringToBitmask(suffix, caseSensitive);
+
+  int matchStart = 0;
+  int matchEnd = input.length;
+
+  final compareInput = caseSensitive ? input : input.toLowerCase();
+  final comparePrefix = caseSensitive ? prefix : prefix.toLowerCase();
+  final compareSuffix = caseSensitive ? suffix : suffix.toLowerCase();
+
+  if (prefix.isNotEmpty) {
+    bool prefixFound = false;
+    for (int i = 0; i <= input.length - prefix.length; i++) {
+      if (_stringToBitmask(
+              compareInput.substring(i, i + prefix.length), caseSensitive) ==
+          prefixMask) {
+        if (compareInput.substring(i, i + prefix.length) == comparePrefix) {
+          matchStart = i + prefix.length;
+          prefixFound = true;
+          break;
+        }
+      }
+    }
+    if (!prefixFound) return null;
+  }
+
+  if (suffix.isNotEmpty) {
+    bool suffixFound = false;
+    for (int i = input.length - suffix.length; i >= matchStart; i--) {
+      if (_stringToBitmask(
+              compareInput.substring(i, i + suffix.length), caseSensitive) ==
+          suffixMask) {
+        if (compareInput.substring(i, i + suffix.length) == compareSuffix) {
+          matchEnd = i;
+          suffixFound = true;
+          break;
+        }
+      }
+    }
+    if (!suffixFound) return null;
+  }
+
+  return input.substring(matchStart, matchEnd);
 }

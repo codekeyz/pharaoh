@@ -59,11 +59,11 @@ abstract class Node with HandlerStoreMixin {
   String _getRoutes(String basePath, Node node, {int tabIndex = 0}) {
     final buffer = StringBuffer();
 
-    final methods = node.requestHandlers.keys;
+    final methods = node.methods;
     final tabSpace = ' ' * tabIndex;
     var routeStr = '$tabSpace└── ${node.route}';
     if (methods.isNotEmpty) {
-      final res = node.requestHandlers.keys.map((e) => e.name).join(', ');
+      final res = methods.map((e) => e.name).join(', ');
       routeStr += ' ($res)';
     }
 
@@ -179,17 +179,15 @@ class ParametricNode extends Node {
     HTTPMethod method,
     String part,
     bool terminal,
+    bool caseSensitive,
   ) {
-    return _definitionsMap[method]?.firstWhereOrNull((e) {
-      /// If we're looking for a terminal, be sure we have the method entry too.
-      /// if not just ensure out condition for terminal being same is met.
-      final a = terminal
-          ? (e.terminal && e.hasMethod(method))
-          : e.terminal == terminal;
-      if (!a) return false;
-
-      return e.template.hasMatch(part);
-    });
+    return _definitionsMap[method]?.firstWhereOrNull(
+      (e) =>
+          (terminal
+              ? (e.terminal && e.hasMethod(method))
+              : e.terminal == terminal) &&
+          e.matches(part, caseSensitive: caseSensitive),
+    );
   }
 }
 

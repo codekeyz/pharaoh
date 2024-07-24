@@ -31,13 +31,17 @@ abstract class ParameterDefinition implements HandlerStore {
 
   String get templateStr;
 
-  RegExp get template;
-
   String get key;
 
   bool get terminal;
 
-  void resolveParams(String pattern, Map<String, dynamic> collector);
+  bool matches(String route, {bool caseSensitive = false});
+
+  void resolveParams(
+    String pattern,
+    Map<String, dynamic> collector, {
+    bool caseSentive = false,
+  });
 }
 
 class SingleParameterDefn extends ParameterDefinition with HandlerStoreMixin {
@@ -51,15 +55,23 @@ class SingleParameterDefn extends ParameterDefinition with HandlerStoreMixin {
   final String templateStr;
 
   @override
-  late final RegExp template;
-
-  @override
   String get key => 'prefix=$prefix&suffix=$suffix&terminal=$terminal';
 
   bool _terminal;
 
   @override
   bool get terminal => _terminal;
+
+  @override
+  bool matches(String route, {bool caseSensitive = false}) {
+    return matchPattern(
+          route,
+          prefix ?? '',
+          suffix ?? '',
+          caseSensitive,
+        ) !=
+        null;
+  }
 
   SingleParameterDefn._(
     this.name, {
@@ -70,18 +82,20 @@ class SingleParameterDefn extends ParameterDefinition with HandlerStoreMixin {
           prefix: prefix,
           suffix: suffix,
         ),
-        _terminal = false {
-    template = buildRegexFromTemplate(templateStr);
-  }
-
-  bool matches(String pattern) => template.hasMatch(pattern);
+        _terminal = false;
 
   @override
-  void resolveParams(final String pattern, Map<String, dynamic> collector) {
-    final match = template.firstMatch(pattern);
-    if (match == null) return;
-
-    collector[name] = match.namedGroup(name);
+  void resolveParams(
+    final String pattern,
+    Map<String, dynamic> collector, {
+    bool caseSentive = false,
+  }) {
+    collector[name] = matchPattern(
+      pattern,
+      prefix ?? "",
+      suffix ?? "",
+      caseSentive,
+    );
   }
 
   @override
@@ -107,15 +121,22 @@ class CompositeParameterDefinition extends ParameterDefinition
   @override
   String get key => parts.map((e) => e.key).join('|');
 
-  @override
-  RegExp get template => buildRegexFromTemplate(templateStr);
+  RegExp get _template => buildRegexFromTemplate(templateStr);
 
   @override
   bool get terminal => _maybeTerminalPart.terminal;
 
   @override
-  void resolveParams(String pattern, Map<String, dynamic> collector) {
-    final match = template.firstMatch(pattern);
+  bool matches(String route, {bool caseSensitive = false}) =>
+      _template.hasMatch(route);
+
+  @override
+  void resolveParams(
+    String pattern,
+    Map<String, dynamic> collector, {
+    bool caseSentive = false,
+  }) {
+    final match = _template.firstMatch(pattern);
     if (match == null) return;
 
     for (final key in match.groupNames) {

@@ -202,6 +202,7 @@ class Spanner {
         method,
         routePart,
         isLastPart,
+        config.caseSensitive,
       );
 
       /// If we don't find no matching Static path or a Parametric Node, OR
@@ -224,7 +225,11 @@ class Spanner {
 
       devlog?.call('- Found defn for route part    ->              $routePart');
 
-      definition!.resolveParams(currPart, resolvedParams);
+      definition!.resolveParams(
+        currPart,
+        resolvedParams,
+        caseSentive: config.caseSensitive,
+      );
 
       if (isLastPart && definition.terminal) {
         return RouteResult(
