@@ -1,5 +1,4 @@
 import 'package:spanner/src/parametric/definition.dart';
-import 'package:spanner/src/parametric/descriptor.dart';
 import 'package:spanner/src/tree/node.dart';
 import 'package:spanner/src/tree/tree.dart';
 import 'package:test/test.dart';
@@ -107,46 +106,6 @@ void main() {
         router.lookup(HTTPMethod.GET, '/fr/item/12345/edit'),
         havingParameters({'lang': 'fr', '*': '12345/edit'}),
       );
-    });
-
-    group('when descriptors', () {
-      test('in single parametric definition', () {
-        final router = Spanner()
-          ..addRoute(
-              HTTPMethod.GET, '/users/<userId|(^\\w+)|number>/detail', null);
-
-        expect(router.lookup(HTTPMethod.GET, '/users/24/detail'),
-            havingParameters({'userId': 24}));
-      });
-
-      test('should error when invalid params', () {
-        final router = Spanner()
-          ..addRoute(
-              HTTPMethod.GET, '/users/<userId|(^\\w+)|number>/detail', null)
-          ..addRoute(HTTPMethod.GET, '/<userId|(^\\w+)>', null);
-
-        var result = router.lookup(HTTPMethod.GET, '/users/24/detail');
-        expect(result, havingParameters({'userId': 24}));
-
-        result = router.lookup(HTTPMethod.GET, '/hello-world');
-        expect(result, havingParameters({'userId': 'hello-world'}));
-
-        expect(
-          runSyncAndReturnException(
-              () => router.lookup(HTTPMethod.GET, '/@388>)#(***)')),
-          isA<SpannerRouteValidatorError>().having(
-              (p0) => p0.message, 'with message', 'Invalid parameter value'),
-        );
-      });
-
-      test('in composite parametric definition', () async {
-        final router = Spanner()
-          ..addRoute(HTTPMethod.GET,
-              '/users/<userId|number>HELLO<paramId|number>/detail', null);
-
-        var result = router.lookup(HTTPMethod.GET, '/users/334HELLO387/detail');
-        expect(result, havingParameters({'userId': 334, 'paramId': 387}));
-      });
     });
   });
 }

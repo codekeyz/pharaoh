@@ -82,9 +82,6 @@ class $PharaohImpl extends RouterContract
     }
 
     if (_onErrorCb == null) {
-      final status = requestError.exception is SpannerRouteValidatorError
-          ? HttpStatus.unprocessableEntity
-          : HttpStatus.internalServerError;
       return forward(
         httpReq,
         response.json(
@@ -92,7 +89,7 @@ class $PharaohImpl extends RouterContract
             'error': requestError.exception.toString(),
             'trace': requestError.trace.toString()
           },
-          statusCode: status,
+          statusCode: HttpStatus.internalServerError,
         ),
       );
     }

@@ -1,41 +1,18 @@
 import '../tree/node.dart';
 import '../tree/tree.dart';
-import 'descriptor.dart';
 import 'utils.dart';
 
-final _knownDescriptors = {'number': numDescriptor};
+typedef ParamAndValue = ({String name, String? value});
 
-SingleParameterDefn _singleParamDefn(RegExpMatch m) {
-  final group = m.group(2)!;
-  var param = group;
+SingleParameterDefn _singleParamDefn(RegExpMatch m, [String? nextPart]) =>
+    SingleParameterDefn._(
+      m.group(2)!,
+      prefix: m.group(1)?.nullIfEmpty,
+      suffix: m.group(3)?.nullIfEmpty,
+      nextPart: nextPart,
+    );
 
-  Iterable<ParameterDescriptor>? descriptors;
-
-  if (group.contains('|')) {
-    final parts = m.group(2)!.split('|');
-    param = parts.first;
-
-    if (parts.length > 1) {
-      descriptors = parts.sublist(1).map((e) {
-        final value = e.isRegex ? regexDescriptor : _knownDescriptors[e];
-        if (value == null) {
-          throw ArgumentError.value(
-              e, null, 'Parameter definition has invalid descriptor');
-        }
-        return value;
-      });
-    }
-  }
-
-  return SingleParameterDefn._(
-    param,
-    prefix: m.group(1)?.nullIfEmpty,
-    suffix: m.group(3)?.nullIfEmpty,
-    descriptors: descriptors ?? const [],
-  );
-}
-
-ParameterDefinition buildParamDefinition(String part) {
+ParameterDefinition buildParamDefinition(String part, [String? nextPart]) {
   if (closeDoorParametricRegex.hasMatch(part)) {
     throw ArgumentError.value(
         part, null, 'Parameter definition is invalid. Close door neighbors');
@@ -47,13 +24,13 @@ ParameterDefinition buildParamDefinition(String part) {
   }
 
   if (matches.length == 1) {
-    return _singleParamDefn(matches.first);
+    return _singleParamDefn(matches.first, nextPart);
   }
 
-  final defns = matches.map(_singleParamDefn);
-  final partsMap = {for (final defn in defns) defn.name: defn};
-
-  return CompositeParameterDefinition._(partsMap, defns.last.name);
+  return CompositeParameterDefinition._(
+    matches.map(_singleParamDefn),
+    nextPart,
+  );
 }
 
 abstract class ParameterDefinition implements HandlerStore {
@@ -61,13 +38,20 @@ abstract class ParameterDefinition implements HandlerStore {
 
   String get templateStr;
 
-  RegExp get template;
-
   String get key;
 
   bool get terminal;
 
-  Map<String, dynamic>? resolveParams(String pattern);
+  /// Next route part included so we can match early if its a static next part
+  String? get nextPart;
+
+  bool matches(String route, {bool caseSensitive = false});
+
+  void resolveParams(
+    String pattern,
+    List<ParamAndValue> collector, {
+    bool caseSentive = false,
+  });
 }
 
 class SingleParameterDefn extends ParameterDefinition with HandlerStoreMixin {
@@ -77,13 +61,11 @@ class SingleParameterDefn extends ParameterDefinition with HandlerStoreMixin {
   final String? prefix;
   final String? suffix;
 
-  final Iterable<ParameterDescriptor> descriptors;
+  @override
+  final String? nextPart;
 
   @override
   final String templateStr;
-
-  @override
-  late final RegExp template;
 
   @override
   String get key => 'prefix=$prefix&suffix=$suffix&terminal=$terminal';
@@ -93,32 +75,36 @@ class SingleParameterDefn extends ParameterDefinition with HandlerStoreMixin {
   @override
   bool get terminal => _terminal;
 
-  SingleParameterDefn._(
-    this.name, {
-    this.descriptors = const [],
-    this.prefix,
-    this.suffix,
-  })  : templateStr = buildTemplateString(
-          name: name,
-          prefix: prefix,
-          suffix: suffix,
-        ),
-        _terminal = false {
-    template = buildRegexFromTemplate(templateStr);
+  @override
+  bool matches(String route, {bool caseSensitive = false}) {
+    return matchPattern(
+          route,
+          prefix ?? '',
+          suffix ?? '',
+          caseSensitive,
+        ) !=
+        null;
   }
 
-  bool matches(String pattern) => template.hasMatch(pattern);
+  SingleParameterDefn._(
+    this.name, {
+    this.prefix,
+    this.suffix,
+    this.nextPart,
+  })  : templateStr =
+            buildTemplateString(name: name, prefix: prefix, suffix: suffix),
+        _terminal = false;
 
   @override
-  Map<String, dynamic>? resolveParams(final String pattern) {
-    final params = resolveParamsFromPath(template, pattern);
-    if (params == null) return null;
-
-    return params
-      ..[name] = descriptors.fold(
-        params[name],
-        (value, descriptor) => descriptor(value),
-      );
+  void resolveParams(
+    final String pattern,
+    List<ParamAndValue> collector, {
+    bool caseSentive = false,
+  }) {
+    collector.add((
+      name: name,
+      value: matchPattern(pattern, prefix ?? "", suffix ?? "", caseSentive)
+    ));
   }
 
   @override
@@ -130,44 +116,45 @@ class SingleParameterDefn extends ParameterDefinition with HandlerStoreMixin {
 
 class CompositeParameterDefinition extends ParameterDefinition
     implements HandlerStore {
-  final Map<String, SingleParameterDefn> parts;
-  final String _lastPartKey;
-
-  SingleParameterDefn get _maybeTerminalPart => parts[_lastPartKey]!;
-
-  CompositeParameterDefinition._(this.parts, this._lastPartKey);
+  final Iterable<SingleParameterDefn> parts;
+  final SingleParameterDefn _maybeTerminalPart;
 
   @override
-  String get templateStr => parts.values.map((e) => e.templateStr).join();
+  final String? nextPart;
+
+  CompositeParameterDefinition._(this.parts, [this.nextPart])
+      : _maybeTerminalPart = parts.last;
 
   @override
-  String get name => parts.values.map((e) => e.name).join('|');
+  String get templateStr => parts.map((e) => e.templateStr).join();
 
   @override
-  String get key => parts.values.map((e) => e.key).join('|');
+  String get name => parts.map((e) => e.name).join('|');
 
   @override
-  RegExp get template => buildRegexFromTemplate(templateStr);
+  String get key => parts.map((e) => e.key).join('|');
+
+  RegExp get _template => buildRegexFromTemplate(templateStr);
 
   @override
   bool get terminal => _maybeTerminalPart.terminal;
 
   @override
-  Map<String, dynamic>? resolveParams(String pattern) {
-    final result = resolveParamsFromPath(template, pattern);
-    if (result == null) return null;
+  bool matches(String route, {bool caseSensitive = false}) =>
+      _template.hasMatch(route);
 
-    for (final param in result.keys) {
-      final defn = parts[param]!;
-      final value = result[param];
+  @override
+  void resolveParams(
+    String pattern,
+    List<ParamAndValue> collector, {
+    bool caseSentive = false,
+  }) {
+    final match = _template.firstMatch(pattern);
+    if (match == null) return;
 
-      result[param] = defn.descriptors.fold<dynamic>(
-        value,
-        (value, fn) => fn(value),
-      );
+    for (final key in match.groupNames) {
+      collector.add((name: key, value: match.namedGroup(key)));
     }
-
-    return result;
   }
 
   @override
@@ -176,12 +163,14 @@ class CompositeParameterDefinition extends ParameterDefinition
   }
 
   @override
-  void addRoute<T>(HTTPMethod method, IndexedValue<T> handler) =>
-      _maybeTerminalPart.addRoute(method, handler);
+  void addRoute<T>(HTTPMethod method, IndexedValue<T> handler) {
+    _maybeTerminalPart.addRoute(method, handler);
+  }
 
   @override
-  IndexedValue? getHandler(HTTPMethod method) =>
-      _maybeTerminalPart.getHandler(method);
+  IndexedValue? getHandler(HTTPMethod method) {
+    return _maybeTerminalPart.getHandler(method);
+  }
 
   @override
   bool hasMethod(HTTPMethod method) => _maybeTerminalPart.hasMethod(method);

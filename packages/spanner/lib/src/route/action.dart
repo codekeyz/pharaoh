@@ -16,27 +16,30 @@ abstract interface class HandlerStore {
 }
 
 mixin HandlerStoreMixin implements HandlerStore {
-  final Map<HTTPMethod, IndexedValue> requestHandlers = {};
   final List<IndexedValue> middlewares = [];
+  final requestHandlers = List<IndexedValue?>.filled(
+    HTTPMethod.values.length,
+    null,
+  );
 
   @override
-  Iterable<HTTPMethod> get methods => requestHandlers.keys;
+  Iterable<HTTPMethod> get methods => HTTPMethod.values.where(hasMethod);
 
   @override
-  bool hasMethod(HTTPMethod method) => requestHandlers.containsKey(method);
+  bool hasMethod(HTTPMethod method) => requestHandlers[method.index] != null;
 
   @override
   IndexedValue? getHandler(HTTPMethod method) =>
-      requestHandlers[method] ?? requestHandlers[HTTPMethod.ALL];
+      requestHandlers[method.index] ?? requestHandlers[HTTPMethod.ALL.index];
 
   @override
   void addRoute<T>(HTTPMethod method, IndexedValue<T> handler) {
-    if (requestHandlers.containsKey(method)) {
+    if (hasMethod(method)) {
       final route = (this as Node).route;
       throw ArgumentError.value(
           '${method.name}: $route', null, 'Route entry already exists');
     }
-    requestHandlers[method] = handler;
+    requestHandlers[method.index] = handler;
   }
 
   @override

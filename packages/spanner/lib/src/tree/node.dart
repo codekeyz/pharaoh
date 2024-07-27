@@ -34,7 +34,7 @@ abstract class Node with HandlerStoreMixin {
   WildcardNode? _wildcardNodeCache;
   WildcardNode? get wildcardNode => _wildcardNodeCache;
 
-  Node addChildAndReturn(String key, Node node) {
+  T addChildAndReturn<T extends Node>(String key, T node) {
     if (node is WildcardNode) return _wildcardNodeCache = node;
     if (node is ParametricNode) return _paramNodecache = node;
     return _nodesMap[key] = node;
@@ -45,6 +45,59 @@ abstract class Node with HandlerStoreMixin {
     super.addRoute(method, handler);
     terminal = true;
   }
+
+  String _buildFullRoute(String basePath, String nodeRoute) {
+    if (basePath == '/') {
+      return nodeRoute.startsWith('/') ? nodeRoute : '/$nodeRoute';
+    } else {
+      return nodeRoute.startsWith('/')
+          ? '$basePath$nodeRoute'
+          : '$basePath/$nodeRoute';
+    }
+  }
+
+  String _getRoutes(String basePath, Node node, {int tabIndex = 0}) {
+    final buffer = StringBuffer();
+
+    final methods = node.methods;
+    final tabSpace = ' ' * tabIndex;
+    var routeStr = '$tabSpace└── ${node.route}';
+    if (methods.isNotEmpty) {
+      final res = methods.map((e) => e.name).join(', ');
+      routeStr += ' ($res)';
+    }
+
+    buffer.writeln(routeStr);
+
+    for (final child in node.children) {
+      final prefix = _buildFullRoute(basePath, node.route);
+      final tabIndex = prefix.length == 1 ? 0 : prefix.length + 1;
+      buffer.write(_getRoutes(prefix, child, tabIndex: tabIndex));
+    }
+
+    final paramNode = node.paramNode;
+    final wildcardNode = node.wildcardNode;
+
+    // TODO: add this to route tree print
+    if (paramNode != null) {
+      final paramBuffer = StringBuffer();
+      for (final method in paramNode.methods) {
+        final defn = paramNode.definitions(method);
+
+        final newSpace = ' ' * (routeStr.length - 2);
+        paramBuffer.write('$newSpace└── <${defn.first.name}> (${method.name})');
+      }
+
+      buffer.writeln(paramBuffer);
+    }
+
+    // TODO: add this to route tree print
+    if (wildcardNode != null) {}
+
+    return buffer.toString();
+  }
+
+  String get routes => _getRoutes('/', this);
 }
 
 class StaticNode extends Node {
@@ -75,7 +128,7 @@ class ParametricNode extends Node {
   Iterable<HTTPMethod> get methods => _definitionsMap.keys;
 
   @override
-  Node addChildAndReturn(String key, Node node) {
+  T addChildAndReturn<T extends Node>(key, node) {
     if (node is WildcardNode) {
       throw ArgumentError('Parametric Node cannot have wildcard');
     }
@@ -132,19 +185,26 @@ class ParametricNode extends Node {
 
   ParameterDefinition? findMatchingDefinition(
     HTTPMethod method,
-    String part,
-    bool terminal,
-  ) {
-    return _definitionsMap[method]?.firstWhereOrNull((e) {
-      /// If we're looking for a terminal, be sure we have the method entry too.
-      /// if not just ensure out condition for terminal being same is met.
-      final a = terminal
-          ? (e.terminal && e.hasMethod(method))
-          : e.terminal == terminal;
-      if (!a) return false;
+    String part, {
+    bool terminal = false,
+    bool caseSensitive = false,
+    String? nextPart,
+  }) {
+    return _definitionsMap[method]?.firstWhereOrNull(
+      (e) {
+        if (nextPart != null && e.nextPart != null && e.nextPart!.isStatic) {
+          final match = caseSensitive
+              ? e.nextPart == nextPart
+              : e.nextPart!.toLowerCase() == nextPart.toLowerCase();
+          if (match) return true;
+        }
 
-      return e.template.hasMatch(part);
-    });
+        return (terminal
+                ? (e.terminal && e.hasMethod(method))
+                : e.terminal == terminal) &&
+            e.matches(part, caseSensitive: caseSensitive);
+      },
+    );
   }
 }
 
@@ -157,7 +217,7 @@ class WildcardNode extends StaticNode {
   bool get terminal => true;
 
   @override
-  Node addChildAndReturn(key, node) {
+  T addChildAndReturn<T extends Node>(key, node) {
     throw ArgumentError('Wildcard cannot have a child');
   }
 }

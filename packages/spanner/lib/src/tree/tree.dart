@@ -7,8 +7,6 @@ import '../parametric/utils.dart';
 // ignore: constant_identifier_names
 const BASE_PATH = '/';
 
-typedef RouteEntry = ({HTTPMethod method, String path});
-
 // ignore: constant_identifier_names
 enum HTTPMethod { GET, HEAD, POST, PUT, DELETE, ALL, PATCH, OPTIONS, TRACE }
 
@@ -60,33 +58,49 @@ class Spanner {
     Node rootNode = _root;
 
     if (path == BASE_PATH) {
-      return rootNode..terminal = true;
+      return rootNode;
     } else if (path == WildcardNode.key) {
-      var wildCardNode = rootNode.wildcardNode;
-      if (wildCardNode != null) return wildCardNode..terminal = true;
-
-      wildCardNode = WildcardNode();
-      (rootNode as StaticNode).addChildAndReturn(
-        WildcardNode.key,
-        wildCardNode,
-      );
-      return wildCardNode..terminal = true;
+      return rootNode.wildcardNode ??
+          rootNode.addChildAndReturn(WildcardNode.key, WildcardNode());
     }
 
     final pathSegments = path.split('/');
-    for (int i = 0; i < pathSegments.length; i++) {
-      final result = _computeNode(
+
+    for (int i = 0; i < pathSegments.length; i += 2) {
+      final firstPart = pathSegments[i];
+      final secondPart =
+          i + 1 < pathSegments.length ? pathSegments[i + 1] : null;
+      final thirdPart =
+          i + 2 < pathSegments.length ? pathSegments[i + 2] : null;
+
+      final first = Spanner._computeNode(
         rootNode,
         method,
-        pathSegments[i],
+        firstPart,
+        config: config,
         fullPath: path,
-        isLastSegment: i == (pathSegments.length - 1),
+        nextPart: secondPart,
       );
 
       /// the only time [result] won't be Node is when we have a parametric definition
-      if (result is! Node) return result;
+      if (first is! Node) return first;
 
-      rootNode = result;
+      rootNode = first;
+
+      if (secondPart != null) {
+        final second = Spanner._computeNode(
+          rootNode,
+          method,
+          secondPart,
+          config: config,
+          fullPath: path,
+          nextPart: thirdPart,
+        );
+
+        if (second is! Node) return second;
+
+        rootNode = second;
+      }
     }
 
     return rootNode;
@@ -106,11 +120,12 @@ class Spanner {
   /// we will find a static child `users` or create one, then proceed to search
   /// for a [ParametricNode] on the current root [node]. If found, we fill add a new
   /// definition, or create a new [ParametricNode] with this definition.
-  HandlerStore _computeNode(
+  static HandlerStore _computeNode(
     Node node,
     HTTPMethod method,
     String routePart, {
-    bool isLastSegment = false,
+    required RouterConfig config,
+    required String? nextPart,
     required String fullPath,
   }) {
     final part = config.caseSensitive ? routePart : routePart.toLowerCase();
@@ -121,7 +136,7 @@ class Spanner {
     } else if (part.isStatic) {
       return node.addChildAndReturn(part, StaticNode(part));
     } else if (part.isWildCard) {
-      if (!isLastSegment) {
+      if (nextPart != null) {
         throw ArgumentError.value(
           fullPath,
           null,
@@ -131,7 +146,7 @@ class Spanner {
       return node.addChildAndReturn(WildcardNode.key, WildcardNode());
     }
 
-    final defn = buildParamDefinition(routePart);
+    final defn = buildParamDefinition(routePart, nextPart);
     final paramNode = node.paramNode;
 
     if (paramNode == null) {
@@ -139,36 +154,28 @@ class Spanner {
         ParametricNode.key,
         ParametricNode(method, defn),
       );
-      return isLastSegment ? defn : newNode;
+      return nextPart == null ? defn : newNode;
     }
 
     paramNode.addNewDefinition(method, defn);
 
-    return isLastSegment
+    return nextPart == null
         ? defn
         : node.addChildAndReturn(ParametricNode.key, paramNode);
   }
 
-  RouteResult? lookup(
-    HTTPMethod method,
-    dynamic route, {
-    void Function(String)? devlog,
-  }) {
+  RouteResult? lookup(HTTPMethod method, dynamic route) {
     var path = route is Uri ? route.path : route.toString();
     if (path.startsWith(BASE_PATH)) path = path.substring(1);
     if (path.endsWith(BASE_PATH)) path = path.substring(0, path.length - 1);
 
-    final resolvedParams = <String, dynamic>{};
-    final resolvedHandlers = <IndexedValue>[];
-
-    collectMiddlewares(Node node) => resolvedHandlers.addAll(node.middlewares);
+    final resolvedParams = <ParamAndValue>[];
+    final resolvedHandlers = <IndexedValue>[...root.middlewares];
 
     getResults(IndexedValue? handler) =>
         handler != null ? (resolvedHandlers..add(handler)) : resolvedHandlers;
 
     Node rootNode = _root;
-
-    collectMiddlewares(rootNode);
 
     if (path.isEmpty) {
       return RouteResult(
@@ -181,10 +188,6 @@ class Spanner {
     /// incase we don't find the route we were looking for.
     var wildcardNode = rootNode.wildcardNode;
 
-    devlog?.call(
-      'Finding node for ---------  ${method.name} $path ------------\n',
-    );
-
     final routeSegments = route is Uri ? route.pathSegments : path.split('/');
 
     for (int i = 0; i < routeSegments.length; i++) {
@@ -193,75 +196,48 @@ class Spanner {
           config.caseSensitive ? currPart : currPart.toLowerCase();
       final isLastPart = i == (routeSegments.length - 1);
 
-      void useWildcard(WildcardNode wildcard) {
-        resolvedParams['*'] = routeSegments.sublist(i).join('/');
-        rootNode = wildcard;
-      }
-
-      final maybeChild = rootNode.maybeChild(routePart);
-      if (maybeChild != null) {
-        rootNode = maybeChild;
-        collectMiddlewares(rootNode);
-
-        final wcNode = rootNode.wildcardNode;
-        if (wcNode != null) wildcardNode = wcNode;
-
-        devlog?.call('- Found Static for                ->         $routePart');
-        continue;
-      }
-
       final parametricNode = rootNode.paramNode;
-      if (parametricNode == null) {
-        devlog?.call(
-          'x Found no Static Node for part   ->         $routePart',
-        );
-        devlog?.call('x Route is not found              ->         $path');
+      final childNode = rootNode.maybeChild(routePart) ??
+          parametricNode?.maybeChild(routePart);
 
-        if (wildcardNode != null) {
-          useWildcard(wildcardNode);
-          break;
-        }
+      wildcardNode = childNode?.wildcardNode ?? wildcardNode;
 
-        return RouteResult(resolvedParams, getResults(null), actual: null);
-      }
+      // set root node as current child
+      rootNode = childNode ?? parametricNode ?? rootNode;
 
-      final maybeChildParam = parametricNode.maybeChild(routePart);
-      if (maybeChildParam != null) {
-        rootNode = maybeChildParam;
-        devlog?.call(
-          '- Found Static for             ->              $routePart',
-        );
-
-        final wcNode = rootNode.wildcardNode;
-        if (wcNode != null) wildcardNode = wcNode;
-        continue;
-      }
-
-      devlog?.call(
-        '- Finding Defn for $routePart        -> terminal?    $isLastPart',
-      );
-
-      final definition = parametricNode.findMatchingDefinition(
+      final definition = parametricNode?.findMatchingDefinition(
         method,
         routePart,
-        isLastPart,
+        terminal: isLastPart,
+        caseSensitive: config.caseSensitive,
+        nextPart: isLastPart ? null : routeSegments[i + 1],
       );
 
-      devlog?.call('    * parametric defn:         ${definition.toString()}');
-
-      if (definition == null) {
-        if (wildcardNode != null) useWildcard(wildcardNode);
+      /// If we don't find no matching Static path or a Parametric Node, OR
+      /// we don't find a matching path or a matching definition, then
+      /// use wildcard if we have any registered
+      if ((childNode == null && parametricNode == null) ||
+          (childNode == null && definition == null)) {
+        if (wildcardNode != null) {
+          resolvedParams.add((
+            name: WildcardNode.key,
+            value: routeSegments.sublist(i).join('/'),
+          ));
+          rootNode = wildcardNode;
+        }
         break;
       }
 
-      devlog?.call(
-        '- Found defn for route part    ->              $routePart',
+      if (childNode != null) {
+        resolvedHandlers.addAll(childNode.middlewares);
+        continue;
+      }
+
+      definition!.resolveParams(
+        currPart,
+        resolvedParams,
+        caseSentive: config.caseSensitive,
       );
-
-      final params = definition.resolveParams(currPart);
-      if (params != null) resolvedParams.addAll(params);
-
-      rootNode = parametricNode;
 
       if (isLastPart && definition.terminal) {
         return RouteResult(
@@ -300,19 +276,25 @@ class Spanner {
 }
 
 class RouteResult {
-  final Map<String, dynamic> params;
+  final List<ParamAndValue> _params;
   final List<IndexedValue> _values;
 
   /// this is either a Node or Parametric Definition
   @visibleForTesting
   final dynamic actual;
 
-  RouteResult(this.params, this._values, {this.actual});
+  RouteResult(this._params, this._values, {this.actual});
 
   Iterable<dynamic>? _cachedValues;
   Iterable<dynamic> get values {
     if (_cachedValues != null) return _cachedValues!;
     _values.sort((a, b) => a.index.compareTo(b.index));
     return _cachedValues = _values.map((e) => e.value);
+  }
+
+  Map<String, dynamic>? _cachedParams;
+  Map<String, dynamic> get params {
+    if (_cachedParams != null) return _cachedParams!;
+    return {for (final entry in _params) entry.name: entry.value};
   }
 }
