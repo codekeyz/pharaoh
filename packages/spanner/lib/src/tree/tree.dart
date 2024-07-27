@@ -190,9 +190,7 @@ class Spanner {
     /// incase we don't find the route we were looking for.
     var wildcardNode = rootNode.wildcardNode;
 
-    final routeSegments = route is Uri
-        ? route.pathSegments
-        : customSplit(path.toString(), '/').toList();
+    final routeSegments = route is Uri ? route.pathSegments : path.split('/');
 
     for (int i = 0; i < routeSegments.length; i++) {
       final currPart = routeSegments[i];
