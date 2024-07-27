@@ -146,7 +146,7 @@ class Spanner {
       return node.addChildAndReturn(WildcardNode.key, WildcardNode());
     }
 
-    final defn = buildParamDefinition(routePart, nextPart);
+    final defn = buildParamDefinition(routePart);
     final paramNode = node.paramNode;
 
     if (paramNode == null) {
@@ -157,7 +157,7 @@ class Spanner {
       return nextPart == null ? defn : newNode;
     }
 
-    paramNode.addNewDefinition(method, defn);
+    paramNode.addNewDefinition(method, defn, nextPart == null);
 
     return nextPart == null
         ? defn
@@ -218,13 +218,7 @@ class Spanner {
       /// use wildcard if we have any registered
       if ((childNode == null && parametricNode == null) ||
           (childNode == null && definition == null)) {
-        if (wildcardNode != null) {
-          resolvedParams.add((
-            name: WildcardNode.key,
-            value: routeSegments.sublist(i).join('/'),
-          ));
-          rootNode = wildcardNode;
-        }
+        if (wildcardNode != null) rootNode = wildcardNode;
         break;
       }
 

@@ -140,10 +140,14 @@ class ParametricNode extends Node {
 
   ParametricNode(HTTPMethod method, ParameterDefinition defn)
       : _definitionsMap = {} {
-    addNewDefinition(method, defn);
+    addNewDefinition(method, defn, false);
   }
 
-  void addNewDefinition(HTTPMethod method, ParameterDefinition defn) {
+  void addNewDefinition(
+    HTTPMethod method,
+    ParameterDefinition defn,
+    bool terminal,
+  ) {
     var definitions = _definitionsMap[method];
     if (definitions == null) {
       definitions = [];
@@ -151,6 +155,11 @@ class ParametricNode extends Node {
     }
 
     if (definitions.isNotEmpty) {
+      /// At this point, terminal in [defn] will always be false since
+      /// terminals are only set after we've added a route to the definition.
+      ///
+      /// So we compare key without terminal and then manually check with the
+      /// [terminal] value we have right now.
       final existing = definitions.firstWhereOrNull((e) => e.key == defn.key);
       if (existing != null) {
         if (existing.name != defn.name) {
@@ -162,13 +171,8 @@ class ParametricNode extends Node {
           );
         }
 
-        if (existing.terminal && defn.terminal) {
-          throw ArgumentError(
-            'Route already exists${[
-              ' - ${existing.templateStr}',
-              ' - ${defn.templateStr}',
-            ].join('\n')}',
-          );
+        if (existing.terminal && terminal) {
+          throw ArgumentError('Route entry already exists');
         }
 
         return;
@@ -191,19 +195,9 @@ class ParametricNode extends Node {
     String? nextPart,
   }) {
     return _definitionsMap[method]?.firstWhereOrNull(
-      (e) {
-        if (nextPart != null && e.nextPart != null && e.nextPart!.isStatic) {
-          final match = caseSensitive
-              ? e.nextPart == nextPart
-              : e.nextPart!.toLowerCase() == nextPart.toLowerCase();
-          if (match) return true;
-        }
-
-        return (terminal
-                ? (e.terminal && e.hasMethod(method))
-                : e.terminal == terminal) &&
-            e.matches(part, caseSensitive: caseSensitive);
-      },
+      (e) =>
+          (!terminal || (e.terminal && e.hasMethod(method))) &&
+          e.matches(part, caseSensitive: caseSensitive),
     );
   }
 }

@@ -45,7 +45,21 @@ void main() {
           ..addRoute(HTTPMethod.GET, '/user', null)
           ..addRoute(HTTPMethod.GET, '/user', null);
 
-        final exception = runSyncAndReturnException<ArgumentError>(router);
+        router2() => Spanner()
+          ..addRoute(HTTPMethod.GET, '/<lang>/item/<id>', null)
+          ..addRoute(HTTPMethod.GET, '/<lang>/item/<id>', null);
+
+        router3() => Spanner()
+          ..addRoute(HTTPMethod.GET, '/<lang>/item/chima<id>hello', null)
+          ..addRoute(HTTPMethod.GET, '/<lang>/item/chima<id>hello', null);
+
+        var exception = runSyncAndReturnException<ArgumentError>(router);
+        expect(exception.message, contains('Route entry already exists'));
+
+        exception = runSyncAndReturnException<ArgumentError>(router2);
+        expect(exception.message, contains('Route entry already exists'));
+
+        exception = runSyncAndReturnException<ArgumentError>(router3);
         expect(exception.message, contains('Route entry already exists'));
       });
     });
@@ -95,17 +109,16 @@ void main() {
     test('contain param and wildcard together', () {
       final router = Spanner()
         ..addRoute(HTTPMethod.GET, '/<lang>/item/<id>', null)
-        ..addRoute(HTTPMethod.GET, '/<lang>/item/*', null);
+        ..addRoute(HTTPMethod.GET, '/<lang>/item/*', #wild);
 
       expect(
         router.lookup(HTTPMethod.GET, '/fr/item/12345'),
         havingParameters({'lang': 'fr', 'id': '12345'}),
       );
 
-      expect(
-        router.lookup(HTTPMethod.GET, '/fr/item/12345/edit'),
-        havingParameters({'lang': 'fr', '*': '12345/edit'}),
-      );
+      final result = router.lookup(HTTPMethod.GET, '/fr/item/12345/edit');
+      expect(result?.values, [#wild]);
+      expect(result?.params, {'lang': 'fr', 'id': '12345'});
     });
   });
 }

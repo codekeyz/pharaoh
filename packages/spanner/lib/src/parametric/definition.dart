@@ -4,15 +4,13 @@ import 'utils.dart';
 
 typedef ParamAndValue = ({String name, String? value});
 
-SingleParameterDefn _singleParamDefn(RegExpMatch m, [String? nextPart]) =>
-    SingleParameterDefn._(
+SingleParameterDefn _singleParamDefn(RegExpMatch m) => SingleParameterDefn._(
       m.group(2)!,
       prefix: m.group(1)?.nullIfEmpty,
       suffix: m.group(3)?.nullIfEmpty,
-      nextPart: nextPart,
     );
 
-ParameterDefinition buildParamDefinition(String part, [String? nextPart]) {
+ParameterDefinition buildParamDefinition(String part) {
   if (closeDoorParametricRegex.hasMatch(part)) {
     throw ArgumentError.value(
         part, null, 'Parameter definition is invalid. Close door neighbors');
@@ -24,13 +22,10 @@ ParameterDefinition buildParamDefinition(String part, [String? nextPart]) {
   }
 
   if (matches.length == 1) {
-    return _singleParamDefn(matches.first, nextPart);
+    return _singleParamDefn(matches.first);
   }
 
-  return CompositeParameterDefinition._(
-    matches.map(_singleParamDefn),
-    nextPart,
-  );
+  return CompositeParameterDefinition._(matches.map(_singleParamDefn));
 }
 
 abstract class ParameterDefinition implements HandlerStore {
@@ -41,9 +36,6 @@ abstract class ParameterDefinition implements HandlerStore {
   String get key;
 
   bool get terminal;
-
-  /// Next route part included so we can match early if its a static next part
-  String? get nextPart;
 
   bool matches(String route, {bool caseSensitive = false});
 
@@ -62,13 +54,10 @@ class SingleParameterDefn extends ParameterDefinition with HandlerStoreMixin {
   final String? suffix;
 
   @override
-  final String? nextPart;
-
-  @override
   final String templateStr;
 
   @override
-  String get key => 'prefix=$prefix&suffix=$suffix&terminal=$terminal';
+  String get key => 'prefix=$prefix&suffix=$suffix';
 
   bool _terminal;
 
@@ -77,20 +66,19 @@ class SingleParameterDefn extends ParameterDefinition with HandlerStoreMixin {
 
   @override
   bool matches(String route, {bool caseSensitive = false}) {
-    return matchPattern(
-          route,
-          prefix ?? '',
-          suffix ?? '',
-          caseSensitive,
-        ) !=
-        null;
+    final match = matchPattern(
+      route,
+      prefix ?? '',
+      suffix ?? '',
+      caseSensitive,
+    );
+    return match != null;
   }
 
   SingleParameterDefn._(
     this.name, {
     this.prefix,
     this.suffix,
-    this.nextPart,
   })  : templateStr =
             buildTemplateString(name: name, prefix: prefix, suffix: suffix),
         _terminal = false;
@@ -119,11 +107,7 @@ class CompositeParameterDefinition extends ParameterDefinition
   final Iterable<SingleParameterDefn> parts;
   final SingleParameterDefn _maybeTerminalPart;
 
-  @override
-  final String? nextPart;
-
-  CompositeParameterDefinition._(this.parts, [this.nextPart])
-      : _maybeTerminalPart = parts.last;
+  CompositeParameterDefinition._(this.parts) : _maybeTerminalPart = parts.last;
 
   @override
   String get templateStr => parts.map((e) => e.templateStr).join();
