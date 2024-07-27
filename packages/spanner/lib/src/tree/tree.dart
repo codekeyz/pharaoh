@@ -7,8 +7,6 @@ import '../parametric/utils.dart';
 // ignore: constant_identifier_names
 const BASE_PATH = '/';
 
-typedef RouteEntry = ({HTTPMethod method, String path});
-
 // ignore: constant_identifier_names
 enum HTTPMethod { GET, HEAD, POST, PUT, DELETE, ALL, PATCH, OPTIONS, TRACE }
 

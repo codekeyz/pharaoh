@@ -97,9 +97,7 @@ abstract class Node with HandlerStoreMixin {
     return buffer.toString();
   }
 
-  String get routes {
-    return _getRoutes('/', this);
-  }
+  String get routes => _getRoutes('/', this);
 }
 
 class StaticNode extends Node {
@@ -222,14 +220,4 @@ class WildcardNode extends StaticNode {
   T addChildAndReturn<T extends Node>(key, node) {
     throw ArgumentError('Wildcard cannot have a child');
   }
-}
-
-void main() {
-  final router = Spanner()
-    ..addRoute(HTTPMethod.GET, '/user/details/chima', #chair)
-    ..addRoute(HTTPMethod.POST, '/user/details/biona', #heeoo)
-    ..addRoute(HTTPMethod.DELETE, '/user/<userId>/popsd', #heeoo)
-    ..addRoute(HTTPMethod.POST, '/tems/chima', #hel);
-
-  print(router.root.routes);
 }
