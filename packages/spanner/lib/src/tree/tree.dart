@@ -60,33 +60,49 @@ class Spanner {
     Node rootNode = _root;
 
     if (path == BASE_PATH) {
-      return rootNode..terminal = true;
+      return rootNode;
     } else if (path == WildcardNode.key) {
-      var wildCardNode = rootNode.wildcardNode;
-      if (wildCardNode != null) return wildCardNode..terminal = true;
-
-      wildCardNode = WildcardNode();
-      (rootNode as StaticNode).addChildAndReturn(
-        WildcardNode.key,
-        wildCardNode,
-      );
-      return wildCardNode..terminal = true;
+      return rootNode.wildcardNode ??
+          rootNode.addChildAndReturn(WildcardNode.key, WildcardNode());
     }
 
     final pathSegments = path.split('/');
-    for (int i = 0; i < pathSegments.length; i++) {
-      final result = _computeNode(
+
+    for (int i = 0; i < pathSegments.length; i += 2) {
+      final firstPart = pathSegments[i];
+      final secondPart =
+          i + 1 < pathSegments.length ? pathSegments[i + 1] : null;
+      final thirdPart =
+          i + 2 < pathSegments.length ? pathSegments[i + 2] : null;
+
+      final first = Spanner._computeNode(
         rootNode,
         method,
-        pathSegments[i],
+        firstPart,
+        config: config,
         fullPath: path,
-        isLastSegment: i == (pathSegments.length - 1),
+        nextPart: secondPart,
       );
 
       /// the only time [result] won't be Node is when we have a parametric definition
-      if (result is! Node) return result;
+      if (first is! Node) return first;
 
-      rootNode = result;
+      rootNode = first;
+
+      if (secondPart != null) {
+        final second = Spanner._computeNode(
+          rootNode,
+          method,
+          secondPart,
+          config: config,
+          fullPath: path,
+          nextPart: thirdPart,
+        );
+
+        if (second is! Node) return second;
+
+        rootNode = second;
+      }
     }
 
     return rootNode;
@@ -106,11 +122,12 @@ class Spanner {
   /// we will find a static child `users` or create one, then proceed to search
   /// for a [ParametricNode] on the current root [node]. If found, we fill add a new
   /// definition, or create a new [ParametricNode] with this definition.
-  HandlerStore _computeNode(
+  static HandlerStore _computeNode(
     Node node,
     HTTPMethod method,
     String routePart, {
-    bool isLastSegment = false,
+    required RouterConfig config,
+    required String? nextPart,
     required String fullPath,
   }) {
     final part = config.caseSensitive ? routePart : routePart.toLowerCase();
@@ -121,7 +138,7 @@ class Spanner {
     } else if (part.isStatic) {
       return node.addChildAndReturn(part, StaticNode(part));
     } else if (part.isWildCard) {
-      if (!isLastSegment) {
+      if (nextPart != null) {
         throw ArgumentError.value(
           fullPath,
           null,
@@ -131,7 +148,7 @@ class Spanner {
       return node.addChildAndReturn(WildcardNode.key, WildcardNode());
     }
 
-    final defn = buildParamDefinition(routePart);
+    final defn = buildParamDefinition(routePart, nextPart);
     final paramNode = node.paramNode;
 
     if (paramNode == null) {
@@ -139,21 +156,17 @@ class Spanner {
         ParametricNode.key,
         ParametricNode(method, defn),
       );
-      return isLastSegment ? defn : newNode;
+      return nextPart == null ? defn : newNode;
     }
 
     paramNode.addNewDefinition(method, defn);
 
-    return isLastSegment
+    return nextPart == null
         ? defn
         : node.addChildAndReturn(ParametricNode.key, paramNode);
   }
 
-  RouteResult? lookup(
-    HTTPMethod method,
-    dynamic route, {
-    void Function(String)? devlog,
-  }) {
+  RouteResult? lookup(HTTPMethod method, dynamic route) {
     var path = route is Uri ? route.path : route.toString();
     if (path.startsWith(BASE_PATH)) path = path.substring(1);
     if (path.endsWith(BASE_PATH)) path = path.substring(0, path.length - 1);
@@ -177,10 +190,6 @@ class Spanner {
     /// incase we don't find the route we were looking for.
     var wildcardNode = rootNode.wildcardNode;
 
-    devlog?.call(
-      'Finding node for ---------  ${method.name} $path ------------\n',
-    );
-
     final routeSegments = route is Uri ? route.pathSegments : path.split('/');
 
     for (int i = 0; i < routeSegments.length; i++) {
@@ -201,8 +210,9 @@ class Spanner {
       final definition = parametricNode?.findMatchingDefinition(
         method,
         routePart,
-        isLastPart,
-        config.caseSensitive,
+        terminal: isLastPart,
+        caseSensitive: config.caseSensitive,
+        nextPart: isLastPart ? null : routeSegments[i + 1],
       );
 
       /// If we don't find no matching Static path or a Parametric Node, OR
@@ -219,11 +229,8 @@ class Spanner {
 
       if (childNode != null) {
         resolvedHandlers.addAll(childNode.middlewares);
-        devlog?.call('- Found Statsc for                ->         $routePart');
         continue;
       }
-
-      devlog?.call('- Found defn for route part    ->              $routePart');
 
       definition!.resolveParams(
         currPart,
