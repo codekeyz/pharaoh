@@ -171,7 +171,7 @@ class Spanner {
     if (path.startsWith(BASE_PATH)) path = path.substring(1);
     if (path.endsWith(BASE_PATH)) path = path.substring(0, path.length - 1);
 
-    final resolvedParams = <String, dynamic>{};
+    final resolvedParams = <ParamAndValue>[];
     final resolvedHandlers = <IndexedValue>[...root.middlewares];
 
     getResults(IndexedValue? handler) =>
@@ -190,7 +190,9 @@ class Spanner {
     /// incase we don't find the route we were looking for.
     var wildcardNode = rootNode.wildcardNode;
 
-    final routeSegments = route is Uri ? route.pathSegments : path.split('/');
+    final routeSegments = route is Uri
+        ? route.pathSegments
+        : customSplit(path.toString(), '/').toList();
 
     for (int i = 0; i < routeSegments.length; i++) {
       final currPart = routeSegments[i];
@@ -221,7 +223,10 @@ class Spanner {
       if ((childNode == null && parametricNode == null) ||
           (childNode == null && definition == null)) {
         if (wildcardNode != null) {
-          resolvedParams['*'] = routeSegments.sublist(i).join('/');
+          resolvedParams.add((
+            name: WildcardNode.key,
+            value: routeSegments.sublist(i).join('/'),
+          ));
           rootNode = wildcardNode;
         }
         break;
@@ -275,19 +280,25 @@ class Spanner {
 }
 
 class RouteResult {
-  final Map<String, dynamic> params;
+  final List<ParamAndValue> _params;
   final List<IndexedValue> _values;
 
   /// this is either a Node or Parametric Definition
   @visibleForTesting
   final dynamic actual;
 
-  RouteResult(this.params, this._values, {this.actual});
+  RouteResult(this._params, this._values, {this.actual});
 
   Iterable<dynamic>? _cachedValues;
   Iterable<dynamic> get values {
     if (_cachedValues != null) return _cachedValues!;
     _values.sort((a, b) => a.index.compareTo(b.index));
     return _cachedValues = _values.map((e) => e.value);
+  }
+
+  Map<String, dynamic>? _cachedParams;
+  Map<String, dynamic> get params {
+    if (_cachedParams != null) return _cachedParams!;
+    return {for (final entry in _params) entry.name: entry.value};
   }
 }

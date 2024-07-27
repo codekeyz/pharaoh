@@ -2,6 +2,8 @@ import '../tree/node.dart';
 import '../tree/tree.dart';
 import 'utils.dart';
 
+typedef ParamAndValue = ({String name, String? value});
+
 SingleParameterDefn _singleParamDefn(RegExpMatch m, [String? nextPart]) =>
     SingleParameterDefn._(
       m.group(2)!,
@@ -47,7 +49,7 @@ abstract class ParameterDefinition implements HandlerStore {
 
   void resolveParams(
     String pattern,
-    Map<String, dynamic> collector, {
+    List<ParamAndValue> collector, {
     bool caseSentive = false,
   });
 }
@@ -96,15 +98,13 @@ class SingleParameterDefn extends ParameterDefinition with HandlerStoreMixin {
   @override
   void resolveParams(
     final String pattern,
-    Map<String, dynamic> collector, {
+    List<ParamAndValue> collector, {
     bool caseSentive = false,
   }) {
-    collector[name] = matchPattern(
-      pattern,
-      prefix ?? "",
-      suffix ?? "",
-      caseSentive,
-    );
+    collector.add((
+      name: name,
+      value: matchPattern(pattern, prefix ?? "", suffix ?? "", caseSentive)
+    ));
   }
 
   @override
@@ -146,14 +146,14 @@ class CompositeParameterDefinition extends ParameterDefinition
   @override
   void resolveParams(
     String pattern,
-    Map<String, dynamic> collector, {
+    List<ParamAndValue> collector, {
     bool caseSentive = false,
   }) {
     final match = _template.firstMatch(pattern);
     if (match == null) return;
 
     for (final key in match.groupNames) {
-      collector[key] = match.namedGroup(key);
+      collector.add((name: key, value: match.namedGroup(key)));
     }
   }
 
