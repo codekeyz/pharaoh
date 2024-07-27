@@ -15,7 +15,7 @@ final parametricDefnsRegex = RegExp(r"([^<]*)<(\w+)>([^<]*)");
 final closeDoorParametricRegex = RegExp(r"><");
 
 extension StringExtension on String {
-  bool get isStatic => !isParametric && !isWildCard;
+  bool get isStatic => !isWildCard && !isParametric;
 
   bool get isParametric => parametricRegex.hasMatch(this);
 

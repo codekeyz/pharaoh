@@ -2,13 +2,15 @@ import '../tree/node.dart';
 import '../tree/tree.dart';
 import 'utils.dart';
 
-SingleParameterDefn _singleParamDefn(RegExpMatch m) => SingleParameterDefn._(
+SingleParameterDefn _singleParamDefn(RegExpMatch m, [String? nextPart]) =>
+    SingleParameterDefn._(
       m.group(2)!,
       prefix: m.group(1)?.nullIfEmpty,
       suffix: m.group(3)?.nullIfEmpty,
+      nextPart: nextPart,
     );
 
-ParameterDefinition buildParamDefinition(String part) {
+ParameterDefinition buildParamDefinition(String part, [String? nextPart]) {
   if (closeDoorParametricRegex.hasMatch(part)) {
     throw ArgumentError.value(
         part, null, 'Parameter definition is invalid. Close door neighbors');
@@ -20,10 +22,13 @@ ParameterDefinition buildParamDefinition(String part) {
   }
 
   if (matches.length == 1) {
-    return _singleParamDefn(matches.first);
+    return _singleParamDefn(matches.first, nextPart);
   }
 
-  return CompositeParameterDefinition._(matches.map(_singleParamDefn));
+  return CompositeParameterDefinition._(
+    matches.map(_singleParamDefn),
+    nextPart,
+  );
 }
 
 abstract class ParameterDefinition implements HandlerStore {
@@ -34,6 +39,9 @@ abstract class ParameterDefinition implements HandlerStore {
   String get key;
 
   bool get terminal;
+
+  /// Next route part included so we can match early if its a static next part
+  String? get nextPart;
 
   bool matches(String route, {bool caseSensitive = false});
 
@@ -50,6 +58,9 @@ class SingleParameterDefn extends ParameterDefinition with HandlerStoreMixin {
 
   final String? prefix;
   final String? suffix;
+
+  @override
+  final String? nextPart;
 
   @override
   final String templateStr;
@@ -77,11 +88,9 @@ class SingleParameterDefn extends ParameterDefinition with HandlerStoreMixin {
     this.name, {
     this.prefix,
     this.suffix,
-  })  : templateStr = buildTemplateString(
-          name: name,
-          prefix: prefix,
-          suffix: suffix,
-        ),
+    this.nextPart,
+  })  : templateStr =
+            buildTemplateString(name: name, prefix: prefix, suffix: suffix),
         _terminal = false;
 
   @override
@@ -110,7 +119,11 @@ class CompositeParameterDefinition extends ParameterDefinition
   final Iterable<SingleParameterDefn> parts;
   final SingleParameterDefn _maybeTerminalPart;
 
-  CompositeParameterDefinition._(this.parts) : _maybeTerminalPart = parts.last;
+  @override
+  final String? nextPart;
+
+  CompositeParameterDefinition._(this.parts, [this.nextPart])
+      : _maybeTerminalPart = parts.last;
 
   @override
   String get templateStr => parts.map((e) => e.templateStr).join();

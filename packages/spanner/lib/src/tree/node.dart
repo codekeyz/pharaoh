@@ -34,7 +34,7 @@ abstract class Node with HandlerStoreMixin {
   WildcardNode? _wildcardNodeCache;
   WildcardNode? get wildcardNode => _wildcardNodeCache;
 
-  Node addChildAndReturn(String key, Node node) {
+  T addChildAndReturn<T extends Node>(String key, T node) {
     if (node is WildcardNode) return _wildcardNodeCache = node;
     if (node is ParametricNode) return _paramNodecache = node;
     return _nodesMap[key] = node;
@@ -79,7 +79,17 @@ abstract class Node with HandlerStoreMixin {
     final wildcardNode = node.wildcardNode;
 
     // TODO: add this to route tree print
-    if (paramNode != null) {}
+    if (paramNode != null) {
+      final paramBuffer = StringBuffer();
+      for (final method in paramNode.methods) {
+        final defn = paramNode.definitions(method);
+
+        final newSpace = ' ' * (routeStr.length - 2);
+        paramBuffer.write('$newSpace└── <${defn.first.name}> (${method.name})');
+      }
+
+      buffer.writeln(paramBuffer);
+    }
 
     // TODO: add this to route tree print
     if (wildcardNode != null) {}
@@ -120,7 +130,7 @@ class ParametricNode extends Node {
   Iterable<HTTPMethod> get methods => _definitionsMap.keys;
 
   @override
-  Node addChildAndReturn(String key, Node node) {
+  T addChildAndReturn<T extends Node>(key, node) {
     if (node is WildcardNode) {
       throw ArgumentError('Parametric Node cannot have wildcard');
     }
@@ -177,16 +187,25 @@ class ParametricNode extends Node {
 
   ParameterDefinition? findMatchingDefinition(
     HTTPMethod method,
-    String part,
-    bool terminal,
-    bool caseSensitive,
-  ) {
+    String part, {
+    bool terminal = false,
+    bool caseSensitive = false,
+    String? nextPart,
+  }) {
     return _definitionsMap[method]?.firstWhereOrNull(
-      (e) =>
-          (terminal
-              ? (e.terminal && e.hasMethod(method))
-              : e.terminal == terminal) &&
-          e.matches(part, caseSensitive: caseSensitive),
+      (e) {
+        if (nextPart != null && e.nextPart != null && e.nextPart!.isStatic) {
+          final match = caseSensitive
+              ? e.nextPart == nextPart
+              : e.nextPart!.toLowerCase() == nextPart.toLowerCase();
+          if (match) return true;
+        }
+
+        return (terminal
+                ? (e.terminal && e.hasMethod(method))
+                : e.terminal == terminal) &&
+            e.matches(part, caseSensitive: caseSensitive);
+      },
     );
   }
 }
@@ -200,7 +219,7 @@ class WildcardNode extends StaticNode {
   bool get terminal => true;
 
   @override
-  Node addChildAndReturn(key, node) {
+  T addChildAndReturn<T extends Node>(key, node) {
     throw ArgumentError('Wildcard cannot have a child');
   }
 }
