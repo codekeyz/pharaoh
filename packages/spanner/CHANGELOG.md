@@ -1,3 +1,8 @@
+## 1.0.3
+
+- (perf): Improve single-param definition matching.
+- (perf): Improve lookup & insert speed by 18%
+
 ## 1.0.2
 
 - (perf): Make route debug logs optional.

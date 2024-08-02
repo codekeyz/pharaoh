@@ -1,3 +1,7 @@
+# 0.0.8
+
+- perf: Use new improvements in spanner version
+
 # 0.0.7
 
 - chore: Perf improvements by @codekeyz in https://github.com/codekeyz/pharaoh/pull/123

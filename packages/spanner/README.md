@@ -7,18 +7,16 @@ import 'package:spanner/spanner.dart';
 import 'package:test/test.dart';
 
 void main() {
-  test('spanner sample test', () {
-    final routeHandler = () async {};
+   test('spanner sample test', () {
+    routeHandler() async {}
 
     final router = Spanner()
       ..addMiddleware('/user', #userMiddleware)
-      ..addMiddleware('/a/<userId>', #anyUser)
       ..addRoute(HTTPMethod.GET, '/user', #currentUser)
       ..addRoute(HTTPMethod.GET, '/user/<userId>', 123)
       ..addRoute(HTTPMethod.GET, '/user/<file>.png/download', null)
       ..addRoute(HTTPMethod.GET, '/user/<file>.png/<user2>/hello', null)
-      ..addRoute(HTTPMethod.GET, '/a/<userId>-static', routeHandler)
-      ..addRoute(HTTPMethod.GET, '/b/<userId>.static', routeHandler);
+      ..addRoute(HTTPMethod.GET, '/a/<userId>-static', routeHandler);
 
     var result = router.lookup(HTTPMethod.GET, '/user');
     expect(result!.values, [#userMiddleware, #currentUser]);
@@ -36,9 +34,6 @@ void main() {
     result = router.lookup(HTTPMethod.GET, '/a/chima-static');
     expect(result?.values, [routeHandler]);
     expect(result?.params, {'userId': 'chima'});
-
-    result = router.lookup(HTTPMethod.GET, '/b/codekeyz.static');
-    expect(result?.values, [routeHandler]);
   });
 }
 
