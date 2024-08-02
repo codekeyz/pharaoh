@@ -1,14 +1,14 @@
 name: pharaoh
 description: Minimalist web-server library for Dart
-version: 0.0.7+2
+version: 0.0.8
 repository: https://github.com/codekeyz/pharaoh/tree/main/packages/pharaoh
 
 environment:
   sdk: ^3.0.0
 
 dependencies:
-  meta:
-  spanner: ^1.0.2
+  meta: ^1.15.0
+  spanner: ^1.0.3
   mime: ^1.0.4
   collection: ^1.18.0
   http_parser: ^4.0.2
@@ -24,7 +24,7 @@ dependencies:
   grammer: ^1.0.3
   dotenv: ^4.2.0
   ez_validator_dart: ^0.3.1
-  spookie:
+  spookie: ^1.0.2+3
 
 dev_dependencies:
   lints: ^3.0.0
