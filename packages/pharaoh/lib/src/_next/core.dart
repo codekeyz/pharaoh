@@ -24,10 +24,8 @@ part '_core/reflector.dart';
 
 typedef RoutesResolver = List<RouteDefinition> Function();
 
-/// This should really be a mixin but due to a bug in reflectable.dart#324
-/// TODO:(codekeyz) make this a mixin when reflectable.dart#324 is fixed
-abstract class AppInstance {
-  Application get app => Application.instance;
+mixin class AppInstance {
+  Application get app => Application._instance;
 }
 
 /// Use this to override the application exceptiosn handler
@@ -39,7 +37,7 @@ typedef ApplicationExceptionsHandler = FutureOr<Response> Function(
 abstract interface class Application {
   Application(AppConfig config);
 
-  static late final Application instance;
+  static late final Application _instance;
 
   String get name;
 
@@ -101,7 +99,7 @@ abstract class ApplicationFactory {
   }
 
   Future<void> startServer() async {
-    final app = Application.instance as _PharaohNextImpl;
+    final app = Application._instance as _PharaohNextImpl;
 
     await app
         ._createPharaohInstance(onException: onApplicationException)
@@ -110,7 +108,7 @@ abstract class ApplicationFactory {
 
   Future<void> _bootstrapComponents(AppConfig config) async {
     final spanner = Spanner()..addMiddleware('/', bodyParser);
-    Application.instance = _PharaohNextImpl(config, spanner);
+    Application._instance = _PharaohNextImpl(config, spanner);
 
     final providerInstances = providers.map(createNewInstance<ServiceProvider>);
 
@@ -185,7 +183,7 @@ abstract class ApplicationFactory {
 
   @visibleForTesting
   Future<spookie.Spookie> get tester {
-    final app = (Application.instance as _PharaohNextImpl);
+    final app = (Application._instance as _PharaohNextImpl);
     return spookie.request(
         app._createPharaohInstance(onException: onApplicationException));
   }
