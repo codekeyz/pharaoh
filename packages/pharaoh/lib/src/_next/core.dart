@@ -26,6 +26,8 @@ typedef RoutesResolver = List<RouteDefinition> Function();
 
 mixin class AppInstance {
   Application get app => Application._instance;
+
+  AppConfig get config => app.config;
 }
 
 /// Use this to override the application exceptiosn handler
