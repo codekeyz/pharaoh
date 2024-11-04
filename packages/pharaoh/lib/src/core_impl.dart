@@ -57,8 +57,8 @@ class $PharaohImpl extends RouterContract
       ..autoCompress = true;
     _server.listen(handleRequest);
 
-    print(
-        'Server start on PORT: ${_server.port} -> ${uri.scheme}://localhost:${_server.port}');
+    stdout.writeln(
+        'Server started on PORT: ${_server.port} -> ${uri.scheme}://localhost:${_server.port}');
     return this;
   }
 
@@ -162,6 +162,7 @@ class $PharaohImpl extends RouterContract
     if (!responseHeaders.containsKey(_XPoweredByHeader)) {
       request.response.headers.add(_XPoweredByHeader, 'Pharaoh');
     }
+
     if (!responseHeaders.containsKey(HttpHeaders.dateHeader)) {
       request.response.headers.add(
         HttpHeaders.dateHeader,

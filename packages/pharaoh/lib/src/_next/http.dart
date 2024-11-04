@@ -9,7 +9,7 @@ import '../router/router_handler.dart';
 import 'core.dart';
 
 @inject
-abstract class ClassMiddleware extends AppInstance {
+abstract class ClassMiddleware with AppInstance {
   handle(Request req, Response res, NextFunction next) {
     next();
   }
@@ -18,7 +18,7 @@ abstract class ClassMiddleware extends AppInstance {
 }
 
 @inject
-abstract class ServiceProvider extends AppInstance {
+abstract class ServiceProvider with AppInstance {
   static List<Type> get defaultProviders => [];
 
   void boot() {}
@@ -27,7 +27,7 @@ abstract class ServiceProvider extends AppInstance {
 }
 
 @inject
-abstract class HTTPController extends AppInstance {
+abstract class HTTPController with AppInstance {
   late final Request request;
 
   late final Response response;
