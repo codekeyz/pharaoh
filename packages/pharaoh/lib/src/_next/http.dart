@@ -43,7 +43,8 @@ abstract class HTTPController with AppInstance {
   get requestBody => request.body;
 
   bool get expectsJson {
-    final headerValue = request.headers[HttpHeaders.acceptEncodingHeader]?.toString();
+    final headerValue =
+        request.headers[HttpHeaders.acceptEncodingHeader]?.toString();
     return headerValue != null && headerValue.contains('application/json');
   }
 
