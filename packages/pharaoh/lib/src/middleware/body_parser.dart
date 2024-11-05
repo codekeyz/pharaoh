@@ -51,7 +51,7 @@ bodyParser(Request req, Response res, NextFunction next) async {
       req.body = Uri.splitQueryString(Uri.decodeFull(body));
       break;
     case MimeType.applicationJson:
-      req.body = json.decode(body);
+      if (body.isNotEmpty) req.body = json.decode(body);
       break;
     case MimeType.textPlain:
       req.body = body;
