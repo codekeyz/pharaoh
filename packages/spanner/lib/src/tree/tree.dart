@@ -247,10 +247,15 @@ class Spanner {
     }
 
     final handler = rootNode.getHandler(method);
+    if (handler == null && wildcardNode != null) {
+      return RouteResult(
+        resolvedParams,
+        getResults(wildcardNode.getHandler(method)),
+        actual: wildcardNode,
+      );
+    }
 
-    return handler == null
-        ? null
-        : RouteResult(resolvedParams, getResults(handler), actual: rootNode);
+    return RouteResult(resolvedParams, getResults(handler), actual: rootNode);
   }
 
   String _cleanPath(String path) {
