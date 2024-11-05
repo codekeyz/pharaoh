@@ -45,7 +45,7 @@ void main() {
       expect(result!.values, ['mee-moo']);
 
       result = router.lookup(HTTPMethod.POST, '/hello');
-      expect(result?.values, null);
+      expect(result?.values, const []);
     });
 
     test('static route and wildcard on same method', () {
