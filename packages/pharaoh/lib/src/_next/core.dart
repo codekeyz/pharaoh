@@ -132,9 +132,9 @@ abstract class ApplicationFactory {
 
   static RequestHandler buildControllerMethod(ControllerMethod method) {
     final params = method.params;
+    final methodName = method.methodName;
 
-    return (req, res) {
-      final methodName = method.methodName;
+    return (req, res) async {
       final instance = createNewInstance<HTTPController>(method.controller);
       final mirror = inject.reflect(instance);
 
@@ -142,7 +142,7 @@ abstract class ApplicationFactory {
         ..invokeSetter('request', req)
         ..invokeSetter('response', res);
 
-      late Function() methodCall;
+      Function methodCall;
 
       if (params.isNotEmpty) {
         final args = _resolveControllerMethodArgs(req, method);
@@ -151,7 +151,12 @@ abstract class ApplicationFactory {
         methodCall = () => mirror.invoke(methodName, []);
       }
 
-      return Future.sync(methodCall);
+      try {
+        final result = await methodCall.call();
+        return result is Response ? result : res.json(result);
+      } on Response catch (response) {
+        return response;
+      }
     };
   }
 
