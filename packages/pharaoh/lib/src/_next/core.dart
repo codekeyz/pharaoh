@@ -14,6 +14,7 @@ import 'package:get_it/get_it.dart';
 import 'package:meta/meta.dart';
 
 import 'http.dart';
+import 'openapi.dart';
 import 'router.dart';
 import 'validation.dart';
 
