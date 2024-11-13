@@ -99,7 +99,8 @@ ControllerMethod parseControllerMethod(ControllerMethodDefinition defn) {
       methods.firstWhereOrNull((e) => e.simpleName == symbolToString(method));
   if (actualMethod == null) {
     throw ArgumentError(
-        '$type does not have method  #${symbolToString(method)}');
+      '$type does not have method  #${symbolToString(method)}',
+    );
   }
 
   final parameters = actualMethod.parameters;
