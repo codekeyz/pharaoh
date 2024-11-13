@@ -21,25 +21,29 @@ class OpenApiGenerator {
 
     for (final route in routes) {
       final pathParams = route.args.where((e) => e.meta is Param).toList();
-      final bodyParam = route.args.firstWhereOrNull((e) => e is Body);
+      final bodyParam = route.args.firstWhereOrNull((e) => e.meta is Body);
+      final parameters = _generateParameters(route.args);
+      final routeMethod = route.method.name.toLowerCase();
 
       var path = route.route;
+
       // Convert Express-style path params (:id) to OpenAPI style ({id})
       for (final param in pathParams) {
         path = path.replaceAll('<${param.name}>', '{${param.name}}');
       }
 
       paths[path] = paths[path] ?? {};
-      paths[path]![route.method.name.toLowerCase()] = {
-        "summary": "", // Could be added as a parameter
-        "parameters": _generateParameters(route.args),
+      paths[path]![routeMethod] = {
+        "summary": "",
+        if (parameters.isNotEmpty) "parameters": parameters,
+        if (route.tags.isNotEmpty) "tags": route.tags,
         "responses": {
           "200": {"description": "Successful response"}
         }
       };
 
       if (bodyParam != null) {
-        paths[path]![route.method.name.toLowerCase()]["requestBody"] = {
+        paths[path]![routeMethod]["requestBody"] = {
           "required": !bodyParam.optional,
           "content": {
             "application/json": {"schema": _generateSchema(bodyParam)}

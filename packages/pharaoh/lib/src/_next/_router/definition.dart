@@ -24,6 +24,7 @@ class RouteMapping {
 }
 
 typedef OpenApiRoute = ({
+  List<String> tags,
   HTTPMethod method,
   String route,
   List<ControllerMethodParam> args,
@@ -32,6 +33,8 @@ typedef OpenApiRoute = ({
 abstract class RouteDefinition {
   late RouteMapping route;
   final RouteDefinitionType type;
+
+  String? group;
 
   RouteDefinition(this.type);
 
@@ -61,7 +64,8 @@ class UseAliasedMiddleware {
 
   RouteGroupDefinition routes(List<RouteDefinition> routes) {
     return RouteGroupDefinition._(
-      BASE_PATH,
+      alias,
+      prefix: BASE_PATH,
       definitions: routes,
     )..middleware(mdw);
   }
@@ -135,7 +139,12 @@ class ControllerRouteMethodDefinition extends RouteDefinition {
 
   @override
   List<OpenApiRoute> get openAPIRoutes => route.methods
-      .map((e) => (route: route.path, method: e, args: method.params.toList()))
+      .map((e) => (
+            route: route.path,
+            method: e,
+            args: method.params.toList(),
+            tags: <String>[if (group != null) group!]
+          ))
       .toList();
 }
 
@@ -162,12 +171,12 @@ class RouteGroupDefinition extends RouteDefinition {
   void _unwrapRoutes(Iterable<RouteDefinition> routes) {
     for (final subRoute in routes) {
       if (subRoute is! RouteGroupDefinition) {
-        defns.add(subRoute._prefix(route.path));
+        defns.add(subRoute._prefix(route.path)..group = name);
         continue;
       }
 
       for (var e in subRoute.defns) {
-        defns.add(e._prefix(route.path));
+        defns.add(e._prefix(route.path)..group = subRoute.name);
       }
     }
   }
@@ -232,6 +241,12 @@ class FunctionalRouteDefinition extends RouteDefinition {
   }
 
   @override
-  List<OpenApiRoute> get openAPIRoutes =>
-      [(args: [], method: method, route: route.path)];
+  List<OpenApiRoute> get openAPIRoutes => [
+        (
+          args: [],
+          method: method,
+          route: route.path,
+          tags: <String>[if (group != null) group!]
+        )
+      ];
 }
