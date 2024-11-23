@@ -25,6 +25,7 @@ class RouteMapping {
 
 typedef OpenApiRoute = ({
   List<String> tags,
+  Type? returnType,
   HTTPMethod method,
   String route,
   List<ControllerMethodParam> args,
@@ -89,6 +90,7 @@ class _MiddlewareDefinition extends RouteDefinition {
 typedef ControllerMethodDefinition = (Type controller, Symbol symbol);
 
 class ControllerMethod {
+  final Type? returnType;
   final ControllerMethodDefinition method;
   final Iterable<ControllerMethodParam> params;
 
@@ -96,7 +98,11 @@ class ControllerMethod {
 
   Type get controller => method.$1;
 
-  ControllerMethod(this.method, [this.params = const []]);
+  ControllerMethod(
+    this.method, {
+    this.params = const [],
+    this.returnType,
+  });
 }
 
 class ControllerMethodParam {
@@ -143,6 +149,7 @@ class ControllerRouteMethodDefinition extends RouteDefinition {
             route: route.path,
             method: e,
             args: method.params.toList(),
+            returnType: method.returnType,
             tags: <String>[if (group != null) group!]
           ))
       .toList();
@@ -244,6 +251,7 @@ class FunctionalRouteDefinition extends RouteDefinition {
   List<OpenApiRoute> get openAPIRoutes => [
         (
           args: [],
+          returnType: Response,
           method: method,
           route: route.path,
           tags: <String>[if (group != null) group!]

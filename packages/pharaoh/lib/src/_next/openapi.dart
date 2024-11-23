@@ -1,5 +1,5 @@
 import 'package:collection/collection.dart';
-import 'package:pharaoh/src/_next/router.dart';
+import 'package:pharaoh/pharaoh_next.dart';
 
 class OpenApiGenerator {
   static Map<String, dynamic> generateOpenApi(
@@ -38,7 +38,17 @@ class OpenApiGenerator {
         if (parameters.isNotEmpty) "parameters": parameters,
         if (route.tags.isNotEmpty) "tags": route.tags,
         "responses": {
-          "200": {"description": "Successful response"}
+          "200": {
+            "description": "Successful response",
+            if (route.returnType != null && route.returnType != Response)
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "\$ref": "#/components/schemas/${route.returnType}"
+                  },
+                },
+              }
+          }
         }
       };
 
@@ -104,18 +114,31 @@ class OpenApiGenerator {
   }
 
   static Map<String, dynamic> _typeToOpenApiType(Type type) {
-    switch (type.toString()) {
-      case "String":
+    switch (type) {
+      case const (String):
         return {"type": "string"};
-      case "int":
+      case const (int):
         return {"type": "integer", "format": "int32"};
-      case "double":
+      case const (double):
         return {"type": "number", "format": "double"};
-      case "bool":
+      case const (bool):
         return {"type": "boolean"};
-      case "DateTime":
+      case const (DateTime):
         return {"type": "string", "format": "date-time"};
       default:
+        final actualType = getActualType(type);
+        if (actualType == null) return {"type": "object"};
+
+        // final properties = <VariableMirror>[];
+
+        // ClassMirror? clazz = reflectType(actualType);
+        // while (clazz?.superclass != null) {
+        //   properties.addAll(clazz!.variables);
+        //   clazz = clazz.superclass;
+        // }
+
+        // print(properties);
+
         return {"type": "object"};
     }
   }
@@ -124,6 +147,7 @@ class OpenApiGenerator {
     final schemas = <String, dynamic>{};
 
     for (final route in routes) {
+      final returnType = route.returnType;
       for (final arg in route.args) {
         final dto = arg.dto;
         if (dto == null) continue;
@@ -134,6 +158,18 @@ class OpenApiGenerator {
               (preV, curr) => preV..[curr.name] = _typeToOpenApiType(curr.type))
         };
       }
+
+      if (returnType == null || returnType == Response) continue;
+
+      final properties = reflectType(returnType).variables;
+
+      schemas[returnType.toString()] = {
+        "type": "object",
+        "properties": properties.fold(
+            {},
+            (preV, curr) => preV
+              ..[curr.simpleName] = _typeToOpenApiType(curr.reflectedType))
+      };
     }
 
     return schemas;
