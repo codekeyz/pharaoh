@@ -2,7 +2,7 @@ import 'package:pharaoh/pharaoh.dart';
 import 'package:spookie/spookie.dart';
 
 void main() {
-  test('should initialize without onError callback', () async {
+  test('should error on route not found', () async {
     final app = Pharaoh()..get('/', (req, res) => res.ok('Hello'));
 
     final tester = await request(app);
