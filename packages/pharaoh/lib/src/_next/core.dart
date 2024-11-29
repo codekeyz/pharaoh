@@ -114,21 +114,21 @@ abstract class ApplicationFactory {
     final spanner = Spanner()..addMiddleware('/', bodyParser);
     Application._instance = _PharaohNextImpl(config, spanner);
 
-    final providerInstances = providers.map(createNewInstance<ServiceProvider>);
+    final providerInstances = providers
+        .map(createNewInstance<ServiceProvider>)
+        .toList(growable: false);
 
     /// register dependencies
-    for (final instance in providerInstances) {
-      await Future.sync(instance.register);
-    }
+    await providerInstances
+        .map((provider) => Future.sync(provider.register))
+        .wait;
 
     if (globalMiddleware != null) {
       spanner.addMiddleware<Middleware>('/', globalMiddleware!);
     }
 
     /// boot providers
-    for (final provider in providerInstances) {
-      await Future.sync(provider.boot);
-    }
+    await providerInstances.map((provider) => Future.sync(provider.boot)).wait;
   }
 
   static RequestHandler buildControllerMethod(ControllerMethod method) {
