@@ -202,6 +202,10 @@ class Spanner {
 
       wildcardNode = childNode?.wildcardNode ?? wildcardNode;
 
+      if (childNode == null && parametricNode == null && wildcardNode == null) {
+        return RouteResult(resolvedParams, getResults(null));
+      }
+
       // set root node as current child
       rootNode = childNode ?? parametricNode ?? rootNode;
 
