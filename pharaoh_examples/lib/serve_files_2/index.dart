@@ -12,7 +12,7 @@ final serveStatic = createStaticHandler(
 final cors = corsHeaders();
 
 void main() async {
-  app.use(logRequests);
+  app.addRequestHook(logRequestHook);
 
   app.use(useShelfMiddleware(cors));
 

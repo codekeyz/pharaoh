@@ -71,7 +71,7 @@ class _$RequestImpl extends Request {
   Session? get session => _context[RequestContext.session];
 
   @override
-  String? get sessionId => _context[RequestContext.sessionId];
+  String? get sessionId => session?.id;
 
   @override
   Object? operator [](String name) => _context[name];

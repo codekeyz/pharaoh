@@ -21,5 +21,7 @@ abstract class RouterContract {
 
   void use(Middleware middleware);
 
+  void addRequestHook(RequestHook hook);
+
   void on(String path, Middleware hdler, {HTTPMethod method = HTTPMethod.ALL});
 }
