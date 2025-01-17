@@ -15,8 +15,7 @@ class RequestContext {
   /// cookies & session
   static const String cookies = '$phar.cookies';
   static const String signedCookies = '$phar.signedcookies';
-  static const String session = '$phar.session.cookie';
-  static const String sessionId = '$phar.session.id';
+  static const String session = '$phar.session';
 }
 
 HTTPMethod getHttpMethod(HttpRequest req) => switch (req.method) {

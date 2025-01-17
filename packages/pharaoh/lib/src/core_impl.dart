@@ -119,13 +119,10 @@ class $PharaohImpl extends RouterContract
     }
 
     reqRes = await executeHandlers(resolvedHandlers, reqRes);
+    if (!reqRes.res.ended) reqRes = reqRes.merge(routeNotFound());
 
     for (final hook in _requestHooks.whereNot((e) => e.onAfter == null)) {
       reqRes = await hook.onAfter!.call(reqRes.req, reqRes.res);
-    }
-
-    if (!reqRes.res.ended) {
-      return reqRes.merge(routeNotFound());
     }
 
     return reqRes;

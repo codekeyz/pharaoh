@@ -1,14 +1,25 @@
-import '../http/request.dart';
-import '../http/response.dart';
+import 'dart:io';
+
 import '../router/router_handler.dart';
 
-logRequests(Request req, Response res, NextFunction next) {
-  final logLines = """
+final logRequestHook = RequestHook(
+  onBefore: (req, res) async {
+    req['startTime'] = DateTime.now();
+    return (req: req, res: res);
+  },
+  onAfter: (req, res) async {
+    final startTime = req['startTime'] as DateTime;
+    final elapsedTime = DateTime.now().difference(startTime).inMilliseconds;
+
+    final logLines = """
+Request:          ${req.method.name} ${req.path}
+Content-Type:     ${req.mimeType}
+Status Code:      ${res.statusCode}
+Elapsed Time:     ${"$elapsedTime ms"}
 -------------------------------------------------------
-Path:             ${req.path}
-Method:           ${req.method.name}
-Content-Type      ${req.mimeType}
--------------------------------------------------------\n""";
-  print(logLines);
-  next();
-}
+""";
+    stdout.writeln(logLines);
+
+    return (req: req, res: res);
+  },
+);

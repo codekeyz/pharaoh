@@ -61,7 +61,6 @@ Middleware sessionMdw({
 
   return (req, res, next) async {
     nextWithSession(Session session) {
-      req[RequestContext.sessionId] = session.id;
       req[RequestContext.session] = session.._withStore(sessionStore);
       return next((req: req, res: res));
     }
