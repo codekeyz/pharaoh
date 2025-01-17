@@ -15,7 +15,7 @@ final logRequestHook = RequestHook(
 Request:          ${req.method.name} ${req.path}
 Content-Type:     ${req.mimeType}
 Status Code:      ${res.statusCode}
-Elapsed Time:     ${"$elapsedTime ms"}
+Elapsed Time:     ${elapsedTime} ms
 -------------------------------------------------------
 """;
     stdout.writeln(logLines);
