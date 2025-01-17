@@ -115,7 +115,7 @@ class $PharaohImpl extends RouterContract
     }
 
     for (final hook in _requestHooks.whereNot((e) => e.onBefore == null)) {
-      reqRes = await hook.onBefore!.call(reqRes.req, reqRes.res);
+      reqRes = await hook.onBefore!.call(req, reqRes.res);
     }
 
     reqRes = await executeHandlers(resolvedHandlers, reqRes);
@@ -129,7 +129,7 @@ class $PharaohImpl extends RouterContract
   }
 
   Future<void> forward(HttpRequest request, Response res_) async {
-    var coding = res_.headers['transfer-encoding'];
+    var coding = res_.headers[HttpHeaders.transferEncodingHeader];
 
     final statusCode = res_.statusCode;
     request.response.statusCode = statusCode;
