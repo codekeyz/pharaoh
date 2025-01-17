@@ -92,8 +92,11 @@ class GroupRouter extends RouterContract {
   }
 
   @override
-  GroupRouter on(String path, Middleware func,
-      {HTTPMethod method = HTTPMethod.ALL}) {
+  GroupRouter on(
+    String path,
+    Middleware func, {
+    HTTPMethod method = HTTPMethod.ALL,
+  }) {
     if (method == HTTPMethod.ALL) path = '$path/*';
     _pendingRouteIntents.add((method, (path: path, handler: func)));
     return this;
@@ -108,5 +111,10 @@ class GroupRouter extends RouterContract {
         spanner.addRoute(intent.$1, '$prefix${intent.$2.path}', handler);
       }
     }
+  }
+
+  @override
+  void addRequestHook(RequestHook hook) {
+    // TODO: implement addRequestHook
   }
 }

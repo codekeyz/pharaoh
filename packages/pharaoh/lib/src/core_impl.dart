@@ -9,7 +9,7 @@ class $PharaohImpl extends RouterContract
 
   static ViewEngine? viewEngine_;
 
-  final List<ReqResHook> _preResponseHooks = [
+  final List<RequestHook> _requestHooks = [
     sessionPreResponseHook,
     viewRenderHook,
   ];
@@ -114,10 +114,14 @@ class $PharaohImpl extends RouterContract
       req.params.addAll(routeResult.params);
     }
 
+    for (final hook in _requestHooks.whereNot((e) => e.onBefore == null)) {
+      reqRes = await hook.onBefore!.call(reqRes.req, reqRes.res);
+    }
+
     reqRes = await executeHandlers(resolvedHandlers, reqRes);
 
-    for (final job in _preResponseHooks) {
-      reqRes = await Future.microtask(() => job(reqRes));
+    for (final hook in _requestHooks.whereNot((e) => e.onAfter == null)) {
+      reqRes = await hook.onAfter!.call(reqRes.req, reqRes.res);
     }
 
     if (!reqRes.res.ended) {
@@ -194,6 +198,9 @@ class $PharaohImpl extends RouterContract
 
   @override
   void onError(OnErrorCallback errorCb) => _onErrorCb = errorCb;
+
+  @override
+  void addRequestHook(RequestHook hook) => _requestHooks.add(hook);
 }
 
 // ignore: constant_identifier_names
