@@ -53,14 +53,38 @@ class Spanner {
     _currentIndex = _nextIndex;
   }
 
-  void attachNode(Node node) {
-    if (node is! StaticNode) {
-      throw UnsupportedError('Only Static Nodes are supported for now');
+  void attachNode(String path, Node node) {
+    final pathSegments = getRoutePathSegments(path);
+    if (pathSegments.isEmpty) {
+      root.addChildAndReturn(BASE_PATH, node);
     }
 
-    root.addChildAndReturn(node.route, node..offsetIndex(_currentIndex));
+    Node rootNode = root;
 
-    _currentIndex = _nextIndex;
+    final totalLength = pathSegments.length;
+    for (int i = 0; i < totalLength; i++) {
+      final routePart = pathSegments[i];
+      final isLastPart = i == totalLength - 1;
+
+      final maybeChild = rootNode.maybeChild(routePart);
+      if (isLastPart) {
+        if (maybeChild != null) {
+          throw ArgumentError.value(path, null, 'Route entry already exists');
+        }
+
+        rootNode = rootNode.addChildAndReturn(
+          routePart,
+          node..offsetIndex(_currentIndex),
+        );
+
+        _currentIndex = _nextIndex;
+        break;
+      }
+
+      if (maybeChild == null) {
+        rootNode = rootNode.addChildAndReturn(routePart, StaticNode(routePart));
+      }
+    }
   }
 
   HandlerStore _on(HTTPMethod method, String path) {

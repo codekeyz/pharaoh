@@ -98,9 +98,6 @@ abstract class Node with HandlerStoreMixin {
   }
 
   String get routes => _getRoutes('/', this);
-
-  @override
-  Object get owner => this;
 }
 
 class StaticNode extends Node {

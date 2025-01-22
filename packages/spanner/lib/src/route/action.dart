@@ -15,8 +15,6 @@ abstract interface class HandlerStore<Owner extends Object> {
 
   void addRoute<T>(HTTPMethod method, IndexedValue<T> handler);
   void addMiddleware<T>(IndexedValue<T> handler);
-
-  Owner get owner;
 }
 
 mixin HandlerStoreMixin implements HandlerStore {

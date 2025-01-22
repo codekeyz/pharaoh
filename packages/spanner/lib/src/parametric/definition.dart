@@ -44,9 +44,6 @@ abstract class ParameterDefinition implements HandlerStore {
     List<ParamAndValue> collector, {
     bool caseSentive = false,
   });
-
-  @override
-  Object get owner => this;
 }
 
 class SingleParameterDefn extends ParameterDefinition with HandlerStoreMixin {
