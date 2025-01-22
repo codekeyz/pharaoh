@@ -44,6 +44,9 @@ abstract class ParameterDefinition implements HandlerStore {
     List<ParamAndValue> collector, {
     bool caseSentive = false,
   });
+
+  @override
+  Object get owner => this;
 }
 
 class SingleParameterDefn extends ParameterDefinition with HandlerStoreMixin {
@@ -150,6 +153,9 @@ class CompositeParameterDefinition extends ParameterDefinition
   void addRoute<T>(HTTPMethod method, IndexedValue<T> handler) {
     _maybeTerminalPart.addRoute(method, handler);
   }
+
+  @override
+  void offsetIndex(int index) => _maybeTerminalPart.offsetIndex(index);
 
   @override
   IndexedValue? getHandler(HTTPMethod method) {

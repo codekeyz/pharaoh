@@ -98,6 +98,9 @@ abstract class Node with HandlerStoreMixin {
   }
 
   String get routes => _getRoutes('/', this);
+
+  @override
+  Object get owner => this;
 }
 
 class StaticNode extends Node {
@@ -110,7 +113,7 @@ class StaticNode extends Node {
 }
 
 class ParametricNode extends Node {
-  static final String key = '<:>';
+  static const String key = '<:>';
 
   final Map<HTTPMethod, List<ParameterDefinition>> _definitionsMap;
 
@@ -203,7 +206,7 @@ class ParametricNode extends Node {
 }
 
 class WildcardNode extends StaticNode {
-  static final String key = '*';
+  static const String key = '*';
 
   WildcardNode() : super(WildcardNode.key);
 
