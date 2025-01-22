@@ -1,9 +1,7 @@
 import 'dart:async';
 import 'dart:isolate';
 
-import '../core.dart';
-
-import '../router/router_handler.dart';
+import '../http/router.dart';
 import '../utils/exceptions.dart';
 import '../shelf_interop/shelf.dart' as shelf;
 
@@ -25,7 +23,7 @@ final viewRenderHook = RequestHook(
     final reqRes = (req: req, res: res);
     if (viewData == null) return reqRes;
 
-    final viewEngine = $PharaohImpl.viewEngine_;
+    final viewEngine = Pharaoh.viewEngine;
     if (viewEngine == null) throw PharaohException('No view engine found');
 
     try {

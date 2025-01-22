@@ -2,7 +2,7 @@ import 'dart:async';
 
 import '../http/request.dart';
 import '../http/response.dart';
-import '../router/router_handler.dart';
+import '../http/router.dart';
 import '../utils/exceptions.dart';
 import 'shelf.dart' as shelf;
 

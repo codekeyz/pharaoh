@@ -1,6 +1,6 @@
 import 'package:pharaoh/pharaoh.dart';
 
-final app = Pharaoh()..addRequestHook(logRequestHook);
+final app = Pharaoh()..useRequestHook(logRequestHook);
 
 void main() async {
   final guestRouter = Pharaoh.router

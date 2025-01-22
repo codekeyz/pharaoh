@@ -38,9 +38,9 @@ class _PharaohNextImpl implements Application {
   int get port => config.port;
 
   Pharaoh _createPharaohInstance({OnErrorCallback? onException}) {
-    final pharaoh = Pharaoh()
-      ..useSpanner(_spanner)
-      ..viewEngine = _viewEngine;
+    final pharaoh = Pharaoh()..useSpanner(_spanner);
+    Pharaoh.viewEngine = _viewEngine;
+
     if (onException != null) pharaoh.onError(onException);
     return pharaoh;
   }

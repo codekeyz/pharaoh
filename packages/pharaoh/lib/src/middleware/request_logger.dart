@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import '../router/router_handler.dart';
+import '../http/router.dart';
 
 final logRequestHook = RequestHook(
   onBefore: (req, res) async {

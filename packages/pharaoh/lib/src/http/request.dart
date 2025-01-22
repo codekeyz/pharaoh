@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:http_parser/http_parser.dart';
 import 'package:pharaoh/pharaoh.dart';
-import 'package:spanner/spanner.dart';
 
 import 'message.dart';
 

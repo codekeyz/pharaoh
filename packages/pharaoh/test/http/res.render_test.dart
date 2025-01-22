@@ -24,7 +24,10 @@ class TestViewEngine extends ViewEngine {
 void main() {
   late Pharaoh app;
 
-  setUp(() async => app = Pharaoh()..viewEngine = TestViewEngine());
+  setUp(() {
+    Pharaoh.viewEngine = TestViewEngine();
+    app = Pharaoh();
+  });
 
   group('res.render', () {
     test('should render template', () async {
@@ -68,9 +71,8 @@ void main() {
     });
 
     test('should err when no view engine', () async {
-      app = app
-        ..viewEngine = null
-        ..get('/', (req, res) => res.render('products'));
+      Pharaoh.viewEngine = null;
+      app = app..get('/', (req, res) => res.render('products'));
 
       await (await request(app))
           .get('/')

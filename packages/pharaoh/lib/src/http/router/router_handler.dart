@@ -1,12 +1,8 @@
-import 'dart:async';
-
-import '../http/request.dart';
-import '../http/response.dart';
-import '../utils/exceptions.dart';
+part of '../router.dart';
 
 typedef ReqRes = ({Request req, Response res});
 
-class RequestHook {
+final class RequestHook {
   final FutureOr<ReqRes> Function(Request req, Response res)? onBefore;
   final FutureOr<ReqRes> Function(Request req, Response res)? onAfter;
   const RequestHook({this.onAfter, this.onBefore});
