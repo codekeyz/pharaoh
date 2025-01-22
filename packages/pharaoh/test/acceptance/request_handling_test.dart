@@ -130,12 +130,10 @@ void main() {
 
     test('should execute route groups', () async {
       final app = Pharaoh()
-        ..get(
-          '/users/<userId>',
-          (req, res) => res.json(req.params),
-        );
+        ..get('/users/<userId>', (req, res) => res.json(req.params));
 
       final router = Pharaoh.router
+        ..use((req, res, next) => next(res.header('admin', '1')))
         ..get('/', (req, res) => res.ok('Group working'))
         ..delete('/say-hello', (req, res) => res.ok('Hello World'));
 
@@ -144,17 +142,20 @@ void main() {
       await (await request(app))
           .get('/users/chima')
           .expectStatus(200)
+          .expectHeader('admin', isNull)
           .expectBody({'userId': 'chima'}).test();
 
       await (await request(app))
           .get('/api/v1')
           .expectStatus(200)
+          .expectHeader('admin', '1')
           .expectBody('Group working')
           .test();
 
       await (await request(app))
           .delete('/api/v1/say-hello')
           .expectStatus(200)
+          .expectHeader('admin', '1')
           .expectBody('Hello World')
           .test();
     });

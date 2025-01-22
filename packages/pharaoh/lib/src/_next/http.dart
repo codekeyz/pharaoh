@@ -5,7 +5,7 @@ import 'dart:io';
 import '../http/request.dart';
 import '../http/response.dart';
 import '../middleware/session_mw.dart';
-import '../router/router_handler.dart';
+import '../http/router.dart';
 import 'core.dart';
 
 @inject
