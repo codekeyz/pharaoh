@@ -11,19 +11,21 @@ void main() {
         ..post('/hello', (req, res) => res.json(req.body));
       app.group('/admin', adminRouter);
 
-      await (await request(app))
+      final appTester = await request<Pharaoh>(app);
+
+      await appTester
           .post('/', {'_': 'Hello World 🚀'})
           .expectBody({"_": "Hello World 🚀"})
           .expectStatus(200)
           .test();
 
-      await (await request(app))
+      await appTester
           .post('/admin/hello', {'_': 'Hello World 🚀'})
           .expectBody({"_": "Hello World 🚀"})
           .expectStatus(200)
           .test();
 
-      await (await request(app))
+      await appTester
           .get('/admin')
           .expectBody('Holy Moly 🚀')
           .expectStatus(200)

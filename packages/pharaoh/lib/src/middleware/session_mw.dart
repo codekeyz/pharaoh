@@ -7,7 +7,7 @@ import 'package:uuid/uuid.dart';
 
 import '../http/cookie.dart';
 import '../http/request.dart';
-import '../router/router_handler.dart';
+import '../http/router.dart';
 import '../utils/utils.dart';
 
 part '../http/session.dart';
@@ -61,7 +61,6 @@ Middleware sessionMdw({
 
   return (req, res, next) async {
     nextWithSession(Session session) {
-      req[RequestContext.sessionId] = session.id;
       req[RequestContext.session] = session.._withStore(sessionStore);
       return next((req: req, res: res));
     }
@@ -92,15 +91,17 @@ Middleware sessionMdw({
   };
 }
 
-final ReqResHook sessionPreResponseHook = (ReqRes reqRes) async {
-  var req = reqRes.req, res = reqRes.res;
-  final session = req.session;
-  if (session == null) return reqRes;
+final sessionPreResponseHook = RequestHook(
+  onAfter: (req, res) async {
+    final session = req.session;
+    final reqRes = (req: req, res: res);
+    if (session == null) return reqRes;
 
-  if (session.saveUninitialized || session.resave || session.modified) {
-    await session.save();
-    res = res.withCookie(session.cookie!);
-  }
+    if (session.saveUninitialized || session.resave || session.modified) {
+      await session.save();
+      res = res.withCookie(session.cookie!);
+    }
 
-  return (req: req, res: res);
-};
+    return (req: req, res: res);
+  },
+);

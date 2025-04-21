@@ -4,10 +4,12 @@ typedef Indexed<T> = ({int index, T value});
 
 typedef IndexedValue<T> = Indexed<T>;
 
-abstract interface class HandlerStore {
+abstract interface class HandlerStore<Owner extends Object> {
   IndexedValue? getHandler(HTTPMethod method);
 
   Iterable<HTTPMethod> get methods;
+
+  void offsetIndex(int index);
 
   bool hasMethod(HTTPMethod method);
 
@@ -21,6 +23,26 @@ mixin HandlerStoreMixin implements HandlerStore {
     HTTPMethod.values.length,
     null,
   );
+
+  @override
+  void offsetIndex(int index) {
+    for (final middleware in middlewares.indexed) {
+      middlewares[middleware.$1] = (
+        index: middleware.$2.index + index,
+        value: middleware.$2.value,
+      );
+    }
+
+    // Offset the indices of request handlers
+    for (int i = 0; i < requestHandlers.length; i++) {
+      if (requestHandlers[i] != null) {
+        requestHandlers[i] = (
+          index: requestHandlers[i]!.index + index,
+          value: requestHandlers[i]!.value,
+        );
+      }
+    }
+  }
 
   @override
   Iterable<HTTPMethod> get methods => HTTPMethod.values.where(hasMethod);

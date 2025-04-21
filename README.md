@@ -29,30 +29,20 @@ dependencies:
 ```dart
 import 'package:pharaoh/pharaoh.dart';
 
-final app = Pharaoh();
-
 void main() async {
 
-  app.use((req, res, next) {
-
-    /// do something here
-
-    next();
-
-  });
-
-  app.get('/foo', (req, res) => res.ok("bar"));
-
-  final guestRouter = app.router()
+  final guestRouter = Pharaoh.router
     ..get('/user', (req, res) => res.ok("Hello World"))
     ..post('/post', (req, res) => res.json({"mee": "moo"}))
     ..put('/put', (req, res) => res.json({"pookey": "reyrey"}));
 
-  app.group('/guest', guestRouter);
+  final app = Pharaoh()
+    ..use((req, res, next) => next());
+    ..get('/foo', (req, res) => res.ok("bar"))
+    ..group('/guest', guestRouter);
 
-  await app.listen(); // port => 3000
+  await app.listen();
 }
-
 ```
 
 See the [Pharaoh Examples](./pharaoh_examples/lib/) directory for more practical use-cases.

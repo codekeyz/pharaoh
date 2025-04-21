@@ -11,14 +11,14 @@ const BASE_PATH = '/';
 enum HTTPMethod { GET, HEAD, POST, PUT, DELETE, ALL, PATCH, OPTIONS, TRACE }
 
 class RouterConfig {
+  final String rootPath;
   final bool caseSensitive;
   final bool ignoreTrailingSlash;
-  final bool ignoreDuplicateSlashes;
 
   const RouterConfig({
+    this.rootPath = BASE_PATH,
     this.caseSensitive = true,
     this.ignoreTrailingSlash = true,
-    this.ignoreDuplicateSlashes = true,
   });
 }
 
@@ -32,7 +32,8 @@ class Spanner {
 
   int get _nextIndex => _currentIndex + 1;
 
-  Spanner({this.config = const RouterConfig()}) : _root = StaticNode(BASE_PATH);
+  Spanner({this.config = const RouterConfig()})
+      : _root = StaticNode(config.rootPath);
 
   void addRoute<T>(HTTPMethod method, String path, T handler) {
     _on(method, path).addRoute(method, (
@@ -52,19 +53,51 @@ class Spanner {
     _currentIndex = _nextIndex;
   }
 
+  void attachNode(String path, Node node) {
+    final pathSegments = getRoutePathSegments(path);
+    if (pathSegments.isEmpty) {
+      root.addChildAndReturn(BASE_PATH, node);
+    }
+
+    Node rootNode = root;
+
+    final totalLength = pathSegments.length;
+    for (int i = 0; i < totalLength; i++) {
+      final routePart = pathSegments[i];
+      final isLastPart = i == totalLength - 1;
+
+      final maybeChild = rootNode.maybeChild(routePart);
+      if (isLastPart) {
+        if (maybeChild != null) {
+          throw ArgumentError.value(path, null, 'Route entry already exists');
+        }
+
+        rootNode = rootNode.addChildAndReturn(
+          routePart,
+          node..offsetIndex(_currentIndex),
+        );
+
+        _currentIndex = _nextIndex;
+        break;
+      }
+
+      if (maybeChild == null) {
+        rootNode = rootNode.addChildAndReturn(routePart, StaticNode(routePart));
+      }
+    }
+  }
+
   HandlerStore _on(HTTPMethod method, String path) {
-    path = _cleanPath(path);
+    final pathSegments = getRoutePathSegments(path);
 
     Node rootNode = _root;
 
-    if (path == BASE_PATH) {
+    if (pathSegments.isEmpty) {
       return rootNode;
-    } else if (path == WildcardNode.key) {
+    } else if (pathSegments[0] == WildcardNode.key) {
       return rootNode.wildcardNode ??
           rootNode.addChildAndReturn(WildcardNode.key, WildcardNode());
     }
-
-    final pathSegments = path.split('/');
 
     for (int i = 0; i < pathSegments.length; i += 2) {
       final firstPart = pathSegments[i];
@@ -165,9 +198,7 @@ class Spanner {
   }
 
   RouteResult? lookup(HTTPMethod method, dynamic route) {
-    var path = route is Uri ? route.path : route.toString();
-    if (path.startsWith(BASE_PATH)) path = path.substring(1);
-    if (path.endsWith(BASE_PATH)) path = path.substring(0, path.length - 1);
+    final pathSegments = getRoutePathSegments(route);
 
     final resolvedParams = <ParamAndValue>[];
     final resolvedHandlers = <IndexedValue>[...root.middlewares];
@@ -175,26 +206,24 @@ class Spanner {
     getResults(IndexedValue? handler) =>
         handler != null ? (resolvedHandlers..add(handler)) : resolvedHandlers;
 
-    Node rootNode = _root;
-
-    if (path.isEmpty) {
+    if (pathSegments.isEmpty) {
       return RouteResult(
         resolvedParams,
-        getResults(rootNode.getHandler(method)),
+        getResults(_root.getHandler(method)),
       );
     }
+
+    Node rootNode = _root;
 
     /// keep track of last wildcard we encounter along route. We'll resort to this
     /// incase we don't find the route we were looking for.
     var wildcardNode = rootNode.wildcardNode;
 
-    final routeSegments = route is Uri ? route.pathSegments : path.split('/');
-
-    for (int i = 0; i < routeSegments.length; i++) {
-      final currPart = routeSegments[i];
+    for (int i = 0; i < pathSegments.length; i++) {
+      final currPart = pathSegments[i];
       final routePart =
           config.caseSensitive ? currPart : currPart.toLowerCase();
-      final isLastPart = i == (routeSegments.length - 1);
+      final isLastPart = i == (pathSegments.length - 1);
 
       final parametricNode = rootNode.paramNode;
       final childNode = rootNode.maybeChild(routePart) ??
@@ -202,26 +231,31 @@ class Spanner {
 
       wildcardNode = childNode?.wildcardNode ?? wildcardNode;
 
-      if (childNode == null && parametricNode == null && wildcardNode == null) {
-        return RouteResult(resolvedParams, getResults(null));
+      if (childNode == null && parametricNode == null) {
+        if (wildcardNode == null) {
+          return RouteResult(resolvedParams, getResults(null));
+        }
+
+        return RouteResult(
+          resolvedParams,
+          getResults(wildcardNode.getHandler(method)),
+          actual: wildcardNode,
+        );
       }
 
-      // set root node as current child
-      rootNode = childNode ?? parametricNode ?? rootNode;
+      rootNode = (childNode ?? parametricNode)!;
 
       final definition = parametricNode?.findMatchingDefinition(
         method,
         routePart,
         terminal: isLastPart,
         caseSensitive: config.caseSensitive,
-        nextPart: isLastPart ? null : routeSegments[i + 1],
+        nextPart: isLastPart ? null : pathSegments[i + 1],
       );
 
-      /// If we don't find no matching Static path or a Parametric Node, OR
-      /// we don't find a matching path or a matching definition, then
+      /// If we don't find a matching path or a matching definition, then
       /// use wildcard if we have any registered
-      if ((childNode == null && parametricNode == null) ||
-          (childNode == null && definition == null)) {
+      if (childNode == null && definition == null) {
         if (wildcardNode != null) rootNode = wildcardNode;
         break;
       }
@@ -246,35 +280,26 @@ class Spanner {
       }
     }
 
-    if (!rootNode.terminal) {
-      return RouteResult(resolvedParams, getResults(null), actual: null);
-    }
-
-    final handler = rootNode.getHandler(method);
-    if (handler == null && wildcardNode != null) {
-      return RouteResult(
-        resolvedParams,
-        getResults(wildcardNode.getHandler(method)),
-        actual: wildcardNode,
-      );
-    }
-
-    return RouteResult(resolvedParams, getResults(handler), actual: rootNode);
+    return !rootNode.terminal
+        ? RouteResult(resolvedParams, getResults(null), actual: null)
+        : RouteResult(
+            resolvedParams,
+            getResults(rootNode.getHandler(method)),
+            actual: rootNode,
+          );
   }
 
-  String _cleanPath(String path) {
-    if ([BASE_PATH, WildcardNode.key].contains(path)) return path;
-    if (!path.startsWith(BASE_PATH)) {
-      throw ArgumentError.value(
-          path, null, 'Route registration must start with `/`');
-    }
-    if (config.ignoreDuplicateSlashes) {
-      path = path.replaceAll(RegExp(r'/+'), '/');
-    }
-    if (config.ignoreTrailingSlash) {
-      path = path.replaceAll(RegExp(r'/+$'), '');
-    }
-    return path.substring(1);
+  List<String> getRoutePathSegments(dynamic route) {
+    if (route is Uri) return route.pathSegments;
+    if (route == BASE_PATH) return const [];
+    if (route == WildcardNode.key) return const [WildcardNode.key];
+
+    var path = route.toString();
+    if (path.isEmpty) return const [];
+
+    if (path.startsWith(BASE_PATH)) path = path.substring(1);
+    if (path.endsWith(BASE_PATH)) path = path.substring(0, path.length - 1);
+    return path.split('/');
   }
 }
 

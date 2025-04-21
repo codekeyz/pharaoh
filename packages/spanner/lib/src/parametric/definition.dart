@@ -152,6 +152,9 @@ class CompositeParameterDefinition extends ParameterDefinition
   }
 
   @override
+  void offsetIndex(int index) => _maybeTerminalPart.offsetIndex(index);
+
+  @override
   IndexedValue? getHandler(HTTPMethod method) {
     return _maybeTerminalPart.getHandler(method);
   }

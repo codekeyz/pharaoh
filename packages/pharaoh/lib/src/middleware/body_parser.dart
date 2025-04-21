@@ -5,7 +5,7 @@ import 'package:mime/mime.dart';
 
 import '../http/request.dart';
 import '../http/response.dart';
-import '../router/router_handler.dart';
+import '../http/router.dart';
 
 sealed class MimeType {
   static const String multiPartForm = 'multipart/form-data';

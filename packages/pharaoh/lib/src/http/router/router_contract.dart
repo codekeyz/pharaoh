@@ -1,8 +1,26 @@
-import 'package:spanner/spanner.dart';
-import 'package:spanner/src/tree/tree.dart' show BASE_PATH;
+part of '../router.dart';
 
-import 'router_contract.dart';
-import 'router_handler.dart';
+sealed class RouterContract {
+  void get(String path, RequestHandler hdler);
+
+  void post(String path, RequestHandler hdler);
+
+  void put(String path, RequestHandler hdler);
+
+  void delete(String path, RequestHandler hdler);
+
+  void head(String path, RequestHandler hdler);
+
+  void patch(String path, RequestHandler hdler);
+
+  void options(String path, RequestHandler hdler);
+
+  void trace(String path, RequestHandler hdler);
+
+  void use(Middleware middleware);
+
+  void on(String path, Middleware hdler, {HTTPMethod method = HTTPMethod.ALL});
+}
 
 mixin RouteDefinitionMixin on RouterContract {
   late Spanner spanner;

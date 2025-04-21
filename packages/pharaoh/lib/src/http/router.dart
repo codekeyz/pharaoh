@@ -1,20 +1,70 @@
-part of 'core.dart';
+import 'dart:async';
+import 'dart:io';
 
-class $PharaohImpl extends RouterContract
+import 'package:collection/collection.dart';
+import 'package:http_parser/http_parser.dart';
+import 'package:meta/meta.dart';
+import 'package:spanner/spanner.dart';
+import 'package:spanner/src/tree/tree.dart' show BASE_PATH;
+
+import '../middleware/body_parser.dart';
+import '../middleware/session_mw.dart';
+import '../shelf_interop/shelf.dart' as shelf;
+import '../utils/exceptions.dart';
+import '../view/view.dart';
+
+import 'request.dart';
+import 'response.dart';
+
+part 'router/router_contract.dart';
+part 'router/router_handler.dart';
+
+typedef PharaohError = ({Object exception, StackTrace trace});
+
+typedef OnErrorCallback = FutureOr<Response> Function(
+  PharaohError error,
+  Request req,
+  Response res,
+);
+
+abstract class Pharaoh implements RouterContract {
+  static _$GroupRouter get router => _$GroupRouter();
+
+  factory Pharaoh() => _$PharaohImpl();
+
+  static ViewEngine? viewEngine;
+
+  void onError(OnErrorCallback onError);
+
+  void useSpanner(Spanner spanner);
+
+  void useRequestHook(RequestHook hook);
+
+  void group(String path, _$GroupRouter router);
+
+  Uri get uri;
+
+  Future<Pharaoh> listen({int port = 3000});
+
+  @visibleForTesting
+  void handleRequest(HttpRequest httpReq);
+
+  Future<void> shutdown();
+}
+
+class _$PharaohImpl extends RouterContract
     with RouteDefinitionMixin
     implements Pharaoh {
   late final HttpServer _server;
 
   OnErrorCallback? _onErrorCb;
 
-  static ViewEngine? viewEngine_;
-
-  final List<ReqResHook> _preResponseHooks = [
+  final List<RequestHook> _requestHooks = [
     sessionPreResponseHook,
     viewRenderHook,
   ];
 
-  $PharaohImpl() {
+  _$PharaohImpl() {
     useSpanner(Spanner());
     use(bodyParser);
   }
@@ -40,15 +90,6 @@ class $PharaohImpl extends RouterContract
       host: _server.address.address,
       port: _server.port,
     );
-  }
-
-  @override
-  Pharaoh group(final String path, final RouterContract router) {
-    if (router is! GroupRouter) {
-      throw PharaohException.value('Router is not an instance of GroupRouter');
-    }
-    router.commit(path, spanner);
-    return this;
   }
 
   @override
@@ -114,21 +155,22 @@ class $PharaohImpl extends RouterContract
       req.params.addAll(routeResult.params);
     }
 
-    reqRes = await executeHandlers(resolvedHandlers, reqRes);
-
-    for (final job in _preResponseHooks) {
-      reqRes = await Future.microtask(() => job(reqRes));
+    for (final hook in _requestHooks.whereNot((e) => e.onBefore == null)) {
+      reqRes = await hook.onBefore!.call(req, reqRes.res);
     }
 
-    if (!reqRes.res.ended) {
-      return reqRes.merge(routeNotFound());
+    reqRes = await executeHandlers(resolvedHandlers, reqRes);
+    if (!reqRes.res.ended) reqRes = reqRes.merge(routeNotFound());
+
+    for (final hook in _requestHooks.whereNot((e) => e.onAfter == null)) {
+      reqRes = await hook.onAfter!.call(reqRes.req, reqRes.res);
     }
 
     return reqRes;
   }
 
   Future<void> forward(HttpRequest request, Response res_) async {
-    var coding = res_.headers['transfer-encoding'];
+    var coding = res_.headers[HttpHeaders.transferEncodingHeader];
 
     final statusCode = res_.statusCode;
     request.response.statusCode = statusCode;
@@ -187,14 +229,21 @@ class $PharaohImpl extends RouterContract
   Future<void> shutdown() async => _server.close();
 
   @override
-  ViewEngine? get viewEngine => viewEngine_;
-
-  @override
-  set viewEngine(ViewEngine? engine) => viewEngine_ = engine;
-
-  @override
   void onError(OnErrorCallback errorCb) => _onErrorCb = errorCb;
+
+  @override
+  void useRequestHook(RequestHook hook) => _requestHooks.add(hook);
+
+  @override
+  void group(String path, _$GroupRouter router) {
+    spanner.attachNode(path, router.spanner.root);
+  }
 }
 
-// ignore: constant_identifier_names
 const _XPoweredByHeader = 'X-Powered-By';
+
+class _$GroupRouter extends RouterContract with RouteDefinitionMixin {
+  _$GroupRouter() {
+    useSpanner(Spanner());
+  }
+}
