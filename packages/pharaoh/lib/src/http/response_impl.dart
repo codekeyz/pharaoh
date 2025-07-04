@@ -40,7 +40,7 @@ class _$ResponseImpl extends Response {
   ///
   /// [statusCode] must be greater than or equal to 100.
   _$ResponseImpl._({
-    shelf.ShelfBody? body,
+    Body? body,
     int? statusCode,
     this.ended = false,
     Map<String, dynamic> headers = const {},
@@ -77,7 +77,7 @@ class _$ResponseImpl extends Response {
       );
 
   @override
-  Response withBody(Object object) => this..body = shelf.ShelfBody(object);
+  Response withBody(Object object) => this..body = Body(object);
 
   @override
   _$ResponseImpl redirect(String url, [int statusCode = HttpStatus.found]) {
@@ -123,7 +123,7 @@ class _$ResponseImpl extends Response {
       statusCode = HttpStatus.internalServerError;
     }
 
-    body = shelf.ShelfBody(result);
+    body = Body(result);
 
     return this.status(statusCode).end();
   }
@@ -144,13 +144,13 @@ class _$ResponseImpl extends Response {
   @override
   _$ResponseImpl ok([String? data]) => this.end()
     ..headers[HttpHeaders.contentTypeHeader] = ContentType.text.toString()
-    ..body = shelf.ShelfBody(data, encoding);
+    ..body = Body(data, encoding);
 
   @override
   _$ResponseImpl send(Object data) {
     return this.end()
       ..headers[HttpHeaders.contentTypeHeader] ??= ContentType.binary.toString()
-      ..body = shelf.ShelfBody(data);
+      ..body = Body(data);
   }
 
   @override
