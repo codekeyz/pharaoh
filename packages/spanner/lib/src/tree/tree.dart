@@ -89,51 +89,32 @@ class Spanner {
 
   HandlerStore _on(HTTPMethod method, String path) {
     final pathSegments = getRoutePathSegments(path);
-
     Node rootNode = _root;
 
     if (pathSegments.isEmpty) {
       return rootNode;
-    } else if (pathSegments[0] == WildcardNode.key) {
+    }
+
+    if (pathSegments[0] == WildcardNode.key) {
       return rootNode.wildcardNode ??
           rootNode.addChildAndReturn(WildcardNode.key, WildcardNode());
     }
 
-    for (int i = 0; i < pathSegments.length; i += 2) {
-      final firstPart = pathSegments[i];
-      final secondPart =
-          i + 1 < pathSegments.length ? pathSegments[i + 1] : null;
-      final thirdPart =
-          i + 2 < pathSegments.length ? pathSegments[i + 2] : null;
+    for (int i = 0; i < pathSegments.length; i++) {
+      final current = pathSegments[i];
+      final next = i + 1 < pathSegments.length ? pathSegments[i + 1] : null;
 
-      final first = Spanner._computeNode(
+      final result = Spanner._computeNode(
         rootNode,
         method,
-        firstPart,
+        current,
         config: config,
         fullPath: path,
-        nextPart: secondPart,
+        nextPart: next,
       );
 
-      /// the only time [result] won't be Node is when we have a parametric definition
-      if (first is! Node) return first;
-
-      rootNode = first;
-
-      if (secondPart != null) {
-        final second = Spanner._computeNode(
-          rootNode,
-          method,
-          secondPart,
-          config: config,
-          fullPath: path,
-          nextPart: thirdPart,
-        );
-
-        if (second is! Node) return second;
-
-        rootNode = second;
-      }
+      if (result is! Node) return result;
+      rootNode = result;
     }
 
     return rootNode;
