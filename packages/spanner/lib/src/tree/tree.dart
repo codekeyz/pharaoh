@@ -11,12 +11,10 @@ const BASE_PATH = '/';
 enum HTTPMethod { GET, HEAD, POST, PUT, DELETE, ALL, PATCH, OPTIONS, TRACE }
 
 class RouterConfig {
-  final String rootPath;
   final bool caseSensitive;
   final bool ignoreTrailingSlash;
 
   const RouterConfig({
-    this.rootPath = BASE_PATH,
     this.caseSensitive = true,
     this.ignoreTrailingSlash = true,
   });
@@ -32,8 +30,7 @@ class Spanner {
 
   int get _nextIndex => _currentIndex + 1;
 
-  Spanner({this.config = const RouterConfig()})
-      : _root = StaticNode(config.rootPath);
+  Spanner({this.config = const RouterConfig()}) : _root = StaticNode(BASE_PATH);
 
   void addRoute<T>(HTTPMethod method, String path, T handler) {
     _on(method, path).addRoute(method, (
@@ -88,29 +85,25 @@ class Spanner {
   }
 
   HandlerStore _on(HTTPMethod method, String path) {
-    final pathSegments = getRoutePathSegments(path);
+    final parts = getRoutePathSegments(path);
     Node rootNode = _root;
 
-    if (pathSegments.isEmpty) {
+    if (parts.isEmpty) {
       return rootNode;
     }
 
-    if (pathSegments[0] == WildcardNode.key) {
+    if (parts[0] == WildcardNode.key) {
       return rootNode.wildcardNode ??
           rootNode.addChildAndReturn(WildcardNode.key, WildcardNode());
     }
 
-    for (int i = 0; i < pathSegments.length; i++) {
-      final current = pathSegments[i];
-      final next = i + 1 < pathSegments.length ? pathSegments[i + 1] : null;
-
+    for (int index = 0; index < parts.length; index++) {
       final result = Spanner._computeNode(
         rootNode,
         method,
-        current,
+        index,
+        parts: parts,
         config: config,
-        fullPath: path,
-        nextPart: next,
       );
 
       if (result is! Node) return result;
@@ -137,13 +130,13 @@ class Spanner {
   static HandlerStore _computeNode(
     Node node,
     HTTPMethod method,
-    String routePart, {
+    int index, {
+    required List<String> parts,
     required RouterConfig config,
-    required String? nextPart,
-    required String fullPath,
   }) {
+    final routePart = parts[index];
+    final nextPart = parts.elementAtOrNull(index + 1);
     final part = config.caseSensitive ? routePart : routePart.toLowerCase();
-
     final child = node.maybeChild(part);
     if (child != null) {
       return node.addChildAndReturn(part, child);
@@ -152,7 +145,7 @@ class Spanner {
     } else if (part.isWildCard) {
       if (nextPart != null) {
         throw ArgumentError.value(
-          fullPath,
+          parts.join('/'),
           null,
           'Route definition is not valid. Wildcard must be the end of the route',
         );
@@ -184,6 +177,7 @@ class Spanner {
     final resolvedParams = <ParamAndValue>[];
     final resolvedHandlers = <IndexedValue>[...root.middlewares];
 
+    @pragma('vm:prefer-inline')
     getResults(IndexedValue? handler) =>
         handler != null ? (resolvedHandlers..add(handler)) : resolvedHandlers;
 
@@ -230,8 +224,6 @@ class Spanner {
         method,
         routePart,
         terminal: isLastPart,
-        caseSensitive: config.caseSensitive,
-        nextPart: isLastPart ? null : pathSegments[i + 1],
       );
 
       /// If we don't find a matching path or a matching definition, then
@@ -246,11 +238,7 @@ class Spanner {
         continue;
       }
 
-      definition!.resolveParams(
-        currPart,
-        resolvedParams,
-        caseSentive: config.caseSensitive,
-      );
+      definition!.resolveParams(currPart, resolvedParams);
 
       if (isLastPart && definition.terminal) {
         return RouteResult(
