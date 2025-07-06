@@ -204,6 +204,11 @@ class Spanner {
       final childNode = rootNode.maybeChild(routePart) ??
           parametricNode?.maybeChild(routePart);
 
+      if (childNode is StaticNode && isLastPart) {
+        rootNode = childNode;
+        break;
+      }
+
       wildcardNode = childNode?.wildcardNode ?? wildcardNode;
 
       if (childNode == null && parametricNode == null) {
@@ -211,11 +216,8 @@ class Spanner {
           return RouteResult(resolvedParams, getResults(null));
         }
 
-        return RouteResult(
-          resolvedParams,
-          getResults(wildcardNode.getHandler(method)),
-          actual: wildcardNode,
-        );
+        rootNode = wildcardNode;
+        break;
       }
 
       rootNode = (childNode ?? parametricNode)!;
@@ -248,6 +250,8 @@ class Spanner {
         );
       }
     }
+
+    resolvedHandlers.addAll(rootNode.middlewares);
 
     return !rootNode.terminal
         ? RouteResult(resolvedParams, getResults(null), actual: null)
