@@ -31,9 +31,7 @@ jobs:
         run: melos format -- --set-exit-if-changed
 
       - name: Check linting
-        run: |
-          cd packages/pharaoh && dart run build_runner build --delete-conflicting-outputs
-          melos analyze
+        run: melos analyze
 
   test:
     name: Test Packages
