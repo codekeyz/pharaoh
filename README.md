@@ -1,9 +1,8 @@
 # Pharaoh 🏇
 
-[![Dart](https://github.com/codekeyz/pharaoh/workflows/Dart/badge.svg)](https://github.com/codekeyz/pharaoh/actions/workflows/test.yml)
+[![Test Pipeline](https://github.com/codekeyz/pharaoh/actions/workflows/test.yaml/badge.svg)](https://github.com/codekeyz/pharaoh/actions/workflows/test.yaml)
 [![codecov](https://codecov.io/gh/codekeyz/pharaoh/graph/badge.svg?token=4CJTGP1U2M)](https://codecov.io/gh/codekeyz/pharaoh)
 [![Pub Version](https://img.shields.io/pub/v/pharaoh?color=green)](https://pub.dev/packages/pharaoh)
-[![popularity](https://img.shields.io/pub/popularity/pharaoh?logo=dart)](https://pub.dev/packages/pharaoh/score)
 [![likes](https://img.shields.io/pub/likes/pharaoh?logo=dart)](https://pub.dev/packages/pharaoh/score)
 [![melos](https://img.shields.io/badge/maintained%20with-melos-f700ff.svg?style=flat-square)](https://github.com/invertase/melos)
 
