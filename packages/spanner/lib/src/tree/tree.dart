@@ -262,21 +262,37 @@ class Spanner {
           );
   }
 
-  List<String> getRoutePathSegments(dynamic route) {
-    if (route is Uri) return route.pathSegments;
-    if (route == BASE_PATH) return const [];
-    if (route == WildcardNode.key) return const [WildcardNode.key];
+  final _pathCache = <Object, List<String>>{};
 
-    var path = route.toString();
-    if (path.isEmpty) return const [];
+  @pragma('vm:prefer-inline')
+  List<String> getRoutePathSegments(Object route) {
+    final cached = _pathCache[route];
+    if (cached != null) return cached;
 
-    if (path.startsWith(BASE_PATH)) path = path.substring(1);
-    if (path.endsWith(BASE_PATH)) path = path.substring(0, path.length - 1);
-    return path.split('/');
+    late final List<String> segments;
+
+    if (route is Uri) {
+      segments = route.pathSegments;
+    } else if (identical(route, BASE_PATH)) {
+      segments = const <String>[];
+    } else if (identical(route, WildcardNode.key)) {
+      segments = const [WildcardNode.key];
+    } else {
+      var path = route.toString();
+      if (path.isEmpty) {
+        segments = const <String>[];
+      } else {
+        final start = path.startsWith(BASE_PATH) ? 1 : 0;
+        final end = path.endsWith(BASE_PATH) ? path.length - 1 : path.length;
+        segments = path.substring(start, end).split('/');
+      }
+    }
+
+    return _pathCache[route] = segments;
   }
 }
 
-class RouteResult {
+final class RouteResult {
   final List<ParamAndValue> _params;
   final List<IndexedValue> _values;
 
