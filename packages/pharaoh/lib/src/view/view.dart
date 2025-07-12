@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'dart:isolate';
 
+import '../http/body.dart';
 import '../http/router.dart';
 import '../utils/exceptions.dart';
-import '../shelf_interop/shelf.dart' as shelf;
 
 abstract class ViewEngine {
   String get name;
@@ -30,7 +30,7 @@ final viewRenderHook = RequestHook(
       final result = await Isolate.run(
         () => viewEngine.render(viewData.name, viewData.data),
       );
-      res = res.end()..body = shelf.ShelfBody(result);
+      res = res.end()..body = Body(result);
     } catch (e) {
       throw PharaohException.value('Failed to render view ${viewData.name}', e);
     }

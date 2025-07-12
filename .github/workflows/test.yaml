@@ -31,9 +31,7 @@ jobs:
         run: melos format -- --set-exit-if-changed
 
       - name: Check linting
-        run: |
-          cd packages/pharaoh && dart run build_runner build --delete-conflicting-outputs
-          melos analyze
+        run: melos analyze
 
   test:
     name: Test Packages
@@ -44,13 +42,7 @@ jobs:
 
       - uses: dart-lang/setup-dart@v1.3
       - uses: bluefireteam/melos-action@v3
-
-      - name: Bootstrap
-        run: |
-          dart pub global activate melos
-          melos bootstrap
-          cd packages/pharaoh && dart run build_runner build --delete-conflicting-outputs
-
+      
       - name: Run Unit tests
         run: melos tests:ci
 

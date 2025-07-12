@@ -3,7 +3,7 @@ import 'dart:io';
 
 import 'package:http_parser/http_parser.dart';
 
-import '../shelf_interop/shelf.dart';
+import 'body.dart';
 
 abstract class Message<T> {
   final Map<String, dynamic> headers;
@@ -44,6 +44,6 @@ abstract class Message<T> {
 
   int? get contentLength {
     final content = body;
-    return content is ShelfBody ? content.contentLength : null;
+    return content is Body ? content.contentLength : null;
   }
 }

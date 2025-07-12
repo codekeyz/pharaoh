@@ -39,11 +39,7 @@ abstract class ParameterDefinition implements HandlerStore {
 
   bool matches(String route, {bool caseSensitive = false});
 
-  void resolveParams(
-    String pattern,
-    List<ParamAndValue> collector, {
-    bool caseSentive = false,
-  });
+  void resolveParams(String pattern, List<ParamAndValue> collector);
 }
 
 class SingleParameterDefn extends ParameterDefinition with HandlerStoreMixin {
@@ -66,12 +62,7 @@ class SingleParameterDefn extends ParameterDefinition with HandlerStoreMixin {
 
   @override
   bool matches(String route, {bool caseSensitive = false}) {
-    final match = matchPattern(
-      route,
-      prefix ?? '',
-      suffix ?? '',
-      caseSensitive,
-    );
+    final match = matchPattern(route, prefix ?? '', suffix ?? '');
     return match != null;
   }
 
@@ -84,15 +75,13 @@ class SingleParameterDefn extends ParameterDefinition with HandlerStoreMixin {
         _terminal = false;
 
   @override
-  void resolveParams(
-    final String pattern,
-    List<ParamAndValue> collector, {
-    bool caseSentive = false,
-  }) {
-    collector.add((
-      name: name,
-      value: matchPattern(pattern, prefix ?? "", suffix ?? "", caseSentive)
-    ));
+  void resolveParams(final String pattern, List<ParamAndValue> collector) {
+    collector.add(
+      (
+        name: name,
+        value: matchPattern(pattern, prefix ?? "", suffix ?? ""),
+      ),
+    );
   }
 
   @override
@@ -128,11 +117,7 @@ class CompositeParameterDefinition extends ParameterDefinition
       _template.hasMatch(route);
 
   @override
-  void resolveParams(
-    String pattern,
-    List<ParamAndValue> collector, {
-    bool caseSentive = false,
-  }) {
+  void resolveParams(String pattern, List<ParamAndValue> collector) {
     final match = _template.firstMatch(pattern);
     if (match == null) return;
 

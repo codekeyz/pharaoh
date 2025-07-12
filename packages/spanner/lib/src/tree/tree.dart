@@ -11,12 +11,10 @@ const BASE_PATH = '/';
 enum HTTPMethod { GET, HEAD, POST, PUT, DELETE, ALL, PATCH, OPTIONS, TRACE }
 
 class RouterConfig {
-  final String rootPath;
   final bool caseSensitive;
   final bool ignoreTrailingSlash;
 
   const RouterConfig({
-    this.rootPath = BASE_PATH,
     this.caseSensitive = true,
     this.ignoreTrailingSlash = true,
   });
@@ -32,8 +30,7 @@ class Spanner {
 
   int get _nextIndex => _currentIndex + 1;
 
-  Spanner({this.config = const RouterConfig()})
-      : _root = StaticNode(config.rootPath);
+  Spanner({this.config = const RouterConfig()}) : _root = StaticNode(BASE_PATH);
 
   void addRoute<T>(HTTPMethod method, String path, T handler) {
     _on(method, path).addRoute(method, (
@@ -88,52 +85,29 @@ class Spanner {
   }
 
   HandlerStore _on(HTTPMethod method, String path) {
-    final pathSegments = getRoutePathSegments(path);
-
+    final parts = getRoutePathSegments(path);
     Node rootNode = _root;
 
-    if (pathSegments.isEmpty) {
+    if (parts.isEmpty) {
       return rootNode;
-    } else if (pathSegments[0] == WildcardNode.key) {
+    }
+
+    if (parts[0] == WildcardNode.key) {
       return rootNode.wildcardNode ??
           rootNode.addChildAndReturn(WildcardNode.key, WildcardNode());
     }
 
-    for (int i = 0; i < pathSegments.length; i += 2) {
-      final firstPart = pathSegments[i];
-      final secondPart =
-          i + 1 < pathSegments.length ? pathSegments[i + 1] : null;
-      final thirdPart =
-          i + 2 < pathSegments.length ? pathSegments[i + 2] : null;
-
-      final first = Spanner._computeNode(
+    for (int index = 0; index < parts.length; index++) {
+      final result = Spanner._computeNode(
         rootNode,
         method,
-        firstPart,
+        index,
+        parts: parts,
         config: config,
-        fullPath: path,
-        nextPart: secondPart,
       );
 
-      /// the only time [result] won't be Node is when we have a parametric definition
-      if (first is! Node) return first;
-
-      rootNode = first;
-
-      if (secondPart != null) {
-        final second = Spanner._computeNode(
-          rootNode,
-          method,
-          secondPart,
-          config: config,
-          fullPath: path,
-          nextPart: thirdPart,
-        );
-
-        if (second is! Node) return second;
-
-        rootNode = second;
-      }
+      if (result is! Node) return result;
+      rootNode = result;
     }
 
     return rootNode;
@@ -156,13 +130,13 @@ class Spanner {
   static HandlerStore _computeNode(
     Node node,
     HTTPMethod method,
-    String routePart, {
+    int index, {
+    required List<String> parts,
     required RouterConfig config,
-    required String? nextPart,
-    required String fullPath,
   }) {
+    final routePart = parts[index];
+    final nextPart = parts.elementAtOrNull(index + 1);
     final part = config.caseSensitive ? routePart : routePart.toLowerCase();
-
     final child = node.maybeChild(part);
     if (child != null) {
       return node.addChildAndReturn(part, child);
@@ -171,7 +145,7 @@ class Spanner {
     } else if (part.isWildCard) {
       if (nextPart != null) {
         throw ArgumentError.value(
-          fullPath,
+          parts.join('/'),
           null,
           'Route definition is not valid. Wildcard must be the end of the route',
         );
@@ -203,6 +177,7 @@ class Spanner {
     final resolvedParams = <ParamAndValue>[];
     final resolvedHandlers = <IndexedValue>[...root.middlewares];
 
+    @pragma('vm:prefer-inline')
     getResults(IndexedValue? handler) =>
         handler != null ? (resolvedHandlers..add(handler)) : resolvedHandlers;
 
@@ -229,6 +204,11 @@ class Spanner {
       final childNode = rootNode.maybeChild(routePart) ??
           parametricNode?.maybeChild(routePart);
 
+      if (childNode is StaticNode && isLastPart) {
+        rootNode = childNode;
+        break;
+      }
+
       wildcardNode = childNode?.wildcardNode ?? wildcardNode;
 
       if (childNode == null && parametricNode == null) {
@@ -236,11 +216,8 @@ class Spanner {
           return RouteResult(resolvedParams, getResults(null));
         }
 
-        return RouteResult(
-          resolvedParams,
-          getResults(wildcardNode.getHandler(method)),
-          actual: wildcardNode,
-        );
+        rootNode = wildcardNode;
+        break;
       }
 
       rootNode = (childNode ?? parametricNode)!;
@@ -249,8 +226,6 @@ class Spanner {
         method,
         routePart,
         terminal: isLastPart,
-        caseSensitive: config.caseSensitive,
-        nextPart: isLastPart ? null : pathSegments[i + 1],
       );
 
       /// If we don't find a matching path or a matching definition, then
@@ -265,11 +240,7 @@ class Spanner {
         continue;
       }
 
-      definition!.resolveParams(
-        currPart,
-        resolvedParams,
-        caseSentive: config.caseSensitive,
-      );
+      definition!.resolveParams(currPart, resolvedParams);
 
       if (isLastPart && definition.terminal) {
         return RouteResult(
@@ -280,6 +251,8 @@ class Spanner {
       }
     }
 
+    resolvedHandlers.addAll(rootNode.middlewares);
+
     return !rootNode.terminal
         ? RouteResult(resolvedParams, getResults(null), actual: null)
         : RouteResult(
@@ -289,21 +262,37 @@ class Spanner {
           );
   }
 
-  List<String> getRoutePathSegments(dynamic route) {
-    if (route is Uri) return route.pathSegments;
-    if (route == BASE_PATH) return const [];
-    if (route == WildcardNode.key) return const [WildcardNode.key];
+  final _pathCache = <Object, List<String>>{};
 
-    var path = route.toString();
-    if (path.isEmpty) return const [];
+  @pragma('vm:prefer-inline')
+  List<String> getRoutePathSegments(Object route) {
+    final cached = _pathCache[route];
+    if (cached != null) return cached;
 
-    if (path.startsWith(BASE_PATH)) path = path.substring(1);
-    if (path.endsWith(BASE_PATH)) path = path.substring(0, path.length - 1);
-    return path.split('/');
+    late final List<String> segments;
+
+    if (route is Uri) {
+      segments = route.pathSegments;
+    } else if (identical(route, BASE_PATH)) {
+      segments = const <String>[];
+    } else if (identical(route, WildcardNode.key)) {
+      segments = const [WildcardNode.key];
+    } else {
+      var path = route.toString();
+      if (path.isEmpty) {
+        segments = const <String>[];
+      } else {
+        final start = path.startsWith(BASE_PATH) ? 1 : 0;
+        final end = path.endsWith(BASE_PATH) ? path.length - 1 : path.length;
+        segments = path.substring(start, end).split('/');
+      }
+    }
+
+    return _pathCache[route] = segments;
   }
 }
 
-class RouteResult {
+final class RouteResult {
   final List<ParamAndValue> _params;
   final List<IndexedValue> _values;
 

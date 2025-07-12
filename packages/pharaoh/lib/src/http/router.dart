@@ -9,10 +9,10 @@ import 'package:spanner/src/tree/tree.dart' show BASE_PATH;
 
 import '../middleware/body_parser.dart';
 import '../middleware/session_mw.dart';
-import '../shelf_interop/shelf.dart' as shelf;
 import '../utils/exceptions.dart';
 import '../view/view.dart';
 
+import 'body.dart';
 import 'request.dart';
 import 'response.dart';
 
@@ -181,7 +181,7 @@ class _$PharaohImpl extends RouterContract
       //
       // TODO(codekeyz): Do this more cleanly when sdk#27886 is fixed.
       final newStream = chunkedCoding.decoder.bind(res_.body!.read());
-      res_.body = shelf.ShelfBody(newStream);
+      res_.body = Body(newStream);
       request.headers.set(HttpHeaders.transferEncodingHeader, 'chunked');
     } else if (statusCode >= 200 &&
         statusCode != 204 &&

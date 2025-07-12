@@ -7,7 +7,7 @@ import '../parametric/utils.dart';
 
 part '../route/action.dart';
 
-abstract class Node with HandlerStoreMixin {
+sealed class Node with HandlerStoreMixin {
   final Map<String, Node> _nodesMap;
 
   Node() : _nodesMap = {};
@@ -191,13 +191,10 @@ class ParametricNode extends Node {
     HTTPMethod method,
     String part, {
     bool terminal = false,
-    bool caseSensitive = false,
-    String? nextPart,
   }) {
     return _definitionsMap[method]?.firstWhereOrNull(
       (e) =>
-          (!terminal || (e.terminal && e.hasMethod(method))) &&
-          e.matches(part, caseSensitive: caseSensitive),
+          (!terminal || (e.terminal && e.hasMethod(method))) && e.matches(part),
     );
   }
 }

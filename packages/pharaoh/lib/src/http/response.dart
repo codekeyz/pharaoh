@@ -3,14 +3,13 @@ import 'dart:io';
 
 import 'package:pharaoh/pharaoh.dart';
 import 'package:http_parser/http_parser.dart';
-
-import '../shelf_interop/shelf.dart' as shelf;
+import 'package:pharaoh/src/http/body.dart';
 
 import 'message.dart';
 
 part 'response_impl.dart';
 
-sealed class Response extends Message<shelf.ShelfBody?> {
+sealed class Response extends Message<Body> {
   Response(super.body, {super.headers = const {}});
 
   /// Constructs an HTTP Response
@@ -21,7 +20,7 @@ sealed class Response extends Message<shelf.ShelfBody?> {
     Map<String, dynamic>? headers,
   }) =>
       _$ResponseImpl._(
-        body: body == null ? null : ShelfBody(body),
+        body: body == null ? null : Body(body),
         ended: false,
         statusCode: statusCode,
         headers: headers ?? {},

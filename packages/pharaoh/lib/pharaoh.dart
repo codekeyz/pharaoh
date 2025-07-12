@@ -6,9 +6,6 @@ export 'src/http/request.dart';
 export 'src/http/response.dart';
 export 'src/http/router.dart';
 
-export 'src/shelf_interop/adapter.dart';
-export 'src/shelf_interop/shelf.dart' show ShelfBody;
-
 export 'src/utils/utils.dart';
 export 'src/utils/exceptions.dart';
 

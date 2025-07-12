@@ -113,12 +113,12 @@ const _upperA = 65; //  'A'
 const _lowerZ = 122; // 'z'
 const _upperZ = 90; // 'Z'
 
-int _stringToBitmask(String s, bool caseSensitive) {
+int _stringToBitmask(String s) {
   int mask = 0;
 
   for (int i = 0; i < s.length; i++) {
     int charCode = s.codeUnitAt(i);
-    if (!caseSensitive && charCode >= _upperA && charCode <= _upperZ) {
+    if (charCode >= _upperA && charCode <= _upperZ) {
       charCode += 32; // Convert to lowercase
     }
     if (charCode >= _lowerA && charCode <= _lowerZ) {
@@ -128,29 +128,23 @@ int _stringToBitmask(String s, bool caseSensitive) {
   return mask;
 }
 
-String? matchPattern(
-  String input,
-  String prefix,
-  String suffix,
-  bool caseSensitive,
-) {
+String? matchPattern(String input, String prefix, String suffix) {
   if (prefix.isEmpty && suffix.isEmpty) return input;
 
-  final prefixMask = _stringToBitmask(prefix, caseSensitive);
-  final suffixMask = _stringToBitmask(suffix, caseSensitive);
+  final prefixMask = _stringToBitmask(prefix);
+  final suffixMask = _stringToBitmask(suffix);
 
   int matchStart = 0;
   int matchEnd = input.length;
 
-  final compareInput = caseSensitive ? input : input.toLowerCase();
-  final comparePrefix = caseSensitive ? prefix : prefix.toLowerCase();
-  final compareSuffix = caseSensitive ? suffix : suffix.toLowerCase();
+  final compareInput = input.toLowerCase();
+  final comparePrefix = prefix.toLowerCase();
+  final compareSuffix = suffix.toLowerCase();
 
   if (prefix.isNotEmpty) {
     bool prefixFound = false;
     for (int i = 0; i <= input.length - prefix.length; i++) {
-      if (_stringToBitmask(
-              compareInput.substring(i, i + prefix.length), caseSensitive) ==
+      if (_stringToBitmask(compareInput.substring(i, i + prefix.length)) ==
           prefixMask) {
         if (compareInput.substring(i, i + prefix.length) == comparePrefix) {
           matchStart = i + prefix.length;
@@ -165,8 +159,7 @@ String? matchPattern(
   if (suffix.isNotEmpty) {
     bool suffixFound = false;
     for (int i = input.length - suffix.length; i >= matchStart; i--) {
-      if (_stringToBitmask(
-              compareInput.substring(i, i + suffix.length), caseSensitive) ==
+      if (_stringToBitmask(compareInput.substring(i, i + suffix.length)) ==
           suffixMask) {
         if (compareInput.substring(i, i + suffix.length) == compareSuffix) {
           matchEnd = i;
