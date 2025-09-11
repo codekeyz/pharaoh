@@ -8,6 +8,8 @@ environment:
 
 dependencies:
   pharaoh:
+  pharaoh_rate_limit:
+    path: ../packages/pharaoh_rate_limit
   shelf_static: ^1.1.2
   shelf_helmet: ^2.1.1
   shelf_cors_headers: ^0.1.5
